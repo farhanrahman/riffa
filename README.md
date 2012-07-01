@@ -1,3 +1,4 @@
+==RIFFA==
 This is a distribution of the Reusable Integration Framework for FPGA 
 Accelerators (RIFFA). The contents of this distribution are open source, 
 licensed with the FreeBSD license. Please feel free to contact the author with
