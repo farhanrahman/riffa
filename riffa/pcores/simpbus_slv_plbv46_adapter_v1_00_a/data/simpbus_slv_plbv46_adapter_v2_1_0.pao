@@ -1,0 +1,8 @@
+##############################################################################
+## Description:       Peripheral Analysis Order
+##############################################################################
+
+lib proc_common_v3_00_a  all 
+lib plbv46_slave_single_v1_01_a  all 
+lib simpbus_slv_plbv46_adapter_v1_00_a simpbus_slv_plbv46_adapter_impl verilog
+lib simpbus_slv_plbv46_adapter_v1_00_a simpbus_slv_plbv46_adapter vhdl

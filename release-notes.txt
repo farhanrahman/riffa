@@ -1,0 +1,12 @@
+RIFFA Release notes.
+
+Version 0.9 (pre-release):
+- The framework currently only supports Xilinx boards.
+- It has been tested on Xilinx boards ML506, ML507, & XUP5V/ML509.
+- Only single lane x1 PCIe Gen 1 configurations have been tested.
+- It has been tested with Fedora 13 & 17 (32/64 bit vers.) and Ubuntu Desktop 10.04 LTS & 12.04 LTS (32/64 bit vers.).
+- The driver is supported on Linux kernels 2.6.27+ (tested on versions between 2.6.32 - 3.3.0).
+- The PC to FPGA bandwidth issue has _not_ been resolved, still limited to ~24 MBs.
+- The RIFFA user library is currently bundled as .c and .h files.
+- All software has been compiled using GCC v. 4.4.3.
+- You will need to compile the driver for your Linux kernel version.

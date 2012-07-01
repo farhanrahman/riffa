@@ -1,0 +1,21 @@
+##############################################################################
+## Description:       Peripheral Analysis Order
+##############################################################################
+
+lib proc_common_v3_00_a proc_common_pkg vhdl
+lib proc_common_v3_00_a ipif_pkg vhdl
+lib proc_common_v3_00_a or_muxcy vhdl
+lib proc_common_v3_00_a or_gate128 vhdl
+lib proc_common_v3_00_a family_support vhdl
+lib proc_common_v3_00_a pselect_f vhdl
+lib proc_common_v3_00_a counter_f vhdl
+lib plbv46_master_single_v1_01_a data_width_adapter vhdl
+lib plbv46_master_single_v1_01_a data_mirror_128 vhdl
+lib plbv46_master_single_v1_01_a plbv46_master_single vhdl
+lib proc_common_v3_00_a cntr_incr_decr_addn_f vhdl
+lib proc_common_v3_00_a muxf_struct_f vhdl
+lib proc_common_v3_00_a dynshreg_f vhdl
+lib proc_common_v3_00_a srl_fifo_rbu_f vhdl
+lib proc_common_v3_00_a srl_fifo_f vhdl
+lib simpbus_mst_plbv46_adapter_v1_00_a plb_master_driver verilog
+lib simpbus_mst_plbv46_adapter_v1_00_a simpbus_mst_plbv46_adapter vhdl
