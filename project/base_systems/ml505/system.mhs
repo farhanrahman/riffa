@@ -1,0 +1,107 @@
+
+# ##############################################################################
+# Created by Base System Builder Wizard for Xilinx EDK 14.1 Build EDK_P.15xf
+# Tue Jul  3 18:45:56 2012
+# Target Board:  Xilinx Virtex 5 ML505 Evaluation Platform Rev 1
+# Family:    virtex5
+# Device:    xc5vlx50t
+# Package:   ff1136
+# Speed Grade:  -1
+# Processor number: 1
+# Processor 1: microblaze_0
+# System clock frequency: 125.0
+# Debug Interface: On-Chip HW Debug Module
+# ##############################################################################
+ PARAMETER VERSION = 2.1.0
+
+
+ PORT fpga_0_PCIe_Bridge_RXN_pin = fpga_0_PCIe_Bridge_RXN_pin, DIR = I
+ PORT fpga_0_PCIe_Bridge_RXP_pin = fpga_0_PCIe_Bridge_RXP_pin, DIR = I
+ PORT fpga_0_PCIe_Bridge_TXN_pin = fpga_0_PCIe_Bridge_TXN_pin, DIR = O
+ PORT fpga_0_PCIe_Bridge_TXP_pin = fpga_0_PCIe_Bridge_TXP_pin, DIR = O
+ PORT fpga_0_clk_1_sys_clk_pin = CLK_S, DIR = I, SIGIS = CLK, CLK_FREQ = 100000000
+ PORT fpga_0_rst_1_sys_rst_pin = sys_rst_s, DIR = I, SIGIS = RST, RST_POLARITY = 0
+ PORT fpga_0_PCIe_Diff_Clk_IBUF_DS_P_pin = PCIe_Diff_Clk, DIR = I, DIFFERENTIAL_POLARITY = P, SIGIS = CLK
+ PORT fpga_0_PCIe_Diff_Clk_IBUF_DS_N_pin = PCIe_Diff_Clk, DIR = I, DIFFERENTIAL_POLARITY = N, SIGIS = CLK
+
+
+BEGIN plb_v46
+ PARAMETER INSTANCE = mb_plb
+ PARAMETER HW_VER = 1.05.a
+ PORT PLB_Clk = clk_125_0000MHz
+END
+
+BEGIN bram_block
+ PARAMETER INSTANCE = lmb_bram
+ PARAMETER HW_VER = 1.00.a
+END
+
+BEGIN plbv46_pcie
+ PARAMETER INSTANCE = PCIe_Bridge
+ PARAMETER C_IPIFBAR_NUM = 2
+ PARAMETER C_PCIBAR_NUM = 1
+ PARAMETER C_DEVICE_ID = 0x0505
+ PARAMETER C_VENDOR_ID = 0x10EE
+ PARAMETER C_CLASS_CODE = 0x058000
+ PARAMETER C_REV_ID = 0x00
+ PARAMETER C_SUBSYSTEM_ID = 0x0000
+ PARAMETER C_SUBSYSTEM_VENDOR_ID = 0x0000
+ PARAMETER C_COMP_TIMEOUT = 1
+ PARAMETER C_IPIFBAR2PCIBAR_0 = 0x00000000
+ PARAMETER C_IPIFBAR2PCIBAR_1 = 0x00000000
+ PARAMETER C_PCIBAR2IPIFBAR_0 = 0x80200000
+ PARAMETER C_PCIBAR2IPIFBAR_1 = 0x00000000
+ PARAMETER C_PCIBAR_LEN_0 = 16
+ PARAMETER C_PCIBAR_LEN_1 = 28
+ PARAMETER C_BOARD = ml505
+ PARAMETER HW_VER = 4.07.a
+ PARAMETER C_BASEADDR = 0x85c00000
+ PARAMETER C_HIGHADDR = 0x85c0ffff
+ PARAMETER C_IPIFBAR_0 = 0xa0000000
+ PARAMETER C_IPIFBAR_HIGHADDR_0 = 0xbfffffff
+ PARAMETER C_IPIFBAR_1 = 0x90000000
+ PARAMETER C_IPIFBAR_HIGHADDR_1 = 0x9fffffff
+ BUS_INTERFACE SPLB = mb_plb
+ BUS_INTERFACE MPLB = mb_plb
+ PORT REFCLK = PCIe_Diff_Clk
+ PORT RXN = fpga_0_PCIe_Bridge_RXN_pin
+ PORT RXP = fpga_0_PCIe_Bridge_RXP_pin
+ PORT TXN = fpga_0_PCIe_Bridge_TXN_pin
+ PORT TXP = fpga_0_PCIe_Bridge_TXP_pin
+ PORT IP2INTC_Irpt = PCIe_Bridge_IP2INTC_Irpt
+ PORT MSI_request = net_gnd
+END
+
+BEGIN xps_central_dma
+ PARAMETER INSTANCE = xps_central_dma_1
+ PARAMETER HW_VER = 2.03.a
+ PARAMETER C_BASEADDR = 0x80200000
+ PARAMETER C_HIGHADDR = 0x8020ffff
+ BUS_INTERFACE MPLB = mb_plb
+ BUS_INTERFACE SPLB = mb_plb
+ PORT IP2INTC_Irpt = xps_central_dma_1_IP2INTC_Irpt
+END
+
+BEGIN clock_generator
+ PARAMETER INSTANCE = clock_generator_0
+ PARAMETER C_CLKIN_FREQ = 100000000
+ PARAMETER C_CLKOUT0_FREQ = 125000000
+ PARAMETER C_CLKOUT0_PHASE = 0
+ PARAMETER C_CLKOUT0_GROUP = NONE
+ PARAMETER C_CLKOUT0_BUF = TRUE
+ PARAMETER C_EXT_RESET_HIGH = 0
+ PARAMETER HW_VER = 4.03.a
+ PORT CLKIN = CLK_S
+ PORT CLKOUT0 = clk_125_0000MHz
+ PORT RST = sys_rst_s
+END
+
+BEGIN xps_intc
+ PARAMETER INSTANCE = xps_intc_0
+ PARAMETER HW_VER = 2.01.a
+ PARAMETER C_BASEADDR = 0x81800000
+ PARAMETER C_HIGHADDR = 0x8180ffff
+ BUS_INTERFACE SPLB = mb_plb
+ PORT Intr = PCIe_Bridge_IP2INTC_Irpt & xps_central_dma_1_IP2INTC_Irpt
+END
+
