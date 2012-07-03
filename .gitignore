@@ -27,7 +27,10 @@ __xps
 *.bsb
 *.make
 XpsGuiSessionLock
-
+*.opt
+*.ut
+*.filters
+*.gui
 #bak files
 *.bak
 
