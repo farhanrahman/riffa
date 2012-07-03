@@ -3,8 +3,8 @@
 # The VENDOR_ID and DEVICE_ID _must_ match what is configured on your FPGA's
 # PCIe endpoint header (e.g. Xilinx ML506 is VENDOR_ID, DEVICE_ID = 10EE, 0506).
 NAME := fpga
-VENDOR_ID :=
-DEVICE_ID :=
+VENDOR_ID := 10EE
+DEVICE_ID := 5050
 MAJNUM := 100
 
 # Build variables

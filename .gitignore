@@ -10,3 +10,12 @@
 *.lai
 *.la
 *.a
+
+#Xilinx ISE files
+UROP
+
+#bak files
+*.bak
+
+#examples directory
+#examples/

@@ -86,35 +86,35 @@ BEGIN plbv46_pcie
 END
 */
 #define VENDOR_ID 0x10EE
-#define DEVICE_ID 0x0506
+#define DEVICE_ID 0x5050
 
 /*
  * Size definitions.
  */
-#define PCI_BAR_0_SIZE          (8*1024)			// size of FPGA PCI BAR 0 config region
-#define IPIF_BAR_SIZE						(4*1024*1024)	// size of each IPIF BAR
+#define PCI_BAR_0_SIZE          (8*1024)	// size of FPGA PCI BAR 0 config region
+#define IPIF_BAR_SIZE		(4*1024*1024)	// size of each IPIF BAR
 
-#define BUF_SIZE								(1*1024*1024)	// size of PC buffer (must be pow of 2 & <= IPIF_BAR_SIZE)
-#define LOG_BUF_SIZE						20	// size of log2 of PC buffer (must be pow of 2 & <= IPIF_BAR_SIZE)
+#define BUF_SIZE		(1*1024*1024)	// size of PC buffer (must be pow of 2 & <= IPIF_BAR_SIZE)
+#define LOG_BUF_SIZE		20		// size of log2 of PC buffer (must be pow of 2 & <= IPIF_BAR_SIZE)
 
-#define NUM_CHANNEL							16	// number of channels
-#define NUM_IPIF_BAR						6		// number of IPIF BARs to attempt to allocate
-#define NUM_IPIF_BAR_SEG				(IPIF_BAR_SIZE/BUF_SIZE)	// number of buf segments per IPIF BAR 
+#define NUM_CHANNEL		16		// number of channels
+#define NUM_IPIF_BAR		6		// number of IPIF BARs to attempt to allocate
+#define NUM_IPIF_BAR_SEG	(IPIF_BAR_SIZE/BUF_SIZE)	// number of buf segments per IPIF BAR 
 
-#define BUF_QUEUE_DEPTH					((NUM_IPIF_BAR*NUM_IPIF_BAR_SEG)+1) // Depth of the PC buffer info queue
-#define READ_QUEUE_DEPTH				50 // Depth of the read msg queue
-#define WRITE_QUEUE_DEPTH				50 // Depth of the write msg queue
+#define BUF_QUEUE_DEPTH		((NUM_IPIF_BAR*NUM_IPIF_BAR_SEG)+1) // Depth of the PC buffer info queue
+#define READ_QUEUE_DEPTH	50 // Depth of the read msg queue
+#define WRITE_QUEUE_DEPTH	50 // Depth of the write msg queue
 
 /*
  * Locations and config space offsets.
  */
-#define IPIF_BAR_ADDR						0xA0000000	// base address for IPIF BARs on FPGA
-#define IPIF_BAR_ADDR_INC				0x00400000	// addr increment for each IPIF BAR region
+#define IPIF_BAR_ADDR		0xA0000000	// base address for IPIF BARs on FPGA
+#define IPIF_BAR_ADDR_INC	0x00400000	// addr increment for each IPIF BAR region
 
-#define IRQ_REG_OFF		          0x2FC	// config offset for interrupt reg
+#define IRQ_REG_OFF		0x2FC	// config offset for interrupt reg
 
-#define IPIF_BAR_HW_REG_OFF			0x200	// config offset for IPIF BAR 0 HW reg
-#define IPIF_BAR_HW_REG_INC			0x004	// config increment for IPIF BAR HW regs
+#define IPIF_BAR_HW_REG_OFF	0x200	// config offset for IPIF BAR 0 HW reg
+#define IPIF_BAR_HW_REG_INC	0x004	// config increment for IPIF BAR HW regs
 
 #define CHANNEL_REG_INC					0x020	// config increment for channel registers
 #define INTR_INFO_REG_OFF				0x01C	// config offset for FPGA->PC info
@@ -130,9 +130,9 @@ END
 /*
  * Message events for readmsgs/writemsgs queues.
  */
-#define EVENT_DATA_RECV					0
+#define EVENT_DATA_RECV				0
 #define EVENT_BUF_ALLOCATE			1
-#define EVENT_DATA_SENT					2
+#define EVENT_DATA_SENT				2
 
 
 #endif
