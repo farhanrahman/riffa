@@ -22,3 +22,6 @@ examples/
 
 #swp files
 *.swp
+
+#XPS files
+base_systems/ml505/__xps/
