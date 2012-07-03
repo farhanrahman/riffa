@@ -19,3 +19,6 @@ UROP
 
 #examples directory
 examples/
+
+#swp files
+*.swp
