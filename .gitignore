@@ -37,6 +37,34 @@ XpsGuiSessionLock
 *.ut
 *.filters
 *.gui
+*.xrpt
+*.ngc
+*.xpi
+*.bld
+*.map
+*.blc
+*.drc
+*.bmm
+*.mrp
+*.ncd
+*.pcf
+*.par
+*.pad
+*.bgn
+*.flw
+*.twr
+*.twx
+*.unroutes
+*.ncf
+*.ngm
+*.ptwx
+*.xwbt
+*.ngd
+*.edn
+*.ngo
+_xmsgs
+cache
+revup/
 #bak files
 *.bak
 
