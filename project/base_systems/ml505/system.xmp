@@ -3,6 +3,8 @@ XmpVersion: 14.1
 VerMgmt: 14.1
 IntStyle: default
 Flow: ise
+ModuleSearchPath: /home/fr909/git/riffa/project/base_systems
+ModuleSearchPath: /home/fr909/git/riffa
 MHS File: system.mhs
 Architecture: virtex5
 Device: xc5vlx50t

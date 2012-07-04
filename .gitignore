@@ -15,7 +15,10 @@
 UROP
 
 #Xilinx EDK files
-blockkdiagram
+blockkdiagram/
+synthesis/
+project/base_systems/ml505/blockdiagram/*
+project/base_systems/ml505/implementation/*
 __xps
 *.log
 *.svf
