@@ -19,6 +19,9 @@ blockkdiagram/
 synthesis/
 project/base_systems/ml505/blockdiagram/*
 project/base_systems/ml505/implementation/*
+
+project/base_systems/ml506/implementation/*
+project/base_systems/ml506/blockdiagram/*
 __xps
 *.log
 *.svf
