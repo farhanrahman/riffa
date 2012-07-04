@@ -90,7 +90,7 @@ begin
   clock_generator_0 : clock_generator
     generic map (
       C_FAMILY => "virtex5",
-      C_DEVICE => "5vlx50t",
+      C_DEVICE => "5vlx110t",
       C_PACKAGE => "ff1136",
       C_SPEEDGRADE => "-1"
     )

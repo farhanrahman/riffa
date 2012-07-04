@@ -7,7 +7,7 @@ ModuleSearchPath: /home/fr909/git/riffa/project/base_systems
 ModuleSearchPath: /home/fr909/git/riffa
 MHS File: system.mhs
 Architecture: virtex5
-Device: xc5vlx50t
+Device: xc5vlx110t
 Package: ff1136
 SpeedGrade: -1
 UserCmd1: 

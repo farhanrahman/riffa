@@ -38,7 +38,8 @@
 #include <stdlib.h>
 #include "fpga_comm.h"
 
-#define DATA_SIZE (1*1024*1024)
+//#define DATA_SIZE (1*1024*1024)
+#define DATA_SIZE (4)
 
 unsigned int gData[DATA_SIZE/4]; // 1 MB (should be good)
 
@@ -50,7 +51,7 @@ int main(int argc, char* argv[])
 	fpga_dev * fpgaDev;
   int rtn, channel, timeout;
 	unsigned int arg0, arg1;
-
+	printf("Reached here \n");
 	timeout = 10*1000; // 10 secs.
 	channel = 0;
 	arg0 = (unsigned int)rand();
@@ -60,6 +61,7 @@ int main(int argc, char* argv[])
 		printf("error opening fpga: %d\n", rtn);
 		return rtn;
 	}
+
 	if ((rtn = fpga_channel_open(fpgaDev, channel, timeout)) < 0) {
 		printf("error opening fpga channel: %d\n", rtn);
 		return rtn;

@@ -81,9 +81,10 @@ int fpga_init(fpga_dev ** fpgaDev) {
 		fprintf(stderr, "Failed to malloc fpga_dev\n");
 		return -ENOMEM;
 	}
-
+	printf("about to open \n");
 	// Open the device file.
 	fd = open(FPGA_DEV_PATH, O_RDWR | O_SYNC);
+	printf("opened fpga device");
 	if(fd < 0) {
 		return fd;
 	}
