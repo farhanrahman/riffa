@@ -86,7 +86,7 @@ BEGIN plbv46_pcie
 END
 */
 #define VENDOR_ID 0x10EE
-#define DEVICE_ID 0x5050
+#define DEVICE_ID 0x0509
 
 /*
  * Size definitions.

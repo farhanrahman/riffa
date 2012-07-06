@@ -77,50 +77,53 @@ parameter C_BRAM_SIZE = 'h8000;
 parameter C_BRAM_SIZE_LOG2 = 15;
 parameter C_SIMPBUS_AWIDTH = 32;
 
-input	 							SYS_CLK;
-input								SYS_RST;
-output								INTERRUPT;
-output								INTERRUPT_ERR;
-input								INTERRUPT_ACK;
-input								DOORBELL;
-input								DOORBELL_ERR;
+input	 				SYS_CLK;
+input					SYS_RST;
+
+output					INTERRUPT;
+output					INTERRUPT_ERR;
+input					INTERRUPT_ACK;
+input					DOORBELL;
+input					DOORBELL_ERR;
 input	[C_SIMPBUS_AWIDTH-1:0]		DOORBELL_LEN;
-input	[31:0]						DOORBELL_ARG;
-output								DMA_REQ;
-input								DMA_REQ_ACK;
+input	[31:0]				DOORBELL_ARG;
+
+
+output					DMA_REQ;
+input					DMA_REQ_ACK;
 output	[C_SIMPBUS_AWIDTH-1:0]		DMA_SRC;
 output	[C_SIMPBUS_AWIDTH-1:0]		DMA_DST;
 output	[C_SIMPBUS_AWIDTH-1:0]		DMA_LEN;
-output								DMA_SIG;
-input								DMA_DONE;
-input								DMA_ERR;
-output								BUF_REQ;
-input								BUF_REQ_ACK;
+output					DMA_SIG;
+input					DMA_DONE;
+input					DMA_ERR;
+output					BUF_REQ;
+input					BUF_REQ_ACK;
 input	[C_SIMPBUS_AWIDTH-1:0]		BUF_REQ_ADDR;
-input	[4:0]						BUF_REQ_SIZE;
-input								BUF_REQ_RDY;
-input								BUF_REQ_ERR;
-input								BUF_REQD;
+input	[4:0]				BUF_REQ_SIZE;
+input					BUF_REQ_RDY;
+input					BUF_REQ_ERR;
+input					BUF_REQD;
 output	[C_SIMPBUS_AWIDTH-1:0]		BUF_REQD_ADDR;
-output	[4:0]						BUF_REQD_SIZE;
-output								BUF_REQD_RDY;
-output								BUF_REQD_ERR;
-output								MEM_EN;
-output	[3:0]						MEM_WEN;
-output	[31:0]						MEM_DATA_OUT;
-input	[31:0]						MEM_DATA_IN;
-output	[31:0]						MEM_ADDR;
+output	[4:0]				BUF_REQD_SIZE;
+output					BUF_REQD_RDY;
+output					BUF_REQD_ERR;
+output					MEM_EN;
+output	[3:0]				MEM_WEN;
+output	[31:0]				MEM_DATA_OUT;
+input	[31:0]				MEM_DATA_IN;
+output	[31:0]				MEM_ADDR;
 
 
-reg		[3:0]						rState=0;
-reg		[31:0]						rAddr=0;
-reg		[31:0]						rData=0;
-reg									rWen=0;
-reg		[31:0]						rSrc=0;
-reg		[31:0]						rDst=0;
-reg		[31:0]						rLen=0;
+reg	[3:0]				rState=0;
+reg	[31:0]				rAddr=0;
+reg	[31:0]				rData=0;
+reg					rWen=0;
+reg	[31:0]				rSrc=0;
+reg	[31:0]				rDst=0;
+reg	[31:0]				rLen=0;
 
-wire	[31:0]						wBufSize;
+wire	[31:0]				wBufSize;
 
 
 assign MEM_EN = 1;
@@ -144,6 +147,7 @@ assign BUF_REQD_ADDR = C_BRAM_ADDR;
 assign BUF_REQD_SIZE = C_BRAM_SIZE_LOG2;
 assign BUF_REQD_RDY = 1;
 assign BUF_REQD_ERR = 0;
+
 
 
 always @(posedge SYS_CLK or posedge SYS_RST) begin
@@ -185,6 +189,8 @@ always @(posedge SYS_CLK or posedge SYS_RST) begin
 			end
 			4'd4: begin // Request buffer.
 				if (BUF_REQ_ACK) begin
+					/*Go to the next state only if 
+					 *Acknowledgement received from PC*/
 					rState <= 5;
 				end
 			end

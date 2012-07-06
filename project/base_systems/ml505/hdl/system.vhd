@@ -1033,6 +1033,7 @@ architecture STRUCTURE of system is
   signal central_notifier_0_SIMPBUS_MST_SIMPBUS_RNW : std_logic;
   signal central_notifier_0_SIMPBUS_MST_SIMPBUS_START : std_logic;
   signal central_notifier_0_SIMPBUS_MST_SIMPBUS_WDATA : std_logic_vector(0 to 31);
+  signal clk_125_0000MHz : std_logic;
   signal clock_generator_0_CLKOUT1 : std_logic;
   signal clock_generator_0_LOCKED : std_logic;
   signal mb_plb_MPLB_Rst : std_logic_vector(0 to 2);
@@ -1199,7 +1200,7 @@ begin
 
   mb_plb : system_mb_plb_wrapper
     port map (
-      PLB_Clk => clock_generator_0_CLKOUT1,
+      PLB_Clk => clk_125_0000MHz,
       SYS_Rst => proc_sys_reset_0_Bus_Struct_Reset(0),
       PLB_Rst => open,
       SPLB_Rst => mb_plb_SPLB_Rst,
@@ -1300,7 +1301,7 @@ begin
 
   PCIe_Bridge : system_pcie_bridge_wrapper
     port map (
-      MPLB_Clk => clock_generator_0_CLKOUT1,
+      MPLB_Clk => clk_125_0000MHz,
       MPLB_Rst => mb_plb_MPLB_Rst(0),
       PLB_MTimeout => mb_plb_PLB_MTimeout(0),
       PLB_MIRQ => mb_plb_PLB_MIRQ(0),
@@ -1332,7 +1333,7 @@ begin
       M_wrDBus => mb_plb_M_wrDBus(0 to 63),
       M_wrBurst => mb_plb_M_wrBurst(0),
       M_rdBurst => mb_plb_M_rdBurst(0),
-      SPLB_Clk => clock_generator_0_CLKOUT1,
+      SPLB_Clk => clk_125_0000MHz,
       SPLB_Rst => mb_plb_SPLB_Rst(0),
       PLB_ABus => mb_plb_PLB_ABus,
       PLB_UABus => mb_plb_PLB_UABus,
@@ -1386,9 +1387,9 @@ begin
 
   xps_central_dma_0 : system_xps_central_dma_0_wrapper
     port map (
-      SPLB_Clk => clock_generator_0_CLKOUT1,
+      SPLB_Clk => clk_125_0000MHz,
       SPLB_Rst => mb_plb_SPLB_Rst(1),
-      MPLB_Clk => clock_generator_0_CLKOUT1,
+      MPLB_Clk => clk_125_0000MHz,
       MPLB_Rst => mb_plb_MPLB_Rst(1),
       SPLB_ABus => mb_plb_PLB_ABus,
       SPLB_BE => mb_plb_PLB_BE,
@@ -1466,7 +1467,7 @@ begin
   clock_generator_0 : system_clock_generator_0_wrapper
     port map (
       CLKIN => CLK_S,
-      CLKOUT0 => open,
+      CLKOUT0 => clk_125_0000MHz,
       CLKOUT1 => clock_generator_0_CLKOUT1,
       CLKOUT2 => open,
       CLKOUT3 => open,
@@ -1944,7 +1945,7 @@ begin
 
   simpbus_mst_plbv46_adapter_0 : system_simpbus_mst_plbv46_adapter_0_wrapper
     port map (
-      MPLB_Clk => clock_generator_0_CLKOUT1,
+      MPLB_Clk => clk_125_0000MHz,
       MPLB_Rst => mb_plb_MPLB_Rst(2),
       M_request => mb_plb_M_request(2),
       M_priority => mb_plb_M_priority(4 to 5),
@@ -1988,7 +1989,7 @@ begin
 
   simpbus_slv_plbv46_adapter_0 : system_simpbus_slv_plbv46_adapter_0_wrapper
     port map (
-      SPLB_Clk => clock_generator_0_CLKOUT1,
+      SPLB_Clk => clk_125_0000MHz,
       SPLB_Rst => mb_plb_SPLB_Rst(2),
       PLB_ABus => mb_plb_PLB_ABus,
       PLB_UABus => mb_plb_PLB_UABus,
@@ -2060,7 +2061,7 @@ begin
 
   xps_bram_if_cntlr_0 : system_xps_bram_if_cntlr_0_wrapper
     port map (
-      SPLB_Clk => clock_generator_0_CLKOUT1,
+      SPLB_Clk => clk_125_0000MHz,
       SPLB_Rst => mb_plb_SPLB_Rst(3),
       PLB_ABus => mb_plb_PLB_ABus,
       PLB_UABus => mb_plb_PLB_UABus,

@@ -28,7 +28,7 @@
 BEGIN plb_v46
  PARAMETER INSTANCE = mb_plb
  PARAMETER HW_VER = 1.05.a
- PORT PLB_Clk = clock_generator_0_CLKOUT1
+ PORT PLB_Clk = clk_125_0000MHz
  PORT SYS_Rst = proc_sys_reset_0_Bus_Struct_Reset
 END
 

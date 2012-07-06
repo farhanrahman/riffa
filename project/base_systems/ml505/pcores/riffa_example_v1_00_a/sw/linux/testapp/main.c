@@ -37,9 +37,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "fpga_comm.h"
-
-//#define DATA_SIZE (1*1024*1024)
-#define DATA_SIZE (4)
+#include <assert.h>
+#define DATA_SIZE (1*1024*1024)
 
 unsigned int gData[DATA_SIZE/4]; // 1 MB (should be good)
 
@@ -49,13 +48,15 @@ unsigned int gData[DATA_SIZE/4]; // 1 MB (should be good)
 int main(int argc, char* argv[]) 
 {
 	fpga_dev * fpgaDev;
-  int rtn, channel, timeout;
+	int rtn, channel, timeout;
 	unsigned int arg0, arg1;
-	printf("Reached here \n");
-	timeout = 10*1000; // 10 secs.
-	channel = 0;
+	timeout = 3000*1000; // 10 secs.
+	channel = argc == 2 ? atoi(argv[1]) : 0;
+	printf("channel = %d \n", channel);
 	arg0 = (unsigned int)rand();
 	arg1 = (unsigned int)rand();
+
+	printf("sending arguments arg0: %d, arg1: %d \n", arg0, arg1);
 
 	if ((rtn = fpga_init(&fpgaDev)) < 0) {
 		printf("error opening fpga: %d\n", rtn);
@@ -67,7 +68,7 @@ int main(int argc, char* argv[])
 		return rtn;
 	}
 
-  printf("Opened.\n");
+ 	printf("Opened.\n");
 
 	while (1) {
 		if ((rtn = fpga_send_args(fpgaDev, channel, arg0, arg1, 2, 1)) < 0) {
@@ -77,23 +78,22 @@ int main(int argc, char* argv[])
 
 		printf("Called with args: 0x%x, 0x%x.\n", arg0, arg1);
 
-		if ((rtn = fpga_recv_data(fpgaDev, channel, (unsigned char *)gData, DATA_SIZE)) < 0) {
+/*		if ((rtn = fpga_recv_data(fpgaDev, channel, (unsigned char *)gData, DATA_SIZE)) < 0) {
 			printf("error receiving data from fpga: %d\n", rtn);
 			break;
 		}
 
 		printf("Received data response, length: 0x%x\n", rtn);
 		printf("Response values 0 & 1: 0x%x, 0x%x should equal 0x%x, 0x%x\n", 
-			fpga_flip_endian(gData[0]), fpga_flip_endian(gData[1]), arg0, arg1);
-
+		fpga_flip_endian(gData[0]), fpga_flip_endian(gData[1]), arg0, arg1);*/
 		break;
 	}
 
-  printf("Done.\n");
+  	printf("Done.\n");
 
 	fpga_channel_close(fpgaDev, 0);
-  fpga_free(fpgaDev);
-  printf("Exiting.\n");
+  	fpga_free(fpgaDev);
+  	printf("Exiting.\n");
 
 	return 0;
 }

@@ -339,8 +339,11 @@ int fpga_send_data_end(fpga_dev * fpgaDev, int channel) {
 int fpga_recv_data(fpga_dev * fpgaDev, int channel, unsigned char * recvdata, 
 	int recvlen) {
 	// Check that the channel is open.
-	if (fpgaDev->intrFds[channel] < 0)
+	if (fpgaDev->intrFds[channel] < 0){
+		printf("_EACCES=%d \n", -EACCES);
 		return -EACCES;
+	}
+
 	// Read from the driver.
 	return read(fpgaDev->intrFds[channel], recvdata, recvlen);
 }
