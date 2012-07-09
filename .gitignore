@@ -29,7 +29,7 @@ __xps
 *.cmd
 *.bak
 *.elf
-*.ace
+#*.ace
 *.bsb
 *.make
 XpsGuiSessionLock
