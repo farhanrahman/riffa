@@ -67,7 +67,7 @@ begin
 
   bram_block_0 : bram_block_0_elaborate
     generic map (
-      C_MEMSIZE => 16#40000#,
+      C_MEMSIZE => 16#10000#,
       C_PORT_DWIDTH => 32,
       C_PORT_AWIDTH => 32,
       C_NUM_WE => 4,

@@ -103,7 +103,7 @@ begin
     generic map (
       C_SIMPBUS_AWIDTH => 32,
       C_BRAM_ADDR => X"90000000",
-      C_BRAM_SIZE => 262144
+      C_BRAM_SIZE => 32768
     )
     port map (
       SYS_CLK => SYS_CLK,

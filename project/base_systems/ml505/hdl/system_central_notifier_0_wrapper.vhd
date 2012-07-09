@@ -932,7 +932,7 @@ begin
       C_NUM_CHANNELS => 1,
       C_INIT_BUS => 0,
       C_DMA_BASE_ADDR => X"80200000",
-      C_PCIE_BASE_ADDR => X"85c00000",
+      C_PCIE_BASE_ADDR => X"85C00000",
       C_PCIE_IPIF2PCI_LEN => 4194304
     )
     port map (

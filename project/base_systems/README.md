@@ -9,3 +9,8 @@ However the bitstream in ml506 (which was generated from the example code given 
 Board being used to test:
 
 Xilinx Universiy Program ml505
+
+Update 9th Jul
+=======================================
+
+The problem as identified by Dr. Nachiket Kapre was that the board needed the bitstream to be loaded up on system boot. There would be a problem otherwise from the host side. Now the data can be transferred and received successfully via the PCIe bus

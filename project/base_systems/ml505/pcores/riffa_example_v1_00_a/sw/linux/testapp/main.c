@@ -78,14 +78,14 @@ int main(int argc, char* argv[])
 
 		printf("Called with args: 0x%x, 0x%x.\n", arg0, arg1);
 
-/*		if ((rtn = fpga_recv_data(fpgaDev, channel, (unsigned char *)gData, DATA_SIZE)) < 0) {
+		if ((rtn = fpga_recv_data(fpgaDev, channel, (unsigned char *)gData, DATA_SIZE)) < 0) {
 			printf("error receiving data from fpga: %d\n", rtn);
 			break;
 		}
 
 		printf("Received data response, length: 0x%x\n", rtn);
 		printf("Response values 0 & 1: 0x%x, 0x%x should equal 0x%x, 0x%x\n", 
-		fpga_flip_endian(gData[0]), fpga_flip_endian(gData[1]), arg0, arg1);*/
+		fpga_flip_endian(gData[0]), fpga_flip_endian(gData[1]), arg0, arg1);
 		break;
 	}
 

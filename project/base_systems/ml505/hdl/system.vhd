@@ -321,6 +321,33 @@ architecture STRUCTURE of system is
     );
   end component;
 
+  component system_proc_sys_reset_0_wrapper is
+    port (
+      Slowest_sync_clk : in std_logic;
+      Ext_Reset_In : in std_logic;
+      Aux_Reset_In : in std_logic;
+      MB_Debug_Sys_Rst : in std_logic;
+      Core_Reset_Req_0 : in std_logic;
+      Chip_Reset_Req_0 : in std_logic;
+      System_Reset_Req_0 : in std_logic;
+      Core_Reset_Req_1 : in std_logic;
+      Chip_Reset_Req_1 : in std_logic;
+      System_Reset_Req_1 : in std_logic;
+      Dcm_locked : in std_logic;
+      RstcPPCresetcore_0 : out std_logic;
+      RstcPPCresetchip_0 : out std_logic;
+      RstcPPCresetsys_0 : out std_logic;
+      RstcPPCresetcore_1 : out std_logic;
+      RstcPPCresetchip_1 : out std_logic;
+      RstcPPCresetsys_1 : out std_logic;
+      MB_Reset : out std_logic;
+      Bus_Struct_Reset : out std_logic_vector(0 to 0);
+      Peripheral_Reset : out std_logic_vector(0 to 0);
+      Interconnect_aresetn : out std_logic_vector(0 to 0);
+      Peripheral_aresetn : out std_logic_vector(0 to 0)
+    );
+  end component;
+
   component system_central_notifier_0_wrapper is
     port (
       SYS_CLK : in std_logic;
@@ -772,106 +799,6 @@ architecture STRUCTURE of system is
     );
   end component;
 
-  component system_simpbus_mst_plbv46_adapter_0_wrapper is
-    port (
-      MPLB_Clk : in std_logic;
-      MPLB_Rst : in std_logic;
-      M_request : out std_logic;
-      M_priority : out std_logic_vector(0 to 1);
-      M_busLock : out std_logic;
-      M_RNW : out std_logic;
-      M_BE : out std_logic_vector(0 to 7);
-      M_MSize : out std_logic_vector(0 to 1);
-      M_size : out std_logic_vector(0 to 3);
-      M_type : out std_logic_vector(0 to 2);
-      M_TAttribute : out std_logic_vector(0 to 15);
-      M_lockErr : out std_logic;
-      M_abort : out std_logic;
-      M_UABus : out std_logic_vector(0 to 31);
-      M_ABus : out std_logic_vector(0 to 31);
-      M_wrDBus : out std_logic_vector(0 to 63);
-      M_wrBurst : out std_logic;
-      M_rdBurst : out std_logic;
-      PLB_MAddrAck : in std_logic;
-      PLB_MSSize : in std_logic_vector(0 to 1);
-      PLB_MRearbitrate : in std_logic;
-      PLB_MTimeout : in std_logic;
-      PLB_MBusy : in std_logic;
-      PLB_MRdErr : in std_logic;
-      PLB_MWrErr : in std_logic;
-      PLB_MIRQ : in std_logic;
-      PLB_MRdDBus : in std_logic_vector(0 to 63);
-      PLB_MRdWdAddr : in std_logic_vector(0 to 3);
-      PLB_MRdDAck : in std_logic;
-      PLB_MRdBTerm : in std_logic;
-      PLB_MWrDAck : in std_logic;
-      PLB_MWrBTerm : in std_logic;
-      SIMPBUS_ADDR : in std_logic_vector(0 to 31);
-      SIMPBUS_WDATA : in std_logic_vector(0 to 31);
-      SIMPBUS_RDATA : out std_logic_vector(0 to 31);
-      SIMPBUS_BE : in std_logic_vector(0 to 3);
-      SIMPBUS_RNW : in std_logic;
-      SIMPBUS_START : in std_logic;
-      SIMPBUS_DONE : out std_logic;
-      SIMPBUS_ERR : out std_logic
-    );
-  end component;
-
-  component system_simpbus_slv_plbv46_adapter_0_wrapper is
-    port (
-      SPLB_Clk : in std_logic;
-      SPLB_Rst : in std_logic;
-      PLB_ABus : in std_logic_vector(0 to 31);
-      PLB_UABus : in std_logic_vector(0 to 31);
-      PLB_PAValid : in std_logic;
-      PLB_SAValid : in std_logic;
-      PLB_rdPrim : in std_logic;
-      PLB_wrPrim : in std_logic;
-      PLB_masterID : in std_logic_vector(0 to 1);
-      PLB_abort : in std_logic;
-      PLB_busLock : in std_logic;
-      PLB_RNW : in std_logic;
-      PLB_BE : in std_logic_vector(0 to 7);
-      PLB_MSize : in std_logic_vector(0 to 1);
-      PLB_size : in std_logic_vector(0 to 3);
-      PLB_type : in std_logic_vector(0 to 2);
-      PLB_lockErr : in std_logic;
-      PLB_wrDBus : in std_logic_vector(0 to 63);
-      PLB_wrBurst : in std_logic;
-      PLB_rdBurst : in std_logic;
-      PLB_wrPendReq : in std_logic;
-      PLB_rdPendReq : in std_logic;
-      PLB_wrPendPri : in std_logic_vector(0 to 1);
-      PLB_rdPendPri : in std_logic_vector(0 to 1);
-      PLB_reqPri : in std_logic_vector(0 to 1);
-      PLB_TAttribute : in std_logic_vector(0 to 15);
-      Sl_addrAck : out std_logic;
-      Sl_SSize : out std_logic_vector(0 to 1);
-      Sl_wait : out std_logic;
-      Sl_rearbitrate : out std_logic;
-      Sl_wrDAck : out std_logic;
-      Sl_wrComp : out std_logic;
-      Sl_wrBTerm : out std_logic;
-      Sl_rdDBus : out std_logic_vector(0 to 63);
-      Sl_rdWdAddr : out std_logic_vector(0 to 3);
-      Sl_rdDAck : out std_logic;
-      Sl_rdComp : out std_logic;
-      Sl_rdBTerm : out std_logic;
-      Sl_MBusy : out std_logic_vector(0 to 2);
-      Sl_MWrErr : out std_logic_vector(0 to 2);
-      Sl_MRdErr : out std_logic_vector(0 to 2);
-      Sl_MIRQ : out std_logic_vector(0 to 2);
-      SIMPBUS_ADDR : out std_logic_vector(0 to 31);
-      SIMPBUS_WDATA : out std_logic_vector(0 to 31);
-      SIMPBUS_RDATA : in std_logic_vector(0 to 31);
-      SIMPBUS_BE : out std_logic_vector(0 to 3);
-      SIMPBUS_RNW : out std_logic;
-      SIMPBUS_START : out std_logic;
-      SIMPBUS_DONE : in std_logic;
-      SIMPBUS_ERR : in std_logic
-    );
-  end component;
-
   component system_bram_block_0_wrapper is
     port (
       BRAM_Rst_A : in std_logic;
@@ -945,30 +872,103 @@ architecture STRUCTURE of system is
     );
   end component;
 
-  component system_proc_sys_reset_0_wrapper is
+  component system_simpbus_slv_plbv46_adapter_0_wrapper is
     port (
-      Slowest_sync_clk : in std_logic;
-      Ext_Reset_In : in std_logic;
-      Aux_Reset_In : in std_logic;
-      MB_Debug_Sys_Rst : in std_logic;
-      Core_Reset_Req_0 : in std_logic;
-      Chip_Reset_Req_0 : in std_logic;
-      System_Reset_Req_0 : in std_logic;
-      Core_Reset_Req_1 : in std_logic;
-      Chip_Reset_Req_1 : in std_logic;
-      System_Reset_Req_1 : in std_logic;
-      Dcm_locked : in std_logic;
-      RstcPPCresetcore_0 : out std_logic;
-      RstcPPCresetchip_0 : out std_logic;
-      RstcPPCresetsys_0 : out std_logic;
-      RstcPPCresetcore_1 : out std_logic;
-      RstcPPCresetchip_1 : out std_logic;
-      RstcPPCresetsys_1 : out std_logic;
-      MB_Reset : out std_logic;
-      Bus_Struct_Reset : out std_logic_vector(0 to 0);
-      Peripheral_Reset : out std_logic_vector(0 to 0);
-      Interconnect_aresetn : out std_logic_vector(0 to 0);
-      Peripheral_aresetn : out std_logic_vector(0 to 0)
+      SPLB_Clk : in std_logic;
+      SPLB_Rst : in std_logic;
+      PLB_ABus : in std_logic_vector(0 to 31);
+      PLB_UABus : in std_logic_vector(0 to 31);
+      PLB_PAValid : in std_logic;
+      PLB_SAValid : in std_logic;
+      PLB_rdPrim : in std_logic;
+      PLB_wrPrim : in std_logic;
+      PLB_masterID : in std_logic_vector(0 to 1);
+      PLB_abort : in std_logic;
+      PLB_busLock : in std_logic;
+      PLB_RNW : in std_logic;
+      PLB_BE : in std_logic_vector(0 to 7);
+      PLB_MSize : in std_logic_vector(0 to 1);
+      PLB_size : in std_logic_vector(0 to 3);
+      PLB_type : in std_logic_vector(0 to 2);
+      PLB_lockErr : in std_logic;
+      PLB_wrDBus : in std_logic_vector(0 to 63);
+      PLB_wrBurst : in std_logic;
+      PLB_rdBurst : in std_logic;
+      PLB_wrPendReq : in std_logic;
+      PLB_rdPendReq : in std_logic;
+      PLB_wrPendPri : in std_logic_vector(0 to 1);
+      PLB_rdPendPri : in std_logic_vector(0 to 1);
+      PLB_reqPri : in std_logic_vector(0 to 1);
+      PLB_TAttribute : in std_logic_vector(0 to 15);
+      Sl_addrAck : out std_logic;
+      Sl_SSize : out std_logic_vector(0 to 1);
+      Sl_wait : out std_logic;
+      Sl_rearbitrate : out std_logic;
+      Sl_wrDAck : out std_logic;
+      Sl_wrComp : out std_logic;
+      Sl_wrBTerm : out std_logic;
+      Sl_rdDBus : out std_logic_vector(0 to 63);
+      Sl_rdWdAddr : out std_logic_vector(0 to 3);
+      Sl_rdDAck : out std_logic;
+      Sl_rdComp : out std_logic;
+      Sl_rdBTerm : out std_logic;
+      Sl_MBusy : out std_logic_vector(0 to 2);
+      Sl_MWrErr : out std_logic_vector(0 to 2);
+      Sl_MRdErr : out std_logic_vector(0 to 2);
+      Sl_MIRQ : out std_logic_vector(0 to 2);
+      SIMPBUS_ADDR : out std_logic_vector(0 to 31);
+      SIMPBUS_WDATA : out std_logic_vector(0 to 31);
+      SIMPBUS_RDATA : in std_logic_vector(0 to 31);
+      SIMPBUS_BE : out std_logic_vector(0 to 3);
+      SIMPBUS_RNW : out std_logic;
+      SIMPBUS_START : out std_logic;
+      SIMPBUS_DONE : in std_logic;
+      SIMPBUS_ERR : in std_logic
+    );
+  end component;
+
+  component system_simpbus_mst_plbv46_adapter_0_wrapper is
+    port (
+      MPLB_Clk : in std_logic;
+      MPLB_Rst : in std_logic;
+      M_request : out std_logic;
+      M_priority : out std_logic_vector(0 to 1);
+      M_busLock : out std_logic;
+      M_RNW : out std_logic;
+      M_BE : out std_logic_vector(0 to 7);
+      M_MSize : out std_logic_vector(0 to 1);
+      M_size : out std_logic_vector(0 to 3);
+      M_type : out std_logic_vector(0 to 2);
+      M_TAttribute : out std_logic_vector(0 to 15);
+      M_lockErr : out std_logic;
+      M_abort : out std_logic;
+      M_UABus : out std_logic_vector(0 to 31);
+      M_ABus : out std_logic_vector(0 to 31);
+      M_wrDBus : out std_logic_vector(0 to 63);
+      M_wrBurst : out std_logic;
+      M_rdBurst : out std_logic;
+      PLB_MAddrAck : in std_logic;
+      PLB_MSSize : in std_logic_vector(0 to 1);
+      PLB_MRearbitrate : in std_logic;
+      PLB_MTimeout : in std_logic;
+      PLB_MBusy : in std_logic;
+      PLB_MRdErr : in std_logic;
+      PLB_MWrErr : in std_logic;
+      PLB_MIRQ : in std_logic;
+      PLB_MRdDBus : in std_logic_vector(0 to 63);
+      PLB_MRdWdAddr : in std_logic_vector(0 to 3);
+      PLB_MRdDAck : in std_logic;
+      PLB_MRdBTerm : in std_logic;
+      PLB_MWrDAck : in std_logic;
+      PLB_MWrBTerm : in std_logic;
+      SIMPBUS_ADDR : in std_logic_vector(0 to 31);
+      SIMPBUS_WDATA : in std_logic_vector(0 to 31);
+      SIMPBUS_RDATA : out std_logic_vector(0 to 31);
+      SIMPBUS_BE : in std_logic_vector(0 to 3);
+      SIMPBUS_RNW : in std_logic;
+      SIMPBUS_START : in std_logic;
+      SIMPBUS_DONE : out std_logic;
+      SIMPBUS_ERR : out std_logic
     );
   end component;
 
@@ -1023,6 +1023,7 @@ architecture STRUCTURE of system is
   -- Internal signals
 
   signal CLK_S : std_logic;
+  signal Dcm_all_locked : std_logic;
   signal PCIe_Bridge_MSI_request_0 : std_logic;
   signal PCIe_Diff_Clk : std_logic;
   signal central_notifier_0_SIMPBUS_MST_SIMPBUS_ADDR : std_logic_vector(0 to 31);
@@ -1034,8 +1035,6 @@ architecture STRUCTURE of system is
   signal central_notifier_0_SIMPBUS_MST_SIMPBUS_START : std_logic;
   signal central_notifier_0_SIMPBUS_MST_SIMPBUS_WDATA : std_logic_vector(0 to 31);
   signal clk_125_0000MHz : std_logic;
-  signal clock_generator_0_CLKOUT1 : std_logic;
-  signal clock_generator_0_LOCKED : std_logic;
   signal mb_plb_MPLB_Rst : std_logic_vector(0 to 2);
   signal mb_plb_M_ABus : std_logic_vector(0 to 95);
   signal mb_plb_M_BE : std_logic_vector(0 to 23);
@@ -1117,40 +1116,39 @@ architecture STRUCTURE of system is
   signal pgassign2 : std_logic_vector(0 to 0);
   signal pgassign3 : std_logic_vector(0 to 0);
   signal pgassign4 : std_logic_vector(0 to 0);
-  signal proc_sys_reset_0_Bus_Struct_Reset : std_logic_vector(0 to 0);
-  signal riffa_example_0_BRAMPORT_BRAM_Addr : std_logic_vector(0 to 31);
-  signal riffa_example_0_BRAMPORT_BRAM_Clk : std_logic;
-  signal riffa_example_0_BRAMPORT_BRAM_Din : std_logic_vector(0 to 31);
-  signal riffa_example_0_BRAMPORT_BRAM_Dout : std_logic_vector(0 to 31);
-  signal riffa_example_0_BRAMPORT_BRAM_EN : std_logic;
-  signal riffa_example_0_BRAMPORT_BRAM_Rst : std_logic;
-  signal riffa_example_0_BRAMPORT_BRAM_WEN : std_logic_vector(0 to 3);
-  signal riffa_example_0_CHANNEL_BUF_REQ : std_logic;
-  signal riffa_example_0_CHANNEL_BUF_REQD : std_logic;
-  signal riffa_example_0_CHANNEL_BUF_REQD_ADDR : std_logic_vector(31 downto 0);
-  signal riffa_example_0_CHANNEL_BUF_REQD_ERR : std_logic;
-  signal riffa_example_0_CHANNEL_BUF_REQD_RDY : std_logic;
-  signal riffa_example_0_CHANNEL_BUF_REQD_SIZE : std_logic_vector(4 downto 0);
-  signal riffa_example_0_CHANNEL_BUF_REQ_ACK : std_logic;
-  signal riffa_example_0_CHANNEL_BUF_REQ_ADDR : std_logic_vector(31 downto 0);
-  signal riffa_example_0_CHANNEL_BUF_REQ_ERR : std_logic;
-  signal riffa_example_0_CHANNEL_BUF_REQ_RDY : std_logic;
-  signal riffa_example_0_CHANNEL_BUF_REQ_SIZE : std_logic_vector(4 downto 0);
-  signal riffa_example_0_CHANNEL_DMA_DONE : std_logic;
-  signal riffa_example_0_CHANNEL_DMA_DST : std_logic_vector(31 downto 0);
-  signal riffa_example_0_CHANNEL_DMA_ERR : std_logic;
-  signal riffa_example_0_CHANNEL_DMA_LEN : std_logic_vector(31 downto 0);
-  signal riffa_example_0_CHANNEL_DMA_REQ : std_logic;
-  signal riffa_example_0_CHANNEL_DMA_REQ_ACK : std_logic;
-  signal riffa_example_0_CHANNEL_DMA_SIG : std_logic;
-  signal riffa_example_0_CHANNEL_DMA_SRC : std_logic_vector(31 downto 0);
-  signal riffa_example_0_CHANNEL_DOORBELL : std_logic;
-  signal riffa_example_0_CHANNEL_DOORBELL_ARG : std_logic_vector(31 downto 0);
-  signal riffa_example_0_CHANNEL_DOORBELL_ERR : std_logic;
-  signal riffa_example_0_CHANNEL_DOORBELL_LEN : std_logic_vector(31 downto 0);
-  signal riffa_example_0_CHANNEL_INTERRUPT : std_logic;
-  signal riffa_example_0_CHANNEL_INTERRUPT_ACK : std_logic;
-  signal riffa_example_0_CHANNEL_INTERRUPT_ERR : std_logic;
+  signal riffa_tester_0_BRAMPORT_BRAM_Addr : std_logic_vector(0 to 31);
+  signal riffa_tester_0_BRAMPORT_BRAM_Clk : std_logic;
+  signal riffa_tester_0_BRAMPORT_BRAM_Din : std_logic_vector(0 to 31);
+  signal riffa_tester_0_BRAMPORT_BRAM_Dout : std_logic_vector(0 to 31);
+  signal riffa_tester_0_BRAMPORT_BRAM_EN : std_logic;
+  signal riffa_tester_0_BRAMPORT_BRAM_Rst : std_logic;
+  signal riffa_tester_0_BRAMPORT_BRAM_WEN : std_logic_vector(0 to 3);
+  signal riffa_tester_0_CHANNEL_BUF_REQ : std_logic;
+  signal riffa_tester_0_CHANNEL_BUF_REQD : std_logic;
+  signal riffa_tester_0_CHANNEL_BUF_REQD_ADDR : std_logic_vector(31 downto 0);
+  signal riffa_tester_0_CHANNEL_BUF_REQD_ERR : std_logic;
+  signal riffa_tester_0_CHANNEL_BUF_REQD_RDY : std_logic;
+  signal riffa_tester_0_CHANNEL_BUF_REQD_SIZE : std_logic_vector(4 downto 0);
+  signal riffa_tester_0_CHANNEL_BUF_REQ_ACK : std_logic;
+  signal riffa_tester_0_CHANNEL_BUF_REQ_ADDR : std_logic_vector(31 downto 0);
+  signal riffa_tester_0_CHANNEL_BUF_REQ_ERR : std_logic;
+  signal riffa_tester_0_CHANNEL_BUF_REQ_RDY : std_logic;
+  signal riffa_tester_0_CHANNEL_BUF_REQ_SIZE : std_logic_vector(4 downto 0);
+  signal riffa_tester_0_CHANNEL_DMA_DONE : std_logic;
+  signal riffa_tester_0_CHANNEL_DMA_DST : std_logic_vector(31 downto 0);
+  signal riffa_tester_0_CHANNEL_DMA_ERR : std_logic;
+  signal riffa_tester_0_CHANNEL_DMA_LEN : std_logic_vector(31 downto 0);
+  signal riffa_tester_0_CHANNEL_DMA_REQ : std_logic;
+  signal riffa_tester_0_CHANNEL_DMA_REQ_ACK : std_logic;
+  signal riffa_tester_0_CHANNEL_DMA_SIG : std_logic;
+  signal riffa_tester_0_CHANNEL_DMA_SRC : std_logic_vector(31 downto 0);
+  signal riffa_tester_0_CHANNEL_DOORBELL : std_logic;
+  signal riffa_tester_0_CHANNEL_DOORBELL_ARG : std_logic_vector(31 downto 0);
+  signal riffa_tester_0_CHANNEL_DOORBELL_ERR : std_logic;
+  signal riffa_tester_0_CHANNEL_DOORBELL_LEN : std_logic_vector(31 downto 0);
+  signal riffa_tester_0_CHANNEL_INTERRUPT : std_logic;
+  signal riffa_tester_0_CHANNEL_INTERRUPT_ACK : std_logic;
+  signal riffa_tester_0_CHANNEL_INTERRUPT_ERR : std_logic;
   signal simpbus_slv_plbv46_adapter_0_SIMPBUS_SIMPBUS_ADDR : std_logic_vector(31 downto 0);
   signal simpbus_slv_plbv46_adapter_0_SIMPBUS_SIMPBUS_BE : std_logic_vector(3 downto 0);
   signal simpbus_slv_plbv46_adapter_0_SIMPBUS_SIMPBUS_DONE : std_logic;
@@ -1159,6 +1157,7 @@ architecture STRUCTURE of system is
   signal simpbus_slv_plbv46_adapter_0_SIMPBUS_SIMPBUS_RNW : std_logic;
   signal simpbus_slv_plbv46_adapter_0_SIMPBUS_SIMPBUS_START : std_logic;
   signal simpbus_slv_plbv46_adapter_0_SIMPBUS_SIMPBUS_WDATA : std_logic_vector(31 downto 0);
+  signal sys_bus_reset : std_logic_vector(0 to 0);
   signal sys_rst_s : std_logic;
   signal xps_bram_if_cntlr_0_PORTA_BRAM_Addr : std_logic_vector(0 to 31);
   signal xps_bram_if_cntlr_0_PORTA_BRAM_Clk : std_logic;
@@ -1174,12 +1173,12 @@ architecture STRUCTURE of system is
   attribute BOX_TYPE of system_pcie_bridge_wrapper : component is "user_black_box";
   attribute BOX_TYPE of system_xps_central_dma_0_wrapper : component is "user_black_box";
   attribute BOX_TYPE of system_clock_generator_0_wrapper : component is "user_black_box";
+  attribute BOX_TYPE of system_proc_sys_reset_0_wrapper : component is "user_black_box";
   attribute BOX_TYPE of system_central_notifier_0_wrapper : component is "user_black_box";
-  attribute BOX_TYPE of system_simpbus_mst_plbv46_adapter_0_wrapper : component is "user_black_box";
-  attribute BOX_TYPE of system_simpbus_slv_plbv46_adapter_0_wrapper : component is "user_black_box";
   attribute BOX_TYPE of system_bram_block_0_wrapper : component is "user_black_box";
   attribute BOX_TYPE of system_xps_bram_if_cntlr_0_wrapper : component is "user_black_box";
-  attribute BOX_TYPE of system_proc_sys_reset_0_wrapper : component is "user_black_box";
+  attribute BOX_TYPE of system_simpbus_slv_plbv46_adapter_0_wrapper : component is "user_black_box";
+  attribute BOX_TYPE of system_simpbus_mst_plbv46_adapter_0_wrapper : component is "user_black_box";
   attribute BOX_TYPE of system_riffa_example_0_wrapper : component is "user_black_box";
 
 begin
@@ -1201,7 +1200,7 @@ begin
   mb_plb : system_mb_plb_wrapper
     port map (
       PLB_Clk => clk_125_0000MHz,
-      SYS_Rst => proc_sys_reset_0_Bus_Struct_Reset(0),
+      SYS_Rst => sys_bus_reset(0),
       PLB_Rst => open,
       SPLB_Rst => mb_plb_SPLB_Rst,
       MPLB_Rst => mb_plb_MPLB_Rst,
@@ -1468,7 +1467,7 @@ begin
     port map (
       CLKIN => CLK_S,
       CLKOUT0 => clk_125_0000MHz,
-      CLKOUT1 => clock_generator_0_CLKOUT1,
+      CLKOUT1 => open,
       CLKOUT2 => open,
       CLKOUT3 => open,
       CLKOUT4 => open,
@@ -1490,13 +1489,39 @@ begin
       PSINCDEC => net_gnd0,
       PSDONE => open,
       RST => sys_rst_s,
-      LOCKED => clock_generator_0_LOCKED
+      LOCKED => Dcm_all_locked
+    );
+
+  proc_sys_reset_0 : system_proc_sys_reset_0_wrapper
+    port map (
+      Slowest_sync_clk => clk_125_0000MHz,
+      Ext_Reset_In => sys_rst_s,
+      Aux_Reset_In => net_gnd0,
+      MB_Debug_Sys_Rst => net_gnd0,
+      Core_Reset_Req_0 => net_gnd0,
+      Chip_Reset_Req_0 => net_gnd0,
+      System_Reset_Req_0 => net_gnd0,
+      Core_Reset_Req_1 => net_gnd0,
+      Chip_Reset_Req_1 => net_gnd0,
+      System_Reset_Req_1 => net_gnd0,
+      Dcm_locked => Dcm_all_locked,
+      RstcPPCresetcore_0 => open,
+      RstcPPCresetchip_0 => open,
+      RstcPPCresetsys_0 => open,
+      RstcPPCresetcore_1 => open,
+      RstcPPCresetchip_1 => open,
+      RstcPPCresetsys_1 => open,
+      MB_Reset => open,
+      Bus_Struct_Reset => sys_bus_reset(0 to 0),
+      Peripheral_Reset => open,
+      Interconnect_aresetn => open,
+      Peripheral_aresetn => open
     );
 
   central_notifier_0 : system_central_notifier_0_wrapper
     port map (
-      SYS_CLK => clock_generator_0_CLKOUT1,
-      SYS_RST => proc_sys_reset_0_Bus_Struct_Reset(0),
+      SYS_CLK => clk_125_0000MHz,
+      SYS_RST => sys_bus_reset(0),
       INTR_PCI => PCIe_Bridge_MSI_request_0,
       INTR_DMA => xps_central_dma_0_IP2INTC_Irpt,
       INIT_START => open,
@@ -1525,32 +1550,32 @@ begin
       SIMPBUS_SLV_START => simpbus_slv_plbv46_adapter_0_SIMPBUS_SIMPBUS_START,
       SIMPBUS_SLV_DONE => simpbus_slv_plbv46_adapter_0_SIMPBUS_SIMPBUS_DONE,
       SIMPBUS_SLV_ERR => simpbus_slv_plbv46_adapter_0_SIMPBUS_SIMPBUS_ERR,
-      INTERRUPT_00 => riffa_example_0_CHANNEL_INTERRUPT,
-      INTERRUPT_ERR_00 => riffa_example_0_CHANNEL_INTERRUPT_ERR,
-      INTERRUPT_ACK_00 => riffa_example_0_CHANNEL_INTERRUPT_ACK,
-      DOORBELL_00 => riffa_example_0_CHANNEL_DOORBELL,
-      DOORBELL_ERR_00 => riffa_example_0_CHANNEL_DOORBELL_ERR,
-      DOORBELL_LEN_00 => riffa_example_0_CHANNEL_DOORBELL_LEN,
-      DOORBELL_ARG_00 => riffa_example_0_CHANNEL_DOORBELL_ARG,
-      DMA_REQ_00 => riffa_example_0_CHANNEL_DMA_REQ,
-      DMA_REQ_ACK_00 => riffa_example_0_CHANNEL_DMA_REQ_ACK,
-      DMA_SRC_00 => riffa_example_0_CHANNEL_DMA_SRC,
-      DMA_DST_00 => riffa_example_0_CHANNEL_DMA_DST,
-      DMA_LEN_00 => riffa_example_0_CHANNEL_DMA_LEN,
-      DMA_SIG_00 => riffa_example_0_CHANNEL_DMA_SIG,
-      DMA_DONE_00 => riffa_example_0_CHANNEL_DMA_DONE,
-      DMA_ERR_00 => riffa_example_0_CHANNEL_DMA_ERR,
-      BUF_REQ_00 => riffa_example_0_CHANNEL_BUF_REQ,
-      BUF_REQ_ACK_00 => riffa_example_0_CHANNEL_BUF_REQ_ACK,
-      BUF_REQ_ADDR_00 => riffa_example_0_CHANNEL_BUF_REQ_ADDR,
-      BUF_REQ_SIZE_00 => riffa_example_0_CHANNEL_BUF_REQ_SIZE,
-      BUF_REQ_RDY_00 => riffa_example_0_CHANNEL_BUF_REQ_RDY,
-      BUF_REQ_ERR_00 => riffa_example_0_CHANNEL_BUF_REQ_ERR,
-      BUF_REQD_00 => riffa_example_0_CHANNEL_BUF_REQD,
-      BUF_REQD_ADDR_00 => riffa_example_0_CHANNEL_BUF_REQD_ADDR,
-      BUF_REQD_SIZE_00 => riffa_example_0_CHANNEL_BUF_REQD_SIZE,
-      BUF_REQD_RDY_00 => riffa_example_0_CHANNEL_BUF_REQD_RDY,
-      BUF_REQD_ERR_00 => riffa_example_0_CHANNEL_BUF_REQD_ERR,
+      INTERRUPT_00 => riffa_tester_0_CHANNEL_INTERRUPT,
+      INTERRUPT_ERR_00 => riffa_tester_0_CHANNEL_INTERRUPT_ERR,
+      INTERRUPT_ACK_00 => riffa_tester_0_CHANNEL_INTERRUPT_ACK,
+      DOORBELL_00 => riffa_tester_0_CHANNEL_DOORBELL,
+      DOORBELL_ERR_00 => riffa_tester_0_CHANNEL_DOORBELL_ERR,
+      DOORBELL_LEN_00 => riffa_tester_0_CHANNEL_DOORBELL_LEN,
+      DOORBELL_ARG_00 => riffa_tester_0_CHANNEL_DOORBELL_ARG,
+      DMA_REQ_00 => riffa_tester_0_CHANNEL_DMA_REQ,
+      DMA_REQ_ACK_00 => riffa_tester_0_CHANNEL_DMA_REQ_ACK,
+      DMA_SRC_00 => riffa_tester_0_CHANNEL_DMA_SRC,
+      DMA_DST_00 => riffa_tester_0_CHANNEL_DMA_DST,
+      DMA_LEN_00 => riffa_tester_0_CHANNEL_DMA_LEN,
+      DMA_SIG_00 => riffa_tester_0_CHANNEL_DMA_SIG,
+      DMA_DONE_00 => riffa_tester_0_CHANNEL_DMA_DONE,
+      DMA_ERR_00 => riffa_tester_0_CHANNEL_DMA_ERR,
+      BUF_REQ_00 => riffa_tester_0_CHANNEL_BUF_REQ,
+      BUF_REQ_ACK_00 => riffa_tester_0_CHANNEL_BUF_REQ_ACK,
+      BUF_REQ_ADDR_00 => riffa_tester_0_CHANNEL_BUF_REQ_ADDR,
+      BUF_REQ_SIZE_00 => riffa_tester_0_CHANNEL_BUF_REQ_SIZE,
+      BUF_REQ_RDY_00 => riffa_tester_0_CHANNEL_BUF_REQ_RDY,
+      BUF_REQ_ERR_00 => riffa_tester_0_CHANNEL_BUF_REQ_ERR,
+      BUF_REQD_00 => riffa_tester_0_CHANNEL_BUF_REQD,
+      BUF_REQD_ADDR_00 => riffa_tester_0_CHANNEL_BUF_REQD_ADDR,
+      BUF_REQD_SIZE_00 => riffa_tester_0_CHANNEL_BUF_REQD_SIZE,
+      BUF_REQD_RDY_00 => riffa_tester_0_CHANNEL_BUF_REQD_RDY,
+      BUF_REQD_ERR_00 => riffa_tester_0_CHANNEL_BUF_REQD_ERR,
       INTERRUPT_01 => net_gnd0,
       INTERRUPT_ERR_01 => net_gnd0,
       INTERRUPT_ACK_01 => open,
@@ -1943,6 +1968,131 @@ begin
       BUF_REQD_ERR_15 => net_gnd0
     );
 
+  bram_block_0 : system_bram_block_0_wrapper
+    port map (
+      BRAM_Rst_A => xps_bram_if_cntlr_0_PORTA_BRAM_Rst,
+      BRAM_Clk_A => xps_bram_if_cntlr_0_PORTA_BRAM_Clk,
+      BRAM_EN_A => xps_bram_if_cntlr_0_PORTA_BRAM_EN,
+      BRAM_WEN_A => xps_bram_if_cntlr_0_PORTA_BRAM_WEN,
+      BRAM_Addr_A => xps_bram_if_cntlr_0_PORTA_BRAM_Addr,
+      BRAM_Din_A => xps_bram_if_cntlr_0_PORTA_BRAM_Din,
+      BRAM_Dout_A => xps_bram_if_cntlr_0_PORTA_BRAM_Dout,
+      BRAM_Rst_B => riffa_tester_0_BRAMPORT_BRAM_Rst,
+      BRAM_Clk_B => riffa_tester_0_BRAMPORT_BRAM_Clk,
+      BRAM_EN_B => riffa_tester_0_BRAMPORT_BRAM_EN,
+      BRAM_WEN_B => riffa_tester_0_BRAMPORT_BRAM_WEN,
+      BRAM_Addr_B => riffa_tester_0_BRAMPORT_BRAM_Addr,
+      BRAM_Din_B => riffa_tester_0_BRAMPORT_BRAM_Din,
+      BRAM_Dout_B => riffa_tester_0_BRAMPORT_BRAM_Dout
+    );
+
+  xps_bram_if_cntlr_0 : system_xps_bram_if_cntlr_0_wrapper
+    port map (
+      SPLB_Clk => clk_125_0000MHz,
+      SPLB_Rst => mb_plb_SPLB_Rst(2),
+      PLB_ABus => mb_plb_PLB_ABus,
+      PLB_UABus => mb_plb_PLB_UABus,
+      PLB_PAValid => mb_plb_PLB_PAValid,
+      PLB_SAValid => mb_plb_PLB_SAValid,
+      PLB_rdPrim => mb_plb_PLB_rdPrim(2),
+      PLB_wrPrim => mb_plb_PLB_wrPrim(2),
+      PLB_masterID => mb_plb_PLB_masterID,
+      PLB_abort => mb_plb_PLB_abort,
+      PLB_busLock => mb_plb_PLB_busLock,
+      PLB_RNW => mb_plb_PLB_RNW,
+      PLB_BE => mb_plb_PLB_BE,
+      PLB_MSize => mb_plb_PLB_MSize,
+      PLB_size => mb_plb_PLB_size,
+      PLB_type => mb_plb_PLB_type,
+      PLB_lockErr => mb_plb_PLB_lockErr,
+      PLB_wrDBus => mb_plb_PLB_wrDBus,
+      PLB_wrBurst => mb_plb_PLB_wrBurst,
+      PLB_rdBurst => mb_plb_PLB_rdBurst,
+      PLB_wrPendReq => mb_plb_PLB_wrPendReq,
+      PLB_rdPendReq => mb_plb_PLB_rdPendReq,
+      PLB_wrPendPri => mb_plb_PLB_wrPendPri,
+      PLB_rdPendPri => mb_plb_PLB_rdPendPri,
+      PLB_reqPri => mb_plb_PLB_reqPri,
+      PLB_TAttribute => mb_plb_PLB_TAttribute,
+      Sl_addrAck => mb_plb_Sl_addrAck(2),
+      Sl_SSize => mb_plb_Sl_SSize(4 to 5),
+      Sl_wait => mb_plb_Sl_wait(2),
+      Sl_rearbitrate => mb_plb_Sl_rearbitrate(2),
+      Sl_wrDAck => mb_plb_Sl_wrDAck(2),
+      Sl_wrComp => mb_plb_Sl_wrComp(2),
+      Sl_wrBTerm => mb_plb_Sl_wrBTerm(2),
+      Sl_rdDBus => mb_plb_Sl_rdDBus(128 to 191),
+      Sl_rdWdAddr => mb_plb_Sl_rdWdAddr(8 to 11),
+      Sl_rdDAck => mb_plb_Sl_rdDAck(2),
+      Sl_rdComp => mb_plb_Sl_rdComp(2),
+      Sl_rdBTerm => mb_plb_Sl_rdBTerm(2),
+      Sl_MBusy => mb_plb_Sl_MBusy(6 to 8),
+      Sl_MWrErr => mb_plb_Sl_MWrErr(6 to 8),
+      Sl_MRdErr => mb_plb_Sl_MRdErr(6 to 8),
+      Sl_MIRQ => mb_plb_Sl_MIRQ(6 to 8),
+      BRAM_Rst => xps_bram_if_cntlr_0_PORTA_BRAM_Rst,
+      BRAM_Clk => xps_bram_if_cntlr_0_PORTA_BRAM_Clk,
+      BRAM_EN => xps_bram_if_cntlr_0_PORTA_BRAM_EN,
+      BRAM_WEN => xps_bram_if_cntlr_0_PORTA_BRAM_WEN,
+      BRAM_Addr => xps_bram_if_cntlr_0_PORTA_BRAM_Addr,
+      BRAM_Din => xps_bram_if_cntlr_0_PORTA_BRAM_Din,
+      BRAM_Dout => xps_bram_if_cntlr_0_PORTA_BRAM_Dout
+    );
+
+  simpbus_slv_plbv46_adapter_0 : system_simpbus_slv_plbv46_adapter_0_wrapper
+    port map (
+      SPLB_Clk => clk_125_0000MHz,
+      SPLB_Rst => mb_plb_SPLB_Rst(3),
+      PLB_ABus => mb_plb_PLB_ABus,
+      PLB_UABus => mb_plb_PLB_UABus,
+      PLB_PAValid => mb_plb_PLB_PAValid,
+      PLB_SAValid => mb_plb_PLB_SAValid,
+      PLB_rdPrim => mb_plb_PLB_rdPrim(3),
+      PLB_wrPrim => mb_plb_PLB_wrPrim(3),
+      PLB_masterID => mb_plb_PLB_masterID,
+      PLB_abort => mb_plb_PLB_abort,
+      PLB_busLock => mb_plb_PLB_busLock,
+      PLB_RNW => mb_plb_PLB_RNW,
+      PLB_BE => mb_plb_PLB_BE,
+      PLB_MSize => mb_plb_PLB_MSize,
+      PLB_size => mb_plb_PLB_size,
+      PLB_type => mb_plb_PLB_type,
+      PLB_lockErr => mb_plb_PLB_lockErr,
+      PLB_wrDBus => mb_plb_PLB_wrDBus,
+      PLB_wrBurst => mb_plb_PLB_wrBurst,
+      PLB_rdBurst => mb_plb_PLB_rdBurst,
+      PLB_wrPendReq => mb_plb_PLB_wrPendReq,
+      PLB_rdPendReq => mb_plb_PLB_rdPendReq,
+      PLB_wrPendPri => mb_plb_PLB_wrPendPri,
+      PLB_rdPendPri => mb_plb_PLB_rdPendPri,
+      PLB_reqPri => mb_plb_PLB_reqPri,
+      PLB_TAttribute => mb_plb_PLB_TAttribute,
+      Sl_addrAck => mb_plb_Sl_addrAck(3),
+      Sl_SSize => mb_plb_Sl_SSize(6 to 7),
+      Sl_wait => mb_plb_Sl_wait(3),
+      Sl_rearbitrate => mb_plb_Sl_rearbitrate(3),
+      Sl_wrDAck => mb_plb_Sl_wrDAck(3),
+      Sl_wrComp => mb_plb_Sl_wrComp(3),
+      Sl_wrBTerm => mb_plb_Sl_wrBTerm(3),
+      Sl_rdDBus => mb_plb_Sl_rdDBus(192 to 255),
+      Sl_rdWdAddr => mb_plb_Sl_rdWdAddr(12 to 15),
+      Sl_rdDAck => mb_plb_Sl_rdDAck(3),
+      Sl_rdComp => mb_plb_Sl_rdComp(3),
+      Sl_rdBTerm => mb_plb_Sl_rdBTerm(3),
+      Sl_MBusy => mb_plb_Sl_MBusy(9 to 11),
+      Sl_MWrErr => mb_plb_Sl_MWrErr(9 to 11),
+      Sl_MRdErr => mb_plb_Sl_MRdErr(9 to 11),
+      Sl_MIRQ => mb_plb_Sl_MIRQ(9 to 11),
+      SIMPBUS_ADDR => simpbus_slv_plbv46_adapter_0_SIMPBUS_SIMPBUS_ADDR(31 downto 0),
+      SIMPBUS_WDATA => simpbus_slv_plbv46_adapter_0_SIMPBUS_SIMPBUS_WDATA(31 downto 0),
+      SIMPBUS_RDATA => simpbus_slv_plbv46_adapter_0_SIMPBUS_SIMPBUS_RDATA,
+      SIMPBUS_BE => simpbus_slv_plbv46_adapter_0_SIMPBUS_SIMPBUS_BE(3 downto 0),
+      SIMPBUS_RNW => simpbus_slv_plbv46_adapter_0_SIMPBUS_SIMPBUS_RNW,
+      SIMPBUS_START => simpbus_slv_plbv46_adapter_0_SIMPBUS_SIMPBUS_START,
+      SIMPBUS_DONE => simpbus_slv_plbv46_adapter_0_SIMPBUS_SIMPBUS_DONE,
+      SIMPBUS_ERR => simpbus_slv_plbv46_adapter_0_SIMPBUS_SIMPBUS_ERR
+    );
+
   simpbus_mst_plbv46_adapter_0 : system_simpbus_mst_plbv46_adapter_0_wrapper
     port map (
       MPLB_Clk => clk_125_0000MHz,
@@ -1987,194 +2137,43 @@ begin
       SIMPBUS_ERR => central_notifier_0_SIMPBUS_MST_SIMPBUS_ERR
     );
 
-  simpbus_slv_plbv46_adapter_0 : system_simpbus_slv_plbv46_adapter_0_wrapper
-    port map (
-      SPLB_Clk => clk_125_0000MHz,
-      SPLB_Rst => mb_plb_SPLB_Rst(2),
-      PLB_ABus => mb_plb_PLB_ABus,
-      PLB_UABus => mb_plb_PLB_UABus,
-      PLB_PAValid => mb_plb_PLB_PAValid,
-      PLB_SAValid => mb_plb_PLB_SAValid,
-      PLB_rdPrim => mb_plb_PLB_rdPrim(2),
-      PLB_wrPrim => mb_plb_PLB_wrPrim(2),
-      PLB_masterID => mb_plb_PLB_masterID,
-      PLB_abort => mb_plb_PLB_abort,
-      PLB_busLock => mb_plb_PLB_busLock,
-      PLB_RNW => mb_plb_PLB_RNW,
-      PLB_BE => mb_plb_PLB_BE,
-      PLB_MSize => mb_plb_PLB_MSize,
-      PLB_size => mb_plb_PLB_size,
-      PLB_type => mb_plb_PLB_type,
-      PLB_lockErr => mb_plb_PLB_lockErr,
-      PLB_wrDBus => mb_plb_PLB_wrDBus,
-      PLB_wrBurst => mb_plb_PLB_wrBurst,
-      PLB_rdBurst => mb_plb_PLB_rdBurst,
-      PLB_wrPendReq => mb_plb_PLB_wrPendReq,
-      PLB_rdPendReq => mb_plb_PLB_rdPendReq,
-      PLB_wrPendPri => mb_plb_PLB_wrPendPri,
-      PLB_rdPendPri => mb_plb_PLB_rdPendPri,
-      PLB_reqPri => mb_plb_PLB_reqPri,
-      PLB_TAttribute => mb_plb_PLB_TAttribute,
-      Sl_addrAck => mb_plb_Sl_addrAck(2),
-      Sl_SSize => mb_plb_Sl_SSize(4 to 5),
-      Sl_wait => mb_plb_Sl_wait(2),
-      Sl_rearbitrate => mb_plb_Sl_rearbitrate(2),
-      Sl_wrDAck => mb_plb_Sl_wrDAck(2),
-      Sl_wrComp => mb_plb_Sl_wrComp(2),
-      Sl_wrBTerm => mb_plb_Sl_wrBTerm(2),
-      Sl_rdDBus => mb_plb_Sl_rdDBus(128 to 191),
-      Sl_rdWdAddr => mb_plb_Sl_rdWdAddr(8 to 11),
-      Sl_rdDAck => mb_plb_Sl_rdDAck(2),
-      Sl_rdComp => mb_plb_Sl_rdComp(2),
-      Sl_rdBTerm => mb_plb_Sl_rdBTerm(2),
-      Sl_MBusy => mb_plb_Sl_MBusy(6 to 8),
-      Sl_MWrErr => mb_plb_Sl_MWrErr(6 to 8),
-      Sl_MRdErr => mb_plb_Sl_MRdErr(6 to 8),
-      Sl_MIRQ => mb_plb_Sl_MIRQ(6 to 8),
-      SIMPBUS_ADDR => simpbus_slv_plbv46_adapter_0_SIMPBUS_SIMPBUS_ADDR(31 downto 0),
-      SIMPBUS_WDATA => simpbus_slv_plbv46_adapter_0_SIMPBUS_SIMPBUS_WDATA(31 downto 0),
-      SIMPBUS_RDATA => simpbus_slv_plbv46_adapter_0_SIMPBUS_SIMPBUS_RDATA,
-      SIMPBUS_BE => simpbus_slv_plbv46_adapter_0_SIMPBUS_SIMPBUS_BE(3 downto 0),
-      SIMPBUS_RNW => simpbus_slv_plbv46_adapter_0_SIMPBUS_SIMPBUS_RNW,
-      SIMPBUS_START => simpbus_slv_plbv46_adapter_0_SIMPBUS_SIMPBUS_START,
-      SIMPBUS_DONE => simpbus_slv_plbv46_adapter_0_SIMPBUS_SIMPBUS_DONE,
-      SIMPBUS_ERR => simpbus_slv_plbv46_adapter_0_SIMPBUS_SIMPBUS_ERR
-    );
-
-  bram_block_0 : system_bram_block_0_wrapper
-    port map (
-      BRAM_Rst_A => xps_bram_if_cntlr_0_PORTA_BRAM_Rst,
-      BRAM_Clk_A => xps_bram_if_cntlr_0_PORTA_BRAM_Clk,
-      BRAM_EN_A => xps_bram_if_cntlr_0_PORTA_BRAM_EN,
-      BRAM_WEN_A => xps_bram_if_cntlr_0_PORTA_BRAM_WEN,
-      BRAM_Addr_A => xps_bram_if_cntlr_0_PORTA_BRAM_Addr,
-      BRAM_Din_A => xps_bram_if_cntlr_0_PORTA_BRAM_Din,
-      BRAM_Dout_A => xps_bram_if_cntlr_0_PORTA_BRAM_Dout,
-      BRAM_Rst_B => riffa_example_0_BRAMPORT_BRAM_Rst,
-      BRAM_Clk_B => riffa_example_0_BRAMPORT_BRAM_Clk,
-      BRAM_EN_B => riffa_example_0_BRAMPORT_BRAM_EN,
-      BRAM_WEN_B => riffa_example_0_BRAMPORT_BRAM_WEN,
-      BRAM_Addr_B => riffa_example_0_BRAMPORT_BRAM_Addr,
-      BRAM_Din_B => riffa_example_0_BRAMPORT_BRAM_Din,
-      BRAM_Dout_B => riffa_example_0_BRAMPORT_BRAM_Dout
-    );
-
-  xps_bram_if_cntlr_0 : system_xps_bram_if_cntlr_0_wrapper
-    port map (
-      SPLB_Clk => clk_125_0000MHz,
-      SPLB_Rst => mb_plb_SPLB_Rst(3),
-      PLB_ABus => mb_plb_PLB_ABus,
-      PLB_UABus => mb_plb_PLB_UABus,
-      PLB_PAValid => mb_plb_PLB_PAValid,
-      PLB_SAValid => mb_plb_PLB_SAValid,
-      PLB_rdPrim => mb_plb_PLB_rdPrim(3),
-      PLB_wrPrim => mb_plb_PLB_wrPrim(3),
-      PLB_masterID => mb_plb_PLB_masterID,
-      PLB_abort => mb_plb_PLB_abort,
-      PLB_busLock => mb_plb_PLB_busLock,
-      PLB_RNW => mb_plb_PLB_RNW,
-      PLB_BE => mb_plb_PLB_BE,
-      PLB_MSize => mb_plb_PLB_MSize,
-      PLB_size => mb_plb_PLB_size,
-      PLB_type => mb_plb_PLB_type,
-      PLB_lockErr => mb_plb_PLB_lockErr,
-      PLB_wrDBus => mb_plb_PLB_wrDBus,
-      PLB_wrBurst => mb_plb_PLB_wrBurst,
-      PLB_rdBurst => mb_plb_PLB_rdBurst,
-      PLB_wrPendReq => mb_plb_PLB_wrPendReq,
-      PLB_rdPendReq => mb_plb_PLB_rdPendReq,
-      PLB_wrPendPri => mb_plb_PLB_wrPendPri,
-      PLB_rdPendPri => mb_plb_PLB_rdPendPri,
-      PLB_reqPri => mb_plb_PLB_reqPri,
-      PLB_TAttribute => mb_plb_PLB_TAttribute,
-      Sl_addrAck => mb_plb_Sl_addrAck(3),
-      Sl_SSize => mb_plb_Sl_SSize(6 to 7),
-      Sl_wait => mb_plb_Sl_wait(3),
-      Sl_rearbitrate => mb_plb_Sl_rearbitrate(3),
-      Sl_wrDAck => mb_plb_Sl_wrDAck(3),
-      Sl_wrComp => mb_plb_Sl_wrComp(3),
-      Sl_wrBTerm => mb_plb_Sl_wrBTerm(3),
-      Sl_rdDBus => mb_plb_Sl_rdDBus(192 to 255),
-      Sl_rdWdAddr => mb_plb_Sl_rdWdAddr(12 to 15),
-      Sl_rdDAck => mb_plb_Sl_rdDAck(3),
-      Sl_rdComp => mb_plb_Sl_rdComp(3),
-      Sl_rdBTerm => mb_plb_Sl_rdBTerm(3),
-      Sl_MBusy => mb_plb_Sl_MBusy(9 to 11),
-      Sl_MWrErr => mb_plb_Sl_MWrErr(9 to 11),
-      Sl_MRdErr => mb_plb_Sl_MRdErr(9 to 11),
-      Sl_MIRQ => mb_plb_Sl_MIRQ(9 to 11),
-      BRAM_Rst => xps_bram_if_cntlr_0_PORTA_BRAM_Rst,
-      BRAM_Clk => xps_bram_if_cntlr_0_PORTA_BRAM_Clk,
-      BRAM_EN => xps_bram_if_cntlr_0_PORTA_BRAM_EN,
-      BRAM_WEN => xps_bram_if_cntlr_0_PORTA_BRAM_WEN,
-      BRAM_Addr => xps_bram_if_cntlr_0_PORTA_BRAM_Addr,
-      BRAM_Din => xps_bram_if_cntlr_0_PORTA_BRAM_Din,
-      BRAM_Dout => xps_bram_if_cntlr_0_PORTA_BRAM_Dout
-    );
-
-  proc_sys_reset_0 : system_proc_sys_reset_0_wrapper
-    port map (
-      Slowest_sync_clk => clock_generator_0_CLKOUT1,
-      Ext_Reset_In => sys_rst_s,
-      Aux_Reset_In => net_gnd0,
-      MB_Debug_Sys_Rst => net_gnd0,
-      Core_Reset_Req_0 => net_gnd0,
-      Chip_Reset_Req_0 => net_gnd0,
-      System_Reset_Req_0 => net_gnd0,
-      Core_Reset_Req_1 => net_gnd0,
-      Chip_Reset_Req_1 => net_gnd0,
-      System_Reset_Req_1 => net_gnd0,
-      Dcm_locked => clock_generator_0_LOCKED,
-      RstcPPCresetcore_0 => open,
-      RstcPPCresetchip_0 => open,
-      RstcPPCresetsys_0 => open,
-      RstcPPCresetcore_1 => open,
-      RstcPPCresetchip_1 => open,
-      RstcPPCresetsys_1 => open,
-      MB_Reset => open,
-      Bus_Struct_Reset => proc_sys_reset_0_Bus_Struct_Reset(0 to 0),
-      Peripheral_Reset => open,
-      Interconnect_aresetn => open,
-      Peripheral_aresetn => open
-    );
-
   riffa_example_0 : system_riffa_example_0_wrapper
     port map (
-      SYS_CLK => clock_generator_0_CLKOUT1,
-      SYS_RST => proc_sys_reset_0_Bus_Struct_Reset(0),
-      INTERRUPT => riffa_example_0_CHANNEL_INTERRUPT,
-      INTERRUPT_ERR => riffa_example_0_CHANNEL_INTERRUPT_ERR,
-      INTERRUPT_ACK => riffa_example_0_CHANNEL_INTERRUPT_ACK,
-      DOORBELL => riffa_example_0_CHANNEL_DOORBELL,
-      DOORBELL_ERR => riffa_example_0_CHANNEL_DOORBELL_ERR,
-      DOORBELL_LEN => riffa_example_0_CHANNEL_DOORBELL_LEN,
-      DOORBELL_ARG => riffa_example_0_CHANNEL_DOORBELL_ARG,
-      DMA_REQ => riffa_example_0_CHANNEL_DMA_REQ,
-      DMA_REQ_ACK => riffa_example_0_CHANNEL_DMA_REQ_ACK,
-      DMA_SRC => riffa_example_0_CHANNEL_DMA_SRC,
-      DMA_DST => riffa_example_0_CHANNEL_DMA_DST,
-      DMA_LEN => riffa_example_0_CHANNEL_DMA_LEN,
-      DMA_SIG => riffa_example_0_CHANNEL_DMA_SIG,
-      DMA_DONE => riffa_example_0_CHANNEL_DMA_DONE,
-      DMA_ERR => riffa_example_0_CHANNEL_DMA_ERR,
-      BUF_REQ => riffa_example_0_CHANNEL_BUF_REQ,
-      BUF_REQ_ACK => riffa_example_0_CHANNEL_BUF_REQ_ACK,
-      BUF_REQ_ADDR => riffa_example_0_CHANNEL_BUF_REQ_ADDR,
-      BUF_REQ_SIZE => riffa_example_0_CHANNEL_BUF_REQ_SIZE,
-      BUF_REQ_RDY => riffa_example_0_CHANNEL_BUF_REQ_RDY,
-      BUF_REQ_ERR => riffa_example_0_CHANNEL_BUF_REQ_ERR,
-      BUF_REQD => riffa_example_0_CHANNEL_BUF_REQD,
-      BUF_REQD_ADDR => riffa_example_0_CHANNEL_BUF_REQD_ADDR,
-      BUF_REQD_SIZE => riffa_example_0_CHANNEL_BUF_REQD_SIZE,
-      BUF_REQD_RDY => riffa_example_0_CHANNEL_BUF_REQD_RDY,
-      BUF_REQD_ERR => riffa_example_0_CHANNEL_BUF_REQD_ERR,
-      BRAM_Rst => riffa_example_0_BRAMPORT_BRAM_Rst,
-      BRAM_Clk => riffa_example_0_BRAMPORT_BRAM_Clk,
-      BRAM_EN => riffa_example_0_BRAMPORT_BRAM_EN,
-      BRAM_WEN => riffa_example_0_BRAMPORT_BRAM_WEN,
-      BRAM_Addr => riffa_example_0_BRAMPORT_BRAM_Addr,
-      BRAM_Din => riffa_example_0_BRAMPORT_BRAM_Din,
-      BRAM_Dout => riffa_example_0_BRAMPORT_BRAM_Dout
+      SYS_CLK => clk_125_0000MHz,
+      SYS_RST => sys_bus_reset(0),
+      INTERRUPT => riffa_tester_0_CHANNEL_INTERRUPT,
+      INTERRUPT_ERR => riffa_tester_0_CHANNEL_INTERRUPT_ERR,
+      INTERRUPT_ACK => riffa_tester_0_CHANNEL_INTERRUPT_ACK,
+      DOORBELL => riffa_tester_0_CHANNEL_DOORBELL,
+      DOORBELL_ERR => riffa_tester_0_CHANNEL_DOORBELL_ERR,
+      DOORBELL_LEN => riffa_tester_0_CHANNEL_DOORBELL_LEN,
+      DOORBELL_ARG => riffa_tester_0_CHANNEL_DOORBELL_ARG,
+      DMA_REQ => riffa_tester_0_CHANNEL_DMA_REQ,
+      DMA_REQ_ACK => riffa_tester_0_CHANNEL_DMA_REQ_ACK,
+      DMA_SRC => riffa_tester_0_CHANNEL_DMA_SRC,
+      DMA_DST => riffa_tester_0_CHANNEL_DMA_DST,
+      DMA_LEN => riffa_tester_0_CHANNEL_DMA_LEN,
+      DMA_SIG => riffa_tester_0_CHANNEL_DMA_SIG,
+      DMA_DONE => riffa_tester_0_CHANNEL_DMA_DONE,
+      DMA_ERR => riffa_tester_0_CHANNEL_DMA_ERR,
+      BUF_REQ => riffa_tester_0_CHANNEL_BUF_REQ,
+      BUF_REQ_ACK => riffa_tester_0_CHANNEL_BUF_REQ_ACK,
+      BUF_REQ_ADDR => riffa_tester_0_CHANNEL_BUF_REQ_ADDR,
+      BUF_REQ_SIZE => riffa_tester_0_CHANNEL_BUF_REQ_SIZE,
+      BUF_REQ_RDY => riffa_tester_0_CHANNEL_BUF_REQ_RDY,
+      BUF_REQ_ERR => riffa_tester_0_CHANNEL_BUF_REQ_ERR,
+      BUF_REQD => riffa_tester_0_CHANNEL_BUF_REQD,
+      BUF_REQD_ADDR => riffa_tester_0_CHANNEL_BUF_REQD_ADDR,
+      BUF_REQD_SIZE => riffa_tester_0_CHANNEL_BUF_REQD_SIZE,
+      BUF_REQD_RDY => riffa_tester_0_CHANNEL_BUF_REQD_RDY,
+      BUF_REQD_ERR => riffa_tester_0_CHANNEL_BUF_REQD_ERR,
+      BRAM_Rst => riffa_tester_0_BRAMPORT_BRAM_Rst,
+      BRAM_Clk => riffa_tester_0_BRAMPORT_BRAM_Clk,
+      BRAM_EN => riffa_tester_0_BRAMPORT_BRAM_EN,
+      BRAM_WEN => riffa_tester_0_BRAMPORT_BRAM_WEN,
+      BRAM_Addr => riffa_tester_0_BRAMPORT_BRAM_Addr,
+      BRAM_Din => riffa_tester_0_BRAMPORT_BRAM_Din,
+      BRAM_Dout => riffa_tester_0_BRAMPORT_BRAM_Dout
     );
 
   ibufgds_0 : IBUFGDS
