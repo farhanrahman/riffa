@@ -112,6 +112,12 @@ PORT(
 	BRAM_Addr				: OUT std_logic_vector(31 DOWNTO 0)
 );
 
+--attribute SIGIS : string;
+--attribute SIGIS of SYS_CLK     		: signal is "CLK";
+--attribute SIGIS of SYS_RST      		: signal is "RST";
+--attribute SIGIS of BRAM_Clk      		: signal is "CLK";
+--attribute SIGIS of BRAM_Rst      		: signal is "RST";
+
 END ENTITY riffa_interface;
 
 
@@ -204,8 +210,8 @@ BEGIN
 				IF (INTERRUPT_ACK = '1') THEN
 					nstate <= idle; --go to idle state if PC sends interrupt ack signal back
 				END IF;
-			WHEN process_data => NULL;
-			WHEN OTHERS => NULL;	
+			WHEN process_data => nstate <= interrupt_state;
+			WHEN OTHERS => nstate <= idle;	
 		END CASE;
 	END IF;
 
@@ -248,8 +254,12 @@ WAIT UNTIL rising_edge(SYS_CLK);
 		r_interrupt <= '0';
 		r_interrupt_err <= '0';
 		
-		IF (state = PC2FPGA_Data_transfer_wait AND DOORBELL = '1' AND DOORBELL_ERR = '0') THEN
-			bramAddress <= slv(usg(bramAddress) + usg(DOORBELL_LEN)*8); --Increment the pointer with however many bits were transferred
+		IF (state = PC2FPGA_Data_transfer_wait) THEN
+			bramWEN <= (OTHERS => '1');
+		END IF;
+		
+		IF (state = PC2FPGA_Data_transfer_wait AND DOORBELL = '1' AND DOORBELL_ERR = '0' AND DOORBELL_LEN /= SIMPBUS_ZERO) THEN
+			bramAddress <= slv(usg(bramAddress) + 1);--usg(DOORBELL_LEN)*8); --Increment the pointer with however many bits were transferred
 		END IF;
 		
 		IF (state = interrupt_state OR state = interrupt_err_state) THEN
