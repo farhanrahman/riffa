@@ -130,10 +130,8 @@ TYPE states IS (
 			--PROCESSING STATE
 			process_data,
 			--SENDING DATA BACK TO PC STATE
-			request_buffer, 
-			get_buffer, 
-			request_dma, 
-			wait_for_dma,
+			dma_transfer,
+			--Done states
 			interrupt_state,
 			interrupt_err_state
 			);
@@ -141,10 +139,6 @@ SIGNAL state, nstate : states := idle;
 
 SIGNAL bramAddress 	: std_logic_vector(31 DOWNTO 0) := (OTHERS => '0'); --Pointer to BRAM
 SIGNAL bramDataOut 	: std_logic_vector(31 DOWNTO 0) := (OTHERS => '0'); --Data output to bram
-SIGNAL bramWEN		: std_logic_vector(3 DOWNTO 0) := (OTHERS => '0');
-
-SIGNAL r_interrupt		: std_logic := '0';
-SIGNAL r_interrupt_err	: std_logic := '0';
 
 ALIAS slv IS std_logic_vector;
 ALIAS usg IS unsigned;
@@ -157,7 +151,6 @@ BEGIN
 
 --BRAM enable signal
 BRAM_EN <= '1'; --Always enable the memory
-BRAM_WEN <= bramWEN; --Assign BRAM_WEN with clocked process output
 
 --Assign BRAM clk and reset signals
 BRAM_Clk <= SYS_CLK;
@@ -172,19 +165,6 @@ BUF_REQD_ADDR <= C_BRAM_ADDR; --Address of BRAM or off-chip RAM
 BUF_REQD_SIZE <= slv((to_unsigned(C_BRAM_LOG, 5))); --Size of RAM in exponent of 2
 BUF_REQD_ERR <= '0'; --There should be no errors. Should allow the PC to write the arguments to the BRAM
 
---Interrupt signals (could make this combinatorial ?)
-INTERRUPT 		<= r_interrupt;
-INTERRUPT_ERR 	<= r_interrupt_err;
-
-AssignBuff_Reqd_Rdy : PROCESS (state)
-BEGIN
-	IF (state = PC2FPGA_Data_transfer_wait) THEN
-	--BUF_REQD_RDY is only high if state = wait for PC to transfer data to FPGA
-		BUF_REQD_RDY <= '1';
-	ELSE
-		BUF_REQD_RDY <= '0';
-	END IF;
-END PROCESS AssignBuff_Reqd_Rdy;
 
 Combinatorial : PROCESS (SYS_RST, DOORBELL, DOORBELL_ERR, BUF_REQD, INTERRUPT_ACK, state)
 BEGIN
@@ -217,25 +197,37 @@ BEGIN
 
 END PROCESS Combinatorial;
 
-AssignSignals : PROCESS (state)
+AssignCombinatorialOutputs : PROCESS (state)
 BEGIN
-	--When the state is in the request buffer state
-	--drive the BUF_REQ signal high to signal the PC
-	--that a buffer is required.
-	IF (state = request_buffer) THEN
-		BUF_REQ	<= '1';
+	
+	--Write enable BRAM when waiting for PC to transfer
+	--data to FPGA
+	IF (state = PC2FPGA_Data_transfer_wait) THEN
+		BRAM_WEN <= (OTHERS => '1');
 	ELSE
-		BUF_REQ <= '0';
+		BRAM_WEN <= (OTHERS => '0');
+	END IF;
+
+	--BUF_REQD_RDY is only high if state = wait for PC to transfer data to FPGA	
+	IF (state = PC2FPGA_Data_transfer_wait) THEN
+		BUF_REQD_RDY <= '1';
+	ELSE
+		BUF_REQD_RDY <= '0';
 	END IF;
 	
-	--Similarly when the state is in the request_dma
-	--state then drive the DMA_REQ signal to signal
-	--the DMA that a buffer is required
-	IF (state = request_dma) THEN
-		DMA_REQ <= '1';
+	--Interrupt assignments
+	IF (state = interrupt_state OR state = interrupt_err_state) THEN
+		INTERRUPT <= '1'; --Flag interrupt signals
+		IF(state = interrupt_err_state) THEN
+			INTERRUPT_ERR <= '1'; --Flag interrupt error signal to output
+		ELSE
+			INTERRUPT_ERR <= '0'; --If there are no errors then flag error interrupt low
+		END IF;
 	ELSE
-		DMA_REQ <= '0';
-	END IF;
+		INTERRUPT <= '0';
+		INTERRUPT_ERR <= '0';
+	END IF;	
+	
 END PROCESS;
 
 State_Assignment : PROCESS
@@ -245,28 +237,13 @@ WAIT UNTIL rising_edge(SYS_CLK);
 		state <= idle;
 		bramDataOut <= (OTHERS => '0');
 		bramAddress <= C_BRAM_ADDR;
-		bramWEN <= (OTHERS => '0');
-		r_interrupt <= '0';
-		r_interrupt_err <= '0';
+
 	ELSE
 		state <= nstate; -- assign the state to next state
-		bramWEN <= (OTHERS => '0');
-		r_interrupt <= '0';
-		r_interrupt_err <= '0';
-		
-		IF (state = PC2FPGA_Data_transfer_wait) THEN
-			bramWEN <= (OTHERS => '1');
-		END IF;
 		
 		IF (state = PC2FPGA_Data_transfer_wait AND DOORBELL = '1' AND DOORBELL_ERR = '0' AND DOORBELL_LEN /= SIMPBUS_ZERO) THEN
-			bramAddress <= slv(usg(bramAddress) + 1);--usg(DOORBELL_LEN)*8); --Increment the pointer with however many bits were transferred
-		END IF;
-		
-		IF (state = interrupt_state OR state = interrupt_err_state) THEN
-			r_interrupt <= '1'; --Flag interrupt signals
-			IF(state = interrupt_err_state) THEN
-				r_interrupt_err <= '1'; --Flag interrupt error signal to output
-			END IF;
+			--REPORT "bramAddress should be: "&integer'image(to_integer(usg(DOORBELL_LEN)*8));
+			bramAddress <= slv(usg(bramAddress) + resize(usg(DOORBELL_LEN)*8 - 1,C_SIMPBUS_AWIDTH)); --Increment the pointer with however many bits were transferred
 		END IF;
 		
 	END IF;

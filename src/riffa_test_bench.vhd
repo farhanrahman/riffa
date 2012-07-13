@@ -157,7 +157,7 @@ State_Machine_test : PROCESS
 
 VARIABLE counter 			: integer := 0;
 CONSTANT limit		 		: integer :=  32;
-CONSTANT bytes_transferred	: integer := 8192;
+CONSTANT bytes_transferred	: integer := 8192/2;
 BEGIN
 INTERRUPT_ACK 	<= '0';
 DOORBELL		<= '0';		
@@ -188,6 +188,8 @@ WHILE BUF_REQD_RDY /= '1' LOOP
 		REPORT "counter = "&integer'image(counter)&" has reached maximum limit of "&integer'image(limit)&" cycles" SEVERITY failure;
 	END IF;
 END LOOP;
+
+BUF_REQD <= '0';
 
 WAIT UNTIL rising_edge(clk);
 DOORBELL <= '1';
