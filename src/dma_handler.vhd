@@ -4,7 +4,9 @@ USE IEEE.numeric_std.ALL;
 
 ENTITY dma_handler IS
 GENERIC(
-
+	C_SIMPBUS_AWIDTH 	: integer := 32;
+	C_BRAM_ADDR			: std_logic_vector(31 DOWNTO 0) := (OTHERS => '0');
+	C_BRAM_SIZE			: integer := 32768
 );
 PORT(
 	--SYSTEM CLOCK AND SYSTEM RESET--
@@ -29,6 +31,10 @@ PORT(
 	BUF_REQ_RDY				: IN std_logic;
 	BUF_REQ_ERR				: IN std_logic;
 	
+	--Start and End addresses to transfer
+	START_ADDR				: IN std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
+	END_ADDR				: IN std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
+	
 	--Start signal
 	START					: IN std_logic;
 	
@@ -47,14 +53,24 @@ TYPE dma_states IS (
 					get_buffer, 
 					request_dma, 
 					wait_for_dma,
-					done,
-					done_err
+					done_state,
+					done_err_state
 				);
 SIGNAL dma_state, dma_nstate : dma_states := idle;
 
+SIGNAL rStart, rEnd, rDes, rLen : std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0) := (OTHERS => '0');
+SIGNAL buffReq : std_logic_vector(31 DOWNTO 0);
+
+ALIAS slv IS std_logic_vector;
+ALIAS usg IS unsigned;
+ALIAS sg IS signed;
+
 BEGIN
 
-DMA_SIG <= '1';
+--buffReq <= (to_integer(usg(BUF_REQ_SIZE)) => '1', OTHERS => '0');
+DMA_SRC <= rStart;
+DMA_DST <= rDes;
+DMA_LEN <= rLen;
 
 CombinatorialSignalAssignments : PROCESS (dma_state)
 BEGIN
@@ -72,15 +88,17 @@ BEGIN
 	--the DMA that a buffer is required
 	IF (dma_state = request_dma) THEN
 		DMA_REQ <= '1';
+		DMA_SIG <= '1';
 	ELSE
 		DMA_REQ <= '0';
+		DMA_SIG <= '0';
 	END IF;
 	
 	
 	--Assignments of signals that the DMA transfer is done
-	IF (dma_state = done OR dma_state = done_err) THEN
+	IF (dma_state = done_state OR dma_state = done_err_state) THEN
 		DONE <= '1';
-		IF(dma_state = done_err) THEN
+		IF(dma_state = done_err_state) THEN
 			DONE_ERR <= '1';
 		ELSE
 			DONE_ERR <= '0';
@@ -90,12 +108,20 @@ BEGIN
 		DONE_ERR <= '0';
 	END IF;
 	
+	FOR i IN buffReq'RANGE LOOP
+		IF ( i = to_integer(usg(BUF_REQ_SIZE))) THEN
+			buffReq(i) <= '1';
+		ELSE
+			buffReq(i) <= '0';
+		END IF;
+	END LOOP;
+	
 END PROCESS;
 
 Combinatorial : PROCESS (dma_state, START)
 
 BEGIN
-	IF(SYS_RESET = '1') THEN
+	IF(SYS_RST = '1') THEN
 		dma_nstate <= idle;
 	ELSE
 		dma_nstate <= dma_state;
@@ -103,7 +129,7 @@ BEGIN
 		CASE (dma_state) IS
 			WHEN idle =>
 				IF (START = '1') THEN
-					dma_nstate <= request_buffer; --Initialise the DMA
+					dma_nstate <= request_buffer; --Go to state to request for a PC buffer
 				END IF;
 			WHEN request_buffer =>
 				IF (BUF_REQ_ACK = '1') THEN
@@ -111,12 +137,28 @@ BEGIN
 				END IF;
 			WHEN get_buffer =>
 				IF (BUF_REQ_RDY = '1') THEN
-					dma_state <= request_dma;
+					dma_nstate <= request_dma;
 				END IF;
 			WHEN request_dma =>
 				IF (DMA_REQ_ACK = '1') THEN
 					dma_nstate <= wait_for_dma;
 				END IF;
+			WHEN wait_for_dma =>
+				IF (DMA_DONE = '1') THEN
+					--check if all data was transferred. If not then go to
+					--request_buffer state to start another DMA transfer
+					IF (usg(rStart)>= usg(rEnd)) THEN
+						dma_nstate <= done_state;
+					ELSE
+						dma_nstate <= request_buffer;
+					END IF;
+				END IF;
+			
+				IF (DMA_ERR = '1') THEN
+					dma_nstate <= done_err_state;
+				END IF;
+			WHEN done_state | done_err_state =>
+				dma_nstate <= idle;
 			WHEN OTHERS => dma_nstate <= idle;
 		END CASE;
 		
@@ -125,13 +167,39 @@ END PROCESS;
 
 State_clocked : PROCESS
 BEGIN
-	WAIT UNTIL rising_edge(clk);
-	dma_state <= dma_nstate;
+	WAIT UNTIL rising_edge(SYS_CLK);
 	
+	IF (SYS_RST = '1') THEN
+		rStart <= (OTHERS => '0');
+		rLen <= (OTHERS => '0');
+		rDes <= (OTHERS => '0');
+		dma_state <= idle;
+	ELSE
+		dma_state <= dma_nstate;
+		
+		IF (dma_state = idle) THEN
+			rStart <= START_ADDR;
+			rEnd <= slv(resize(usg(END_ADDR), C_SIMPBUS_AWIDTH));
+			IF(usg(START_ADDR) > usg(END_ADDR)) THEN
+				rStart 	<= END_ADDR;
+				rEnd	<= slv(resize(usg(START_ADDR), C_SIMPBUS_AWIDTH));
+			END IF;
+		END IF;
+		
+		IF (dma_state = get_buffer AND BUF_REQ_RDY = '1') THEN
+			rDes <= BUF_REQ_ADDR;
+			IF (usg(rEnd) - usg(rStart) < usg(buffReq)) THEN
+				rLen <= slv(usg(rEnd) - usg(rStart));
+			ELSE
+				rLen <= slv(usg(buffReq));
+			END IF;
+		END IF;
+		
+		IF (dma_state = request_dma AND DMA_REQ_ACK = '1') THEN
+			rStart <= slv(resize(usg(rStart) + usg(rLen), C_SIMPBUS_AWIDTH));
+		END IF;
+	END IF;
 END PROCESS;
 
 
 END ARCHITECTURE IMPL;
-
-
-
