@@ -154,6 +154,8 @@ BEGIN
 		END IF;
 	END LOOP;
 	
+	DMA_DONE <= '0';
+	
 	WAIT UNTIL rising_edge(clk);
 	WAIT UNTIL rising_edge(clk);
 	WAIT UNTIL rising_edge(clk);

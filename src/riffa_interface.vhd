@@ -3,7 +3,7 @@ USE IEEE.std_logic_1164.ALL;
 USE IEEE.numeric_std.ALL;
 USE ieee.math_real.log2;
 USE ieee.math_real.ceil;
-
+USE work.dma_handler;
 --LIBRARY proc_common_v3_00_a;
 --USE proc_common_v3_00_a.proc_common_pkg.ALL;
 
@@ -147,6 +147,13 @@ ALIAS sg IS signed;
 CONSTANT SIMPBUS_ZERO : std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0) := (OTHERS => '0');
 CONSTANT C_BRAM_LOG : integer := integer(ceil(log2(real(C_BRAM_SIZE-1))));
 
+
+--DMA INTERFACING SIGNALS
+SIGNAL DONE, DONE_ERR		 		: std_logic := '0';
+SIGNAL START, r_start				: std_logic := '0';
+SIGNAL START_ADDR, r_start_addr		: std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0) := (OTHERS => '0');
+SIGNAL END_ADDR, r_end_addr			: std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0) := (OTHERS => '0');
+
 BEGIN
 
 --BRAM enable signal
@@ -161,9 +168,55 @@ BRAM_Addr <= bramAddress;
 BRAM_Dout <= bramDataOut;
 
 --PC TO FPGA data transfer signals
-BUF_REQD_ADDR <= C_BRAM_ADDR; --Address of BRAM or off-chip RAM
-BUF_REQD_SIZE <= slv((to_unsigned(C_BRAM_LOG, 5))); --Size of RAM in exponent of 2
-BUF_REQD_ERR <= '0'; --There should be no errors. Should allow the PC to write the arguments to the BRAM
+BUF_REQD_ADDR 	<= C_BRAM_ADDR; --Address of BRAM or off-chip RAM
+BUF_REQD_SIZE 	<= slv((to_unsigned(C_BRAM_LOG, 5))); --Size of RAM in exponent of 2
+BUF_REQD_ERR 	<= '0'; --There should be no errors. Should allow the PC to write the arguments to the BRAM
+
+--Drive signal with registered output
+START_ADDR 	<= r_start_addr;
+END_ADDR 	<= r_end_addr;
+START 		<= r_start;
+
+DMA : ENTITY dma_handler
+GENERIC MAP(
+	C_SIMPBUS_AWIDTH 		=> C_SIMPBUS_AWIDTH,
+	C_BRAM_ADDR				=> C_BRAM_ADDR,	
+	C_BRAM_SIZE				=> C_BRAM_SIZE	
+)
+PORT MAP(
+	--SYSTEM CLOCK AND SYSTEM RESET--
+	SYS_CLK					=> 	SYS_CLK,		--IN
+	SYS_RST					=> 	SYS_RST,		--IN
+
+	--DMA signals
+	DMA_REQ					=>	DMA_REQ,		--OUT
+	DMA_REQ_ACK				=>	DMA_REQ_ACK,	--IN
+	DMA_SRC					=>	DMA_SRC,		--OUT
+	DMA_DST					=>	DMA_DST,		--OUT
+	DMA_LEN					=>	DMA_LEN,		--OUT
+	DMA_SIG					=>	DMA_SIG,		--OUT
+	DMA_DONE				=>	DMA_DONE,		--IN
+	DMA_ERR					=>	DMA_ERR,		--IN
+	
+	--PC BUFFER REQUEST SIGNALS--
+	BUF_REQ					=> 	BUF_REQ,		--OUT
+	BUF_REQ_ACK				=> 	BUF_REQ_ACK,	--IN
+	BUF_REQ_ADDR			=> 	BUF_REQ_ADDR,	--IN
+	BUF_REQ_SIZE			=> 	BUF_REQ_SIZE,	--IN
+	BUF_REQ_RDY				=> 	BUF_REQ_RDY,	--IN
+	BUF_REQ_ERR				=> 	BUF_REQ_ERR,	--IN
+		
+	--Start and End addresses t	o transfer
+	START_ADDR				=> 	START_ADDR,		--IN
+	END_ADDR				=> 	END_ADDR,		--IN
+		
+	--Start signal	
+	START					=> 	START,			--IN
+		
+	--Done Signal	
+	DONE					=> 	DONE,			--OUT
+	DONE_ERR				=> 	DONE_ERR		--OUT
+);
 
 
 Combinatorial : PROCESS (SYS_RST, DOORBELL, DOORBELL_ERR, BUF_REQD, INTERRUPT_ACK, state)
@@ -186,11 +239,11 @@ BEGIN
 						nstate <= idle; --reset to idle state if there is an error from host
 					END IF;
 				END IF;
+			WHEN process_data => nstate <= interrupt_state;
 			WHEN interrupt_err_state | interrupt_state =>
 				IF (INTERRUPT_ACK = '1') THEN
 					nstate <= idle; --go to idle state if PC sends interrupt ack signal back
 				END IF;
-			WHEN process_data => nstate <= interrupt_state;
 			WHEN OTHERS => nstate <= idle;	
 		END CASE;
 	END IF;
@@ -237,13 +290,18 @@ WAIT UNTIL rising_edge(SYS_CLK);
 		state <= idle;
 		bramDataOut <= (OTHERS => '0');
 		bramAddress <= C_BRAM_ADDR;
-
+		r_start_addr <= (OTHERS => '0');
+		r_end_addr	<= (OTHERS => '0');
+		r_start <= '0';
 	ELSE
 		state <= nstate; -- assign the state to next state
+		r_start_addr <= (OTHERS => '0');
+		r_end_addr	<= (OTHERS => '0');
+		r_start <= '0';
 		
 		IF (state = PC2FPGA_Data_transfer_wait AND DOORBELL = '1' AND DOORBELL_ERR = '0' AND DOORBELL_LEN /= SIMPBUS_ZERO) THEN
-			--REPORT "bramAddress should be: "&integer'image(to_integer(usg(DOORBELL_LEN)*8));
-			bramAddress <= slv(usg(bramAddress) + resize(usg(DOORBELL_LEN)*8 - 1,C_SIMPBUS_AWIDTH)); --Increment the pointer with however many bits were transferred
+			 --Increment the pointer with however many bits were transferred
+			bramAddress <= slv(usg(bramAddress) + resize(usg(DOORBELL_LEN)*8 - 1,C_SIMPBUS_AWIDTH));
 		END IF;
 		
 	END IF;
