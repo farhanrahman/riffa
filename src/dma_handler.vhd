@@ -67,12 +67,11 @@ ALIAS sg IS signed;
 
 BEGIN
 
---buffReq <= (to_integer(usg(BUF_REQ_SIZE)) => '1', OTHERS => '0');
 DMA_SRC <= rStart;
 DMA_DST <= rDes;
 DMA_LEN <= rLen;
 
-CombinatorialSignalAssignments : PROCESS (dma_state)
+CombinatorialSignalAssignments : PROCESS (dma_state, BUF_REQ_SIZE)
 BEGIN
 	--When the state is in the request buffer state
 	--drive the BUF_REQ signal high to signal the PC
@@ -108,6 +107,7 @@ BEGIN
 		DONE_ERR <= '0';
 	END IF;
 	
+	--buffReq <= (to_integer(usg(BUF_REQ_SIZE)) => '1', OTHERS => '0');
 	FOR i IN buffReq'RANGE LOOP
 		IF ( i = to_integer(usg(BUF_REQ_SIZE))) THEN
 			buffReq(i) <= '1';
@@ -118,8 +118,7 @@ BEGIN
 	
 END PROCESS;
 
-Combinatorial : PROCESS (dma_state, START)
-
+Combinatorial : PROCESS (dma_state, START, BUF_REQ_ACK, BUF_REQ_RDY, DMA_REQ_ACK, DMA_DONE, DMA_ERR, SYS_RST, rStart, rEnd)
 BEGIN
 	IF(SYS_RST = '1') THEN
 		dma_nstate <= idle;
