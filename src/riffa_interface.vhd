@@ -4,6 +4,7 @@ USE IEEE.numeric_std.ALL;
 USE ieee.math_real.log2;
 USE ieee.math_real.ceil;
 USE work.dma_handler;
+--USE work.riffa_pack.ALL;
 --LIBRARY proc_common_v3_00_a;
 --USE proc_common_v3_00_a.proc_common_pkg.ALL;
 
@@ -57,9 +58,10 @@ ENTITY riffa_interface IS
 --   BRAM_Addr					-- Memory address for pixel output data
 ------------------------------------------------------------------------------
 GENERIC(
-	C_SIMPBUS_AWIDTH 	: integer := 32;
-	C_BRAM_ADDR			: std_logic_vector(31 DOWNTO 0) := (OTHERS => '0');
-	C_BRAM_SIZE			: integer := 32768
+	C_SIMPBUS_AWIDTH 			: integer := 32;
+	C_BRAM_ADDR					: std_logic_vector(31 DOWNTO 0) := (OTHERS => '0');
+	C_BRAM_SIZE					: integer := 32768
+	--C_NUM_OF_INPUTS_TO_CORE		: integer := 4
 );
 
 PORT(
@@ -110,6 +112,10 @@ PORT(
 	BRAM_Dout				: OUT std_logic_vector(31 DOWNTO 0);
 	BRAM_Din				: IN std_logic_vector(31 DOWNTO 0);
 	BRAM_Addr				: OUT std_logic_vector(31 DOWNTO 0)
+	
+	--Outputs from PC to CORE
+	--CORE_INPUTS				: OUT std_logic_vector(C_NUM_OF_INPUTS_TO_CORE*C_SIMPBUS_AWIDTH-1 DOWNTO 0)
+	
 );
 
 --attribute SIGIS : string;
@@ -127,6 +133,8 @@ TYPE states IS (
 			idle, 
 			--INPUT DATA TRANSFER STATE (PC 2 FPGA)
 			PC2FPGA_Data_transfer_wait,
+			--STORE DATA INTO BUFFERS
+			store_data,
 			--PROCESSING STATE
 			process_data,
 			--SENDING DATA BACK TO PC STATE
@@ -153,6 +161,12 @@ SIGNAL DONE, DONE_ERR		 		: std_logic := '0';
 SIGNAL START, r_start				: std_logic := '0';
 SIGNAL START_ADDR, r_start_addr		: std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0) := (OTHERS => '0');
 SIGNAL END_ADDR, r_end_addr			: std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0) := (OTHERS => '0');
+
+--TYPE buffer_type IS ARRAY (0 TO C_NUM_OF_INPUTS_TO_CORE-1) OF std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
+--
+--SIGNAL input_buffer : buffer_type;
+--SIGNAL store_counter : std_logic_vector(C_BRAM_SIZE - 1 DOWNTO 0) := (OTHERS => '1');
+
 
 BEGIN
 
@@ -219,7 +233,7 @@ PORT MAP(
 );
 
 
-Combinatorial : PROCESS (SYS_RST, DOORBELL, DOORBELL_ERR, BUF_REQD, INTERRUPT_ACK, state)
+Combinatorial : PROCESS (SYS_RST, DOORBELL, DOORBELL_ERR, BUF_REQD, INTERRUPT_ACK, DONE, DONE_ERR, state)
 BEGIN
 	IF (SYS_RST = '1') THEN
 		nstate <= idle;
@@ -234,12 +248,23 @@ BEGIN
 			WHEN PC2FPGA_Data_transfer_wait =>
 				IF (DOORBELL = '1') THEN
 					IF (DOORBELL_ERR = '0') THEN
-						nstate <= process_data; --go to state where we process the data after getting confirmation from PC
+						nstate <= store_data; --go to state where we input the data into the core
 					ELSE
 						nstate <= idle; --reset to idle state if there is an error from host
 					END IF;
 				END IF;
-			WHEN process_data => nstate <= interrupt_state;
+			WHEN store_data =>
+				nstate <= process_data;
+			WHEN process_data => 
+				nstate <= dma_transfer;
+			WHEN dma_transfer =>
+				IF (DONE = '1') THEN
+					IF (DONE_ERR = '1') THEN
+						nstate <= interrupt_err_state;
+					ELSE
+						nstate <= interrupt_state;
+					END IF;
+				END IF;
 			WHEN interrupt_err_state | interrupt_state =>
 				IF (INTERRUPT_ACK = '1') THEN
 					nstate <= idle; --go to idle state if PC sends interrupt ack signal back
@@ -279,8 +304,8 @@ BEGIN
 	ELSE
 		INTERRUPT <= '0';
 		INTERRUPT_ERR <= '0';
-	END IF;	
-	
+	END IF;
+
 END PROCESS;
 
 State_Assignment : PROCESS
@@ -295,13 +320,22 @@ WAIT UNTIL rising_edge(SYS_CLK);
 		r_start <= '0';
 	ELSE
 		state <= nstate; -- assign the state to next state
-		r_start_addr <= (OTHERS => '0');
+		r_start_addr <= C_BRAM_ADDR;
 		r_end_addr	<= (OTHERS => '0');
 		r_start <= '0';
 		
 		IF (state = PC2FPGA_Data_transfer_wait AND DOORBELL = '1' AND DOORBELL_ERR = '0' AND DOORBELL_LEN /= SIMPBUS_ZERO) THEN
 			 --Increment the pointer with however many bits were transferred
 			bramAddress <= slv(usg(bramAddress) + resize(usg(DOORBELL_LEN)*8 - 1,C_SIMPBUS_AWIDTH));
+		END IF;
+		
+		IF (state = dma_transfer) THEN
+			r_start_addr <= C_BRAM_ADDR;
+			r_end_addr <= bramAddress;
+			r_start <= '1'; --start DMA transfer
+			IF (DONE = '1') THEN
+				r_start <= '0'; --stop the DMA transfer
+			END IF;
 		END IF;
 		
 	END IF;

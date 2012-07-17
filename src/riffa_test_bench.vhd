@@ -157,7 +157,7 @@ State_Machine_test : PROCESS
 
 VARIABLE counter 			: integer := 0;
 CONSTANT limit		 		: integer :=  32;
-CONSTANT bytes_transferred	: integer := 8192/2;
+CONSTANT bytes_transferred	: integer := 16;
 BEGIN
 INTERRUPT_ACK 	<= '0';
 DOORBELL		<= '0';		
@@ -167,15 +167,14 @@ DOORBELL_ARG	<= (OTHERS => '0');
 BUF_REQD		<= '0';
 BRAM_Din 		<= (OTHERS => '0');
 
---Not required for this test (yet)
-DMA_REQ_ACK		<= '0';
-DMA_DONE		<= '0';
-DMA_ERR			<= '0';
-BUF_REQ_ACK		<= '0';
-BUF_REQ_ADDR	<= (OTHERS => '0');
-BUF_REQ_SIZE	<= (OTHERS => '0');
-BUF_REQ_RDY		<= '0';
-BUF_REQ_ERR		<= '0';
+DMA_REQ_ACK 	<= 	'0';
+DMA_DONE		<=	'0';
+DMA_ERR			<= 	'0';	
+BUF_REQ_ACK		<=	'0';
+BUF_REQ_ADDR	<= 	(OTHERS => '0');
+BUF_REQ_SIZE	<= 	(OTHERS => '0');
+BUF_REQ_RDY		<= 	'0';
+BUF_REQ_ERR		<= 	'0';
 
 WAIT UNTIL rising_edge(clk);
 
@@ -198,6 +197,35 @@ DOORBELL_LEN <= slv(to_unsigned(bytes_transferred,C_SIMPBUS_AWIDTH));
 WAIT UNTIL rising_edge(clk);
 DOORBELL <= '0';
 DOORBELL_LEN <= (OTHERS => '0');
+
+
+--DMA STUFF
+WAIT UNTIL rising_edge(BUF_REQ);
+WAIT UNTIL rising_edge(clk);
+BUF_REQ_ACK <= '1';
+
+BUF_REQ_SIZE 	<= slv(to_unsigned(11, 5));
+BUF_REQ_ADDR(3) <= '1'; --(3 => '1', OTHERS => '0'); 
+
+WAIT UNTIL rising_edge(clk);
+BUF_REQ_ACK <= '0';
+BUF_REQ_RDY <= '1';
+
+WAIT UNTIL rising_edge(DMA_REQ);
+DMA_REQ_ACK <= '1';
+
+WAIT UNTIL rising_edge(clk);
+DMA_REQ_ACK <= '0';
+
+WAIT UNTIL rising_edge(clk);
+WAIT UNTIL rising_edge(clk);
+
+DMA_ERR 	<= '0';
+DMA_DONE 	<= '1';
+	
+WAIT UNTIL rising_edge(clk);
+
+DMA_DONE <= '0';
 
 WAIT UNTIL rising_edge(INTERRUPT);
 
