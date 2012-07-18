@@ -156,8 +156,9 @@ State_Machine_test : PROCESS
 --);
 
 VARIABLE counter 			: integer := 0;
-CONSTANT limit		 		: integer :=  32;
-CONSTANT bytes_transferred	: integer := 16;
+CONSTANT limit		 		: integer := 32; --cycles wait until BUF_REQD times out
+CONSTANT bytes_transferred	: integer := 16; --in bytes. Assuming for now 4 inputs of 32 bit width
+
 BEGIN
 INTERRUPT_ACK 	<= '0';
 DOORBELL		<= '0';		
@@ -165,7 +166,7 @@ DOORBELL_ERR	<= '0';
 DOORBELL_LEN	<= (OTHERS => '0');
 DOORBELL_ARG	<= (OTHERS => '0');
 BUF_REQD		<= '0';
-BRAM_Din 		<= (OTHERS => '0');
+BRAM_Din 		<= slv(to_unsigned(1024, C_SIMPBUS_AWIDTH));--(OTHERS => '0');
 
 DMA_REQ_ACK 	<= 	'0';
 DMA_DONE		<=	'0';

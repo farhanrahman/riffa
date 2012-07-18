@@ -60,8 +60,8 @@ ENTITY riffa_interface IS
 GENERIC(
 	C_SIMPBUS_AWIDTH 			: integer := 32;
 	C_BRAM_ADDR					: std_logic_vector(31 DOWNTO 0) := (OTHERS => '0');
-	C_BRAM_SIZE					: integer := 32768
-	--C_NUM_OF_INPUTS_TO_CORE		: integer := 4
+	C_BRAM_SIZE					: integer := 32768;
+	C_NUM_OF_INPUTS_TO_CORE		: integer := 4 --CANNOT BE ZERO
 );
 
 PORT(
@@ -109,12 +109,12 @@ PORT(
 	BRAM_Rst				: OUT std_logic;
 	BRAM_EN					: OUT std_logic;
 	BRAM_WEN				: OUT std_logic_vector(3 DOWNTO 0);
-	BRAM_Dout				: OUT std_logic_vector(31 DOWNTO 0);
-	BRAM_Din				: IN std_logic_vector(31 DOWNTO 0);
-	BRAM_Addr				: OUT std_logic_vector(31 DOWNTO 0)
+	BRAM_Dout				: OUT std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);	  --Not sure if length should be 32 bits or length of simplebus
+	BRAM_Din				: IN std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);     --Not sure if length should be 32 bits or length of simplebus
+	BRAM_Addr				: OUT std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);    --Not sure if length should be 32 bits or length of simplebus
 	
 	--Outputs from PC to CORE
-	--CORE_INPUTS				: OUT std_logic_vector(C_NUM_OF_INPUTS_TO_CORE*C_SIMPBUS_AWIDTH-1 DOWNTO 0)
+	CORE_INPUTS				: OUT std_logic_vector(C_NUM_OF_INPUTS_TO_CORE*C_SIMPBUS_AWIDTH-1 DOWNTO 0)
 	
 );
 
@@ -129,12 +129,16 @@ END ENTITY riffa_interface;
 
 ARCHITECTURE synth OF riffa_interface IS
 
+CONSTANT SIMPBUS_ZERO : std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0) := (OTHERS => '0');
+CONSTANT C_BRAM_LOG : integer := integer(ceil(log2(real(C_BRAM_SIZE))));
+CONSTANT C_NUM_INPUTS_LOG : integer := integer(ceil(log2(real(C_NUM_OF_INPUTS_TO_CORE))));
+
 TYPE states IS (
 			idle, 
 			--INPUT DATA TRANSFER STATE (PC 2 FPGA)
 			PC2FPGA_Data_transfer_wait,
 			--STORE DATA INTO BUFFERS
-			store_data,
+			prepare_data,
 			--PROCESSING STATE
 			process_data,
 			--SENDING DATA BACK TO PC STATE
@@ -145,15 +149,14 @@ TYPE states IS (
 			);
 SIGNAL state, nstate : states := idle;
 
-SIGNAL bramAddress 	: std_logic_vector(31 DOWNTO 0) := (OTHERS => '0'); --Pointer to BRAM
-SIGNAL bramDataOut 	: std_logic_vector(31 DOWNTO 0) := (OTHERS => '0'); --Data output to bram
+SIGNAL bramAddress 	: std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0) := (OTHERS => '0'); --Pointer to BRAM
+SIGNAL bramDataOut 	: std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0) := (OTHERS => '0'); --Data output to bram
 
 ALIAS slv IS std_logic_vector;
 ALIAS usg IS unsigned;
 ALIAS sg IS signed;
 
-CONSTANT SIMPBUS_ZERO : std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0) := (OTHERS => '0');
-CONSTANT C_BRAM_LOG : integer := integer(ceil(log2(real(C_BRAM_SIZE-1))));
+
 
 
 --DMA INTERFACING SIGNALS
@@ -162,11 +165,13 @@ SIGNAL START, r_start				: std_logic := '0';
 SIGNAL START_ADDR, r_start_addr		: std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0) := (OTHERS => '0');
 SIGNAL END_ADDR, r_end_addr			: std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0) := (OTHERS => '0');
 
---TYPE buffer_type IS ARRAY (0 TO C_NUM_OF_INPUTS_TO_CORE-1) OF std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
+TYPE buffer_type IS ARRAY (0 TO C_NUM_OF_INPUTS_TO_CORE-1) OF std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
 --
---SIGNAL input_buffer : buffer_type;
---SIGNAL store_counter : std_logic_vector(C_BRAM_SIZE - 1 DOWNTO 0) := (OTHERS => '1');
+SIGNAL input_buffer : buffer_type;
+SIGNAL store_counter : std_logic_vector(C_NUM_INPUTS_LOG - 1 DOWNTO 0) := (OTHERS => '0');
+CONSTANT store_counter_zero : std_logic_vector(C_NUM_INPUTS_LOG - 1 DOWNTO 0) := (OTHERS => '0');
 
+SIGNAL core_inputs_1 : std_logic_vector(C_NUM_OF_INPUTS_TO_CORE*C_SIMPBUS_AWIDTH-1 DOWNTO 0);
 
 BEGIN
 
@@ -190,6 +195,9 @@ BUF_REQD_ERR 	<= '0'; --There should be no errors. Should allow the PC to write 
 START_ADDR 	<= r_start_addr;
 END_ADDR 	<= r_end_addr;
 START 		<= r_start;
+
+--Core outputs assignments
+CORE_INPUTS <= core_inputs_1;
 
 DMA : ENTITY dma_handler
 GENERIC MAP(
@@ -233,7 +241,7 @@ PORT MAP(
 );
 
 
-Combinatorial : PROCESS (SYS_RST, DOORBELL, DOORBELL_ERR, BUF_REQD, INTERRUPT_ACK, DONE, DONE_ERR, state)
+Combinatorial : PROCESS (SYS_RST, DOORBELL, DOORBELL_ERR, BUF_REQD, INTERRUPT_ACK, DONE, DONE_ERR, state, bramAddress, store_counter)
 BEGIN
 	IF (SYS_RST = '1') THEN
 		nstate <= idle;
@@ -248,13 +256,17 @@ BEGIN
 			WHEN PC2FPGA_Data_transfer_wait =>
 				IF (DOORBELL = '1') THEN
 					IF (DOORBELL_ERR = '0') THEN
-						nstate <= store_data; --go to state where we input the data into the core
+						nstate <= prepare_data; --go to state where we set up the input data to the core
 					ELSE
 						nstate <= idle; --reset to idle state if there is an error from host
 					END IF;
 				END IF;
-			WHEN store_data =>
-				nstate <= process_data;
+			WHEN prepare_data =>
+				--Go to next state (process_data) if bramAddress reached the beginning of the BRAM
+				--or all slots of the input_buffer has been assigned
+				IF (bramAddress = C_BRAM_ADDR OR store_counter = store_counter_zero) THEN
+					nstate <= process_data;
+				END IF;
 			WHEN process_data => 
 				nstate <= dma_transfer;
 			WHEN dma_transfer =>
@@ -275,7 +287,7 @@ BEGIN
 
 END PROCESS Combinatorial;
 
-AssignCombinatorialOutputs : PROCESS (state)
+AssignCombinatorialOutputs : PROCESS (state, input_buffer)
 BEGIN
 	
 	--Write enable BRAM when waiting for PC to transfer
@@ -306,6 +318,12 @@ BEGIN
 		INTERRUPT_ERR <= '0';
 	END IF;
 
+	
+	--CORE INPUT ASSIGNMENTS
+	FOR i IN input_buffer'RANGE LOOP
+		core_inputs_1(((i+1)*C_SIMPBUS_AWIDTH-1) DOWNTO (((i+1)*C_SIMPBUS_AWIDTH-1)-C_SIMPBUS_AWIDTH + 1)) <= input_buffer(i);
+	END LOOP;
+	
 END PROCESS;
 
 State_Assignment : PROCESS
@@ -318,6 +336,10 @@ WAIT UNTIL rising_edge(SYS_CLK);
 		r_start_addr <= (OTHERS => '0');
 		r_end_addr	<= (OTHERS => '0');
 		r_start <= '0';
+		FOR i IN input_buffer'RANGE LOOP
+			input_buffer(i) <= (OTHERS => '0');
+		END LOOP;
+		store_counter <= (OTHERS => '0');
 	ELSE
 		state <= nstate; -- assign the state to next state
 		r_start_addr <= C_BRAM_ADDR;
@@ -326,8 +348,32 @@ WAIT UNTIL rising_edge(SYS_CLK);
 		
 		IF (state = PC2FPGA_Data_transfer_wait AND DOORBELL = '1' AND DOORBELL_ERR = '0' AND DOORBELL_LEN /= SIMPBUS_ZERO) THEN
 			 --Increment the pointer with however many bits were transferred
+			store_counter <= slv(to_unsigned(C_NUM_OF_INPUTS_TO_CORE-1,C_NUM_INPUTS_LOG));
 			bramAddress <= slv(usg(bramAddress) + resize(usg(DOORBELL_LEN)*8 - 1,C_SIMPBUS_AWIDTH));
 		END IF;
+		
+		IF (state = prepare_data) THEN
+			--Set the input_buffer for every input to the core.
+			--Uses store_counter as a sort of counter to iterate
+			--through the input_buffer.
+			input_buffer(to_integer(usg(store_counter))) <= BRAM_Din;
+			
+			--Decrement bramAddress
+			IF (bramAddress /= C_BRAM_ADDR AND (usg(store_counter) > usg(store_counter_zero))) THEN
+				IF ((sg(bramAddress) - C_SIMPBUS_AWIDTH) >= 0) THEN --CHECK IF SUBTRACTION IS NEGATIVE
+					bramAddress <= slv(usg(bramAddress) - C_SIMPBUS_AWIDTH);
+				END IF;
+			END IF;
+			
+			--Decrement store_counter
+			IF (store_counter /= store_counter_zero) THEN
+				store_counter <= slv(usg(store_counter) - 1);
+			END IF;
+		END IF;
+		
+		--IF (state /= PC2FPGA_Data_transfer_wait AND state /= prepare_data) THEN
+		--	store_counter <= (OTHERS => '0'); --reset store_counter for next usage
+		--END IF;
 		
 		IF (state = dma_transfer) THEN
 			r_start_addr <= C_BRAM_ADDR;

@@ -121,7 +121,7 @@ BEGIN
 	END_ADDR	    <= 	(OTHERS => '0');
 	START 			<= 	'0';
 	WAIT UNTIL rising_edge(clk);
-	END_ADDR(4) <= '1'; --(4 => '1', OTHERS => '0')
+	--END_ADDR(4) <= '1'; --(4 => '1', OTHERS => '0')
 	START <= '1';
 
 	WAIT UNTIL rising_edge(BUF_REQ);

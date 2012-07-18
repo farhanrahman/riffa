@@ -188,7 +188,11 @@ BEGIN
 		IF (dma_state = get_buffer AND BUF_REQ_RDY = '1') THEN
 			rDes <= BUF_REQ_ADDR;
 			IF (usg(rEnd) - usg(rStart) < usg(buffReq)) THEN
-				rLen <= slv(usg(rEnd) - usg(rStart));
+				IF (usg(rEnd) = usg(rStart)) THEN
+					rLen <= slv(to_unsigned(C_SIMPBUS_AWIDTH-1,C_SIMPBUS_AWIDTH)); --default length of 32 bits
+				ELSE
+					rLen <= slv(usg(rEnd) - usg(rStart));
+				END IF;
 			ELSE
 				rLen <= slv(usg(buffReq));
 			END IF;
