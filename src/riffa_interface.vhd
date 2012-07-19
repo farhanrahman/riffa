@@ -118,11 +118,11 @@ PORT(
 	
 );
 
---attribute SIGIS : string;
---attribute SIGIS of SYS_CLK     		: signal is "CLK";
---attribute SIGIS of SYS_RST      		: signal is "RST";
---attribute SIGIS of BRAM_Clk      		: signal is "CLK";
---attribute SIGIS of BRAM_Rst      		: signal is "RST";
+attribute SIGIS : string;
+attribute SIGIS of SYS_CLK     			: signal is "CLK";
+attribute SIGIS of SYS_RST      		: signal is "RST";
+attribute SIGIS of BRAM_Clk      		: signal is "CLK";
+attribute SIGIS of BRAM_Rst      		: signal is "RST";
 
 END ENTITY riffa_interface;
 
