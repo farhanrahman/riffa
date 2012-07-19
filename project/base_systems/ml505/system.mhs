@@ -23,6 +23,7 @@
  PORT fpga_0_rst_1_sys_rst_pin = sys_rst_s, DIR = I, SIGIS = RST, RST_POLARITY = 0
  PORT fpga_0_PCIe_Diff_Clk_IBUF_DS_P_pin = PCIe_Diff_Clk, DIR = I, DIFFERENTIAL_POLARITY = P, SIGIS = CLK
  PORT fpga_0_PCIe_Diff_Clk_IBUF_DS_N_pin = PCIe_Diff_Clk, DIR = I, DIFFERENTIAL_POLARITY = N, SIGIS = CLK
+ PORT riffa_0_SYS_CLK_pin = net_riffa_0_SYS_CLK_pin, DIR = I, SIGIS = CLK
 
 
 BEGIN plb_v46
@@ -114,6 +115,7 @@ BEGIN proc_sys_reset
  PORT Ext_Reset_In = sys_rst_s
  PORT Dcm_locked = Dcm_all_locked
  PORT Bus_Struct_Reset = sys_bus_reset
+ PORT MB_Reset = proc_sys_reset_0_MB_Reset
 END
 
 BEGIN central_notifier
@@ -122,9 +124,10 @@ BEGIN central_notifier
  PARAMETER C_DMA_BASE_ADDR = 0x80200000
  PARAMETER C_PCIE_BASE_ADDR = 0x85C00000
  PARAMETER C_PCIE_IPIF2PCI_LEN = 4194304
+ PARAMETER C_NUM_CHANNELS = 1
  BUS_INTERFACE SIMPBUS_SLV = simpbus_slv_plbv46_adapter_0_SIMPBUS
  BUS_INTERFACE SIMPBUS_MST = central_notifier_0_SIMPBUS_MST
- BUS_INTERFACE CHANNEL_00 = riffa_tester_0_CHANNEL
+ BUS_INTERFACE CHANNEL_00 = riffa_0_CHANNEL
  PORT SYS_RST = sys_bus_reset
  PORT SYS_CLK = clk_125_0000MHz
  PORT INTR_PCI = PCIe_Bridge_MSI_request_0
@@ -135,7 +138,6 @@ BEGIN bram_block
  PARAMETER INSTANCE = bram_block_0
  PARAMETER HW_VER = 1.00.a
  BUS_INTERFACE PORTA = xps_bram_if_cntlr_0_PORTA
- BUS_INTERFACE PORTB = riffa_tester_0_BRAMPORT
 END
 
 BEGIN xps_bram_if_cntlr
@@ -164,13 +166,12 @@ BEGIN simpbus_mst_plbv46_adapter
  BUS_INTERFACE SIMPBUS = central_notifier_0_SIMPBUS_MST
 END
 
-BEGIN riffa_example
- PARAMETER INSTANCE = riffa_example_0
+BEGIN riffa
+ PARAMETER INSTANCE = riffa_0
  PARAMETER HW_VER = 1.00.a
  PARAMETER C_BRAM_ADDR = 0x90000000
- BUS_INTERFACE CHANNEL = riffa_tester_0_CHANNEL
- BUS_INTERFACE BRAMPORT = riffa_tester_0_BRAMPORT
- PORT SYS_RST = sys_bus_reset
+ BUS_INTERFACE CHANNEL = riffa_0_CHANNEL
  PORT SYS_CLK = clk_125_0000MHz
+ PORT SYS_RST = sys_bus_reset
 END
 

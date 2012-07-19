@@ -27,10 +27,10 @@
 --	either expressed or implied, of the FreeBSD Project.
 ------------------------------------------------------------------------------
 ------------------------------------------------------------------------------
--- Filename:			riffa_example.vhd
+-- Filename:			riffa.vhd
 -- Version:				1.00.a
 -- VHDL Standard:		VHDL'93
--- Description:			Top level core design, instantiates riffa_example_impl
+-- Description:			Top level core design, instantiates riffa_impl
 --						and passes all signals through.
 -- History:				@mattj: Initial pre-release. Version 0.9.
 -------------------------------------------------------------------------------
@@ -40,8 +40,8 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
 
---library proc_common_v3_00_a;
---use proc_common_v3_00_a.proc_common_pkg.all;
+library proc_common_v3_00_a;
+use proc_common_v3_00_a.proc_common_pkg.all;
 
 ------------------------------------------------------------------------------
 -- Entity section
@@ -91,7 +91,7 @@ use ieee.std_logic_unsigned.all;
 --   BRAM_Addr					-- Memory address for pixel output data
 ------------------------------------------------------------------------------
 
-entity riffa_example is
+entity riffa is
   generic
   (
 	C_SIMPBUS_AWIDTH			: integer					:= 32;
@@ -145,16 +145,16 @@ entity riffa_example is
   attribute SIGIS of BRAM_Clk      		: signal is "CLK";
   attribute SIGIS of BRAM_Rst      		: signal is "RST";
   
-end entity riffa_example;
+end entity riffa;
 
 ------------------------------------------------------------------------------
 -- Architecture section
 ------------------------------------------------------------------------------
 
-architecture IMP of riffa_example is
+architecture IMP of riffa is
   
   ------------------------------------------
-  -- Component declaration for verilog riffa_example_impl
+  -- Component declaration for verilog riffa_impl
   ------------------------------------------
 	component riffa_interface is
 		generic
@@ -217,7 +217,7 @@ architecture IMP of riffa_example is
 	end component riffa_interface;
 begin
   ------------------------------------------
-  -- instantiate riffa_example_impl
+  -- instantiate riffa_impl
   ------------------------------------------
 	RIFFA_INTERFACE_I : component riffa_interface
 	generic map

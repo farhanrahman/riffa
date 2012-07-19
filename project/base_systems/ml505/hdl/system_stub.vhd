@@ -16,7 +16,8 @@ entity system_stub is
     fpga_0_clk_1_sys_clk_pin : in std_logic;
     fpga_0_rst_1_sys_rst_pin : in std_logic;
     fpga_0_PCIe_Diff_Clk_IBUF_DS_P_pin : in std_logic;
-    fpga_0_PCIe_Diff_Clk_IBUF_DS_N_pin : in std_logic
+    fpga_0_PCIe_Diff_Clk_IBUF_DS_N_pin : in std_logic;
+    riffa_0_SYS_CLK_pin : in std_logic
   );
 end system_stub;
 
@@ -31,7 +32,8 @@ architecture STRUCTURE of system_stub is
       fpga_0_clk_1_sys_clk_pin : in std_logic;
       fpga_0_rst_1_sys_rst_pin : in std_logic;
       fpga_0_PCIe_Diff_Clk_IBUF_DS_P_pin : in std_logic;
-      fpga_0_PCIe_Diff_Clk_IBUF_DS_N_pin : in std_logic
+      fpga_0_PCIe_Diff_Clk_IBUF_DS_N_pin : in std_logic;
+      riffa_0_SYS_CLK_pin : in std_logic
     );
   end component;
 
@@ -49,7 +51,8 @@ begin
       fpga_0_clk_1_sys_clk_pin => fpga_0_clk_1_sys_clk_pin,
       fpga_0_rst_1_sys_rst_pin => fpga_0_rst_1_sys_rst_pin,
       fpga_0_PCIe_Diff_Clk_IBUF_DS_P_pin => fpga_0_PCIe_Diff_Clk_IBUF_DS_P_pin,
-      fpga_0_PCIe_Diff_Clk_IBUF_DS_N_pin => fpga_0_PCIe_Diff_Clk_IBUF_DS_N_pin
+      fpga_0_PCIe_Diff_Clk_IBUF_DS_N_pin => fpga_0_PCIe_Diff_Clk_IBUF_DS_N_pin,
+      riffa_0_SYS_CLK_pin => riffa_0_SYS_CLK_pin
     );
 
 end architecture STRUCTURE;

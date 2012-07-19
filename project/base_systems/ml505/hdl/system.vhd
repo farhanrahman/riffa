@@ -16,7 +16,8 @@ entity system is
     fpga_0_clk_1_sys_clk_pin : in std_logic;
     fpga_0_rst_1_sys_rst_pin : in std_logic;
     fpga_0_PCIe_Diff_Clk_IBUF_DS_P_pin : in std_logic;
-    fpga_0_PCIe_Diff_Clk_IBUF_DS_N_pin : in std_logic
+    fpga_0_PCIe_Diff_Clk_IBUF_DS_N_pin : in std_logic;
+    riffa_0_SYS_CLK_pin : in std_logic
   );
 end system;
 
@@ -972,7 +973,7 @@ architecture STRUCTURE of system is
     );
   end component;
 
-  component system_riffa_example_0_wrapper is
+  component system_riffa_0_wrapper is
     port (
       SYS_CLK : in std_logic;
       SYS_RST : in std_logic;
@@ -1116,39 +1117,32 @@ architecture STRUCTURE of system is
   signal pgassign2 : std_logic_vector(0 to 0);
   signal pgassign3 : std_logic_vector(0 to 0);
   signal pgassign4 : std_logic_vector(0 to 0);
-  signal riffa_tester_0_BRAMPORT_BRAM_Addr : std_logic_vector(0 to 31);
-  signal riffa_tester_0_BRAMPORT_BRAM_Clk : std_logic;
-  signal riffa_tester_0_BRAMPORT_BRAM_Din : std_logic_vector(0 to 31);
-  signal riffa_tester_0_BRAMPORT_BRAM_Dout : std_logic_vector(0 to 31);
-  signal riffa_tester_0_BRAMPORT_BRAM_EN : std_logic;
-  signal riffa_tester_0_BRAMPORT_BRAM_Rst : std_logic;
-  signal riffa_tester_0_BRAMPORT_BRAM_WEN : std_logic_vector(0 to 3);
-  signal riffa_tester_0_CHANNEL_BUF_REQ : std_logic;
-  signal riffa_tester_0_CHANNEL_BUF_REQD : std_logic;
-  signal riffa_tester_0_CHANNEL_BUF_REQD_ADDR : std_logic_vector(31 downto 0);
-  signal riffa_tester_0_CHANNEL_BUF_REQD_ERR : std_logic;
-  signal riffa_tester_0_CHANNEL_BUF_REQD_RDY : std_logic;
-  signal riffa_tester_0_CHANNEL_BUF_REQD_SIZE : std_logic_vector(4 downto 0);
-  signal riffa_tester_0_CHANNEL_BUF_REQ_ACK : std_logic;
-  signal riffa_tester_0_CHANNEL_BUF_REQ_ADDR : std_logic_vector(31 downto 0);
-  signal riffa_tester_0_CHANNEL_BUF_REQ_ERR : std_logic;
-  signal riffa_tester_0_CHANNEL_BUF_REQ_RDY : std_logic;
-  signal riffa_tester_0_CHANNEL_BUF_REQ_SIZE : std_logic_vector(4 downto 0);
-  signal riffa_tester_0_CHANNEL_DMA_DONE : std_logic;
-  signal riffa_tester_0_CHANNEL_DMA_DST : std_logic_vector(31 downto 0);
-  signal riffa_tester_0_CHANNEL_DMA_ERR : std_logic;
-  signal riffa_tester_0_CHANNEL_DMA_LEN : std_logic_vector(31 downto 0);
-  signal riffa_tester_0_CHANNEL_DMA_REQ : std_logic;
-  signal riffa_tester_0_CHANNEL_DMA_REQ_ACK : std_logic;
-  signal riffa_tester_0_CHANNEL_DMA_SIG : std_logic;
-  signal riffa_tester_0_CHANNEL_DMA_SRC : std_logic_vector(31 downto 0);
-  signal riffa_tester_0_CHANNEL_DOORBELL : std_logic;
-  signal riffa_tester_0_CHANNEL_DOORBELL_ARG : std_logic_vector(31 downto 0);
-  signal riffa_tester_0_CHANNEL_DOORBELL_ERR : std_logic;
-  signal riffa_tester_0_CHANNEL_DOORBELL_LEN : std_logic_vector(31 downto 0);
-  signal riffa_tester_0_CHANNEL_INTERRUPT : std_logic;
-  signal riffa_tester_0_CHANNEL_INTERRUPT_ACK : std_logic;
-  signal riffa_tester_0_CHANNEL_INTERRUPT_ERR : std_logic;
+  signal riffa_0_CHANNEL_BUF_REQ : std_logic;
+  signal riffa_0_CHANNEL_BUF_REQD : std_logic;
+  signal riffa_0_CHANNEL_BUF_REQD_ADDR : std_logic_vector(31 downto 0);
+  signal riffa_0_CHANNEL_BUF_REQD_ERR : std_logic;
+  signal riffa_0_CHANNEL_BUF_REQD_RDY : std_logic;
+  signal riffa_0_CHANNEL_BUF_REQD_SIZE : std_logic_vector(4 downto 0);
+  signal riffa_0_CHANNEL_BUF_REQ_ACK : std_logic;
+  signal riffa_0_CHANNEL_BUF_REQ_ADDR : std_logic_vector(31 downto 0);
+  signal riffa_0_CHANNEL_BUF_REQ_ERR : std_logic;
+  signal riffa_0_CHANNEL_BUF_REQ_RDY : std_logic;
+  signal riffa_0_CHANNEL_BUF_REQ_SIZE : std_logic_vector(4 downto 0);
+  signal riffa_0_CHANNEL_DMA_DONE : std_logic;
+  signal riffa_0_CHANNEL_DMA_DST : std_logic_vector(31 downto 0);
+  signal riffa_0_CHANNEL_DMA_ERR : std_logic;
+  signal riffa_0_CHANNEL_DMA_LEN : std_logic_vector(31 downto 0);
+  signal riffa_0_CHANNEL_DMA_REQ : std_logic;
+  signal riffa_0_CHANNEL_DMA_REQ_ACK : std_logic;
+  signal riffa_0_CHANNEL_DMA_SIG : std_logic;
+  signal riffa_0_CHANNEL_DMA_SRC : std_logic_vector(31 downto 0);
+  signal riffa_0_CHANNEL_DOORBELL : std_logic;
+  signal riffa_0_CHANNEL_DOORBELL_ARG : std_logic_vector(31 downto 0);
+  signal riffa_0_CHANNEL_DOORBELL_ERR : std_logic;
+  signal riffa_0_CHANNEL_DOORBELL_LEN : std_logic_vector(31 downto 0);
+  signal riffa_0_CHANNEL_INTERRUPT : std_logic;
+  signal riffa_0_CHANNEL_INTERRUPT_ACK : std_logic;
+  signal riffa_0_CHANNEL_INTERRUPT_ERR : std_logic;
   signal simpbus_slv_plbv46_adapter_0_SIMPBUS_SIMPBUS_ADDR : std_logic_vector(31 downto 0);
   signal simpbus_slv_plbv46_adapter_0_SIMPBUS_SIMPBUS_BE : std_logic_vector(3 downto 0);
   signal simpbus_slv_plbv46_adapter_0_SIMPBUS_SIMPBUS_DONE : std_logic;
@@ -1179,7 +1173,7 @@ architecture STRUCTURE of system is
   attribute BOX_TYPE of system_xps_bram_if_cntlr_0_wrapper : component is "user_black_box";
   attribute BOX_TYPE of system_simpbus_slv_plbv46_adapter_0_wrapper : component is "user_black_box";
   attribute BOX_TYPE of system_simpbus_mst_plbv46_adapter_0_wrapper : component is "user_black_box";
-  attribute BOX_TYPE of system_riffa_example_0_wrapper : component is "user_black_box";
+  attribute BOX_TYPE of system_riffa_0_wrapper : component is "user_black_box";
 
 begin
 
@@ -1550,32 +1544,32 @@ begin
       SIMPBUS_SLV_START => simpbus_slv_plbv46_adapter_0_SIMPBUS_SIMPBUS_START,
       SIMPBUS_SLV_DONE => simpbus_slv_plbv46_adapter_0_SIMPBUS_SIMPBUS_DONE,
       SIMPBUS_SLV_ERR => simpbus_slv_plbv46_adapter_0_SIMPBUS_SIMPBUS_ERR,
-      INTERRUPT_00 => riffa_tester_0_CHANNEL_INTERRUPT,
-      INTERRUPT_ERR_00 => riffa_tester_0_CHANNEL_INTERRUPT_ERR,
-      INTERRUPT_ACK_00 => riffa_tester_0_CHANNEL_INTERRUPT_ACK,
-      DOORBELL_00 => riffa_tester_0_CHANNEL_DOORBELL,
-      DOORBELL_ERR_00 => riffa_tester_0_CHANNEL_DOORBELL_ERR,
-      DOORBELL_LEN_00 => riffa_tester_0_CHANNEL_DOORBELL_LEN,
-      DOORBELL_ARG_00 => riffa_tester_0_CHANNEL_DOORBELL_ARG,
-      DMA_REQ_00 => riffa_tester_0_CHANNEL_DMA_REQ,
-      DMA_REQ_ACK_00 => riffa_tester_0_CHANNEL_DMA_REQ_ACK,
-      DMA_SRC_00 => riffa_tester_0_CHANNEL_DMA_SRC,
-      DMA_DST_00 => riffa_tester_0_CHANNEL_DMA_DST,
-      DMA_LEN_00 => riffa_tester_0_CHANNEL_DMA_LEN,
-      DMA_SIG_00 => riffa_tester_0_CHANNEL_DMA_SIG,
-      DMA_DONE_00 => riffa_tester_0_CHANNEL_DMA_DONE,
-      DMA_ERR_00 => riffa_tester_0_CHANNEL_DMA_ERR,
-      BUF_REQ_00 => riffa_tester_0_CHANNEL_BUF_REQ,
-      BUF_REQ_ACK_00 => riffa_tester_0_CHANNEL_BUF_REQ_ACK,
-      BUF_REQ_ADDR_00 => riffa_tester_0_CHANNEL_BUF_REQ_ADDR,
-      BUF_REQ_SIZE_00 => riffa_tester_0_CHANNEL_BUF_REQ_SIZE,
-      BUF_REQ_RDY_00 => riffa_tester_0_CHANNEL_BUF_REQ_RDY,
-      BUF_REQ_ERR_00 => riffa_tester_0_CHANNEL_BUF_REQ_ERR,
-      BUF_REQD_00 => riffa_tester_0_CHANNEL_BUF_REQD,
-      BUF_REQD_ADDR_00 => riffa_tester_0_CHANNEL_BUF_REQD_ADDR,
-      BUF_REQD_SIZE_00 => riffa_tester_0_CHANNEL_BUF_REQD_SIZE,
-      BUF_REQD_RDY_00 => riffa_tester_0_CHANNEL_BUF_REQD_RDY,
-      BUF_REQD_ERR_00 => riffa_tester_0_CHANNEL_BUF_REQD_ERR,
+      INTERRUPT_00 => riffa_0_CHANNEL_INTERRUPT,
+      INTERRUPT_ERR_00 => riffa_0_CHANNEL_INTERRUPT_ERR,
+      INTERRUPT_ACK_00 => riffa_0_CHANNEL_INTERRUPT_ACK,
+      DOORBELL_00 => riffa_0_CHANNEL_DOORBELL,
+      DOORBELL_ERR_00 => riffa_0_CHANNEL_DOORBELL_ERR,
+      DOORBELL_LEN_00 => riffa_0_CHANNEL_DOORBELL_LEN,
+      DOORBELL_ARG_00 => riffa_0_CHANNEL_DOORBELL_ARG,
+      DMA_REQ_00 => riffa_0_CHANNEL_DMA_REQ,
+      DMA_REQ_ACK_00 => riffa_0_CHANNEL_DMA_REQ_ACK,
+      DMA_SRC_00 => riffa_0_CHANNEL_DMA_SRC,
+      DMA_DST_00 => riffa_0_CHANNEL_DMA_DST,
+      DMA_LEN_00 => riffa_0_CHANNEL_DMA_LEN,
+      DMA_SIG_00 => riffa_0_CHANNEL_DMA_SIG,
+      DMA_DONE_00 => riffa_0_CHANNEL_DMA_DONE,
+      DMA_ERR_00 => riffa_0_CHANNEL_DMA_ERR,
+      BUF_REQ_00 => riffa_0_CHANNEL_BUF_REQ,
+      BUF_REQ_ACK_00 => riffa_0_CHANNEL_BUF_REQ_ACK,
+      BUF_REQ_ADDR_00 => riffa_0_CHANNEL_BUF_REQ_ADDR,
+      BUF_REQ_SIZE_00 => riffa_0_CHANNEL_BUF_REQ_SIZE,
+      BUF_REQ_RDY_00 => riffa_0_CHANNEL_BUF_REQ_RDY,
+      BUF_REQ_ERR_00 => riffa_0_CHANNEL_BUF_REQ_ERR,
+      BUF_REQD_00 => riffa_0_CHANNEL_BUF_REQD,
+      BUF_REQD_ADDR_00 => riffa_0_CHANNEL_BUF_REQD_ADDR,
+      BUF_REQD_SIZE_00 => riffa_0_CHANNEL_BUF_REQD_SIZE,
+      BUF_REQD_RDY_00 => riffa_0_CHANNEL_BUF_REQD_RDY,
+      BUF_REQD_ERR_00 => riffa_0_CHANNEL_BUF_REQD_ERR,
       INTERRUPT_01 => net_gnd0,
       INTERRUPT_ERR_01 => net_gnd0,
       INTERRUPT_ACK_01 => open,
@@ -1977,13 +1971,13 @@ begin
       BRAM_Addr_A => xps_bram_if_cntlr_0_PORTA_BRAM_Addr,
       BRAM_Din_A => xps_bram_if_cntlr_0_PORTA_BRAM_Din,
       BRAM_Dout_A => xps_bram_if_cntlr_0_PORTA_BRAM_Dout,
-      BRAM_Rst_B => riffa_tester_0_BRAMPORT_BRAM_Rst,
-      BRAM_Clk_B => riffa_tester_0_BRAMPORT_BRAM_Clk,
-      BRAM_EN_B => riffa_tester_0_BRAMPORT_BRAM_EN,
-      BRAM_WEN_B => riffa_tester_0_BRAMPORT_BRAM_WEN,
-      BRAM_Addr_B => riffa_tester_0_BRAMPORT_BRAM_Addr,
-      BRAM_Din_B => riffa_tester_0_BRAMPORT_BRAM_Din,
-      BRAM_Dout_B => riffa_tester_0_BRAMPORT_BRAM_Dout
+      BRAM_Rst_B => net_gnd0,
+      BRAM_Clk_B => net_gnd0,
+      BRAM_EN_B => net_gnd0,
+      BRAM_WEN_B => net_gnd4(3 downto 0),
+      BRAM_Addr_B => net_gnd32,
+      BRAM_Din_B => open,
+      BRAM_Dout_B => net_gnd32
     );
 
   xps_bram_if_cntlr_0 : system_xps_bram_if_cntlr_0_wrapper
@@ -2137,43 +2131,43 @@ begin
       SIMPBUS_ERR => central_notifier_0_SIMPBUS_MST_SIMPBUS_ERR
     );
 
-  riffa_example_0 : system_riffa_example_0_wrapper
+  riffa_0 : system_riffa_0_wrapper
     port map (
       SYS_CLK => clk_125_0000MHz,
       SYS_RST => sys_bus_reset(0),
-      INTERRUPT => riffa_tester_0_CHANNEL_INTERRUPT,
-      INTERRUPT_ERR => riffa_tester_0_CHANNEL_INTERRUPT_ERR,
-      INTERRUPT_ACK => riffa_tester_0_CHANNEL_INTERRUPT_ACK,
-      DOORBELL => riffa_tester_0_CHANNEL_DOORBELL,
-      DOORBELL_ERR => riffa_tester_0_CHANNEL_DOORBELL_ERR,
-      DOORBELL_LEN => riffa_tester_0_CHANNEL_DOORBELL_LEN,
-      DOORBELL_ARG => riffa_tester_0_CHANNEL_DOORBELL_ARG,
-      DMA_REQ => riffa_tester_0_CHANNEL_DMA_REQ,
-      DMA_REQ_ACK => riffa_tester_0_CHANNEL_DMA_REQ_ACK,
-      DMA_SRC => riffa_tester_0_CHANNEL_DMA_SRC,
-      DMA_DST => riffa_tester_0_CHANNEL_DMA_DST,
-      DMA_LEN => riffa_tester_0_CHANNEL_DMA_LEN,
-      DMA_SIG => riffa_tester_0_CHANNEL_DMA_SIG,
-      DMA_DONE => riffa_tester_0_CHANNEL_DMA_DONE,
-      DMA_ERR => riffa_tester_0_CHANNEL_DMA_ERR,
-      BUF_REQ => riffa_tester_0_CHANNEL_BUF_REQ,
-      BUF_REQ_ACK => riffa_tester_0_CHANNEL_BUF_REQ_ACK,
-      BUF_REQ_ADDR => riffa_tester_0_CHANNEL_BUF_REQ_ADDR,
-      BUF_REQ_SIZE => riffa_tester_0_CHANNEL_BUF_REQ_SIZE,
-      BUF_REQ_RDY => riffa_tester_0_CHANNEL_BUF_REQ_RDY,
-      BUF_REQ_ERR => riffa_tester_0_CHANNEL_BUF_REQ_ERR,
-      BUF_REQD => riffa_tester_0_CHANNEL_BUF_REQD,
-      BUF_REQD_ADDR => riffa_tester_0_CHANNEL_BUF_REQD_ADDR,
-      BUF_REQD_SIZE => riffa_tester_0_CHANNEL_BUF_REQD_SIZE,
-      BUF_REQD_RDY => riffa_tester_0_CHANNEL_BUF_REQD_RDY,
-      BUF_REQD_ERR => riffa_tester_0_CHANNEL_BUF_REQD_ERR,
-      BRAM_Rst => riffa_tester_0_BRAMPORT_BRAM_Rst,
-      BRAM_Clk => riffa_tester_0_BRAMPORT_BRAM_Clk,
-      BRAM_EN => riffa_tester_0_BRAMPORT_BRAM_EN,
-      BRAM_WEN => riffa_tester_0_BRAMPORT_BRAM_WEN,
-      BRAM_Addr => riffa_tester_0_BRAMPORT_BRAM_Addr,
-      BRAM_Din => riffa_tester_0_BRAMPORT_BRAM_Din,
-      BRAM_Dout => riffa_tester_0_BRAMPORT_BRAM_Dout
+      INTERRUPT => riffa_0_CHANNEL_INTERRUPT,
+      INTERRUPT_ERR => riffa_0_CHANNEL_INTERRUPT_ERR,
+      INTERRUPT_ACK => riffa_0_CHANNEL_INTERRUPT_ACK,
+      DOORBELL => riffa_0_CHANNEL_DOORBELL,
+      DOORBELL_ERR => riffa_0_CHANNEL_DOORBELL_ERR,
+      DOORBELL_LEN => riffa_0_CHANNEL_DOORBELL_LEN,
+      DOORBELL_ARG => riffa_0_CHANNEL_DOORBELL_ARG,
+      DMA_REQ => riffa_0_CHANNEL_DMA_REQ,
+      DMA_REQ_ACK => riffa_0_CHANNEL_DMA_REQ_ACK,
+      DMA_SRC => riffa_0_CHANNEL_DMA_SRC,
+      DMA_DST => riffa_0_CHANNEL_DMA_DST,
+      DMA_LEN => riffa_0_CHANNEL_DMA_LEN,
+      DMA_SIG => riffa_0_CHANNEL_DMA_SIG,
+      DMA_DONE => riffa_0_CHANNEL_DMA_DONE,
+      DMA_ERR => riffa_0_CHANNEL_DMA_ERR,
+      BUF_REQ => riffa_0_CHANNEL_BUF_REQ,
+      BUF_REQ_ACK => riffa_0_CHANNEL_BUF_REQ_ACK,
+      BUF_REQ_ADDR => riffa_0_CHANNEL_BUF_REQ_ADDR,
+      BUF_REQ_SIZE => riffa_0_CHANNEL_BUF_REQ_SIZE,
+      BUF_REQ_RDY => riffa_0_CHANNEL_BUF_REQ_RDY,
+      BUF_REQ_ERR => riffa_0_CHANNEL_BUF_REQ_ERR,
+      BUF_REQD => riffa_0_CHANNEL_BUF_REQD,
+      BUF_REQD_ADDR => riffa_0_CHANNEL_BUF_REQD_ADDR,
+      BUF_REQD_SIZE => riffa_0_CHANNEL_BUF_REQD_SIZE,
+      BUF_REQD_RDY => riffa_0_CHANNEL_BUF_REQD_RDY,
+      BUF_REQD_ERR => riffa_0_CHANNEL_BUF_REQD_ERR,
+      BRAM_Rst => open,
+      BRAM_Clk => open,
+      BRAM_EN => open,
+      BRAM_WEN => open,
+      BRAM_Addr => open,
+      BRAM_Din => net_gnd32,
+      BRAM_Dout => open
     );
 
   ibufgds_0 : IBUFGDS
