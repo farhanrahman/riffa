@@ -60,8 +60,6 @@ SIGNAL BUF_REQD_RDY		:	std_logic;										--OUT
 SIGNAL BUF_REQD_ERR		:	std_logic;										--OUT
 
 --BRAM SIGNALS FROM AND TO RIFFA_INTERFACE
-SIGNAL BRAM_Clk			: std_logic; 										--OUT
-SIGNAL BRAM_Rst			: std_logic;										--OUT
 SIGNAL BRAM_EN			: std_logic;										--OUT
 SIGNAL BRAM_WEN			: std_logic_vector(3 DOWNTO 0);						--OUT
 SIGNAL BRAM_Dout		: std_logic_vector(31 DOWNTO 0);					--OUT
@@ -114,8 +112,6 @@ PORT MAP(
 	BUF_REQD_ERR		=> BUF_REQD_ERR,				--OUT
 
 	--BRAM SIGNALS--
-	BRAM_Clk			=> BRAM_Clk, 					--OUT	
-	BRAM_Rst			=> BRAM_Rst, 					--OUT	
 	BRAM_EN				=> BRAM_EN,	 					--OUT
 	BRAM_WEN			=> BRAM_WEN, 					--OUT	
 	BRAM_Dout			=> BRAM_Dout,					--OUT

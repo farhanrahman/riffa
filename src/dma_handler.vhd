@@ -61,9 +61,6 @@ SIGNAL dma_state, dma_nstate : dma_states := idle;
 SIGNAL rStart, rEnd, rDes, rLen : std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0) := (OTHERS => '0');
 SIGNAL buffReq : std_logic_vector(31 DOWNTO 0);
 
-ALIAS slv IS std_logic_vector;
-ALIAS usg IS unsigned;
-ALIAS sg IS signed;
 
 BEGIN
 
@@ -107,9 +104,9 @@ BEGIN
 		DONE_ERR <= '0';
 	END IF;
 	
-	--buffReq <= (to_integer(usg(BUF_REQ_SIZE)) => '1', OTHERS => '0');
+	--buffReq <= (to_integer(unsigned(BUF_REQ_SIZE)) => '1', OTHERS => '0');
 	FOR i IN buffReq'RANGE LOOP
-		IF ( i = to_integer(usg(BUF_REQ_SIZE))) THEN
+		IF ( i = to_integer(unsigned(BUF_REQ_SIZE))) THEN
 			buffReq(i) <= '1';
 		ELSE
 			buffReq(i) <= '0';
@@ -146,7 +143,7 @@ BEGIN
 				IF (DMA_DONE = '1') THEN
 					--check if all data was transferred. If not then go to
 					--request_buffer state to start another DMA transfer
-					IF (usg(rStart)>= usg(rEnd)) THEN
+					IF (unsigned(rStart)>= unsigned(rEnd)) THEN
 						dma_nstate <= done_state;
 					ELSE
 						dma_nstate <= request_buffer;
@@ -178,28 +175,28 @@ BEGIN
 		
 		IF (dma_state = idle) THEN
 			rStart <= START_ADDR;
-			rEnd <= slv(resize(usg(END_ADDR), C_SIMPBUS_AWIDTH));
-			IF(usg(START_ADDR) > usg(END_ADDR)) THEN
+			rEnd <= std_logic_vector(resize(unsigned(END_ADDR), C_SIMPBUS_AWIDTH));
+			IF(unsigned(START_ADDR) > unsigned(END_ADDR)) THEN
 				rStart 	<= END_ADDR;
-				rEnd	<= slv(resize(usg(START_ADDR), C_SIMPBUS_AWIDTH));
+				rEnd	<= std_logic_vector(resize(unsigned(START_ADDR), C_SIMPBUS_AWIDTH));
 			END IF;
 		END IF;
 		
 		IF (dma_state = get_buffer AND BUF_REQ_RDY = '1') THEN
 			rDes <= BUF_REQ_ADDR;
-			IF (usg(rEnd) - usg(rStart) < usg(buffReq)) THEN
-				IF (usg(rEnd) = usg(rStart)) THEN
-					rLen <= slv(to_unsigned(C_SIMPBUS_AWIDTH-1,C_SIMPBUS_AWIDTH)); --default length of 32 bits
+			IF (unsigned(rEnd) - unsigned(rStart) < unsigned(buffReq)) THEN
+				IF (unsigned(rEnd) = unsigned(rStart)) THEN
+					rLen <= std_logic_vector(to_unsigned(C_SIMPBUS_AWIDTH-1,C_SIMPBUS_AWIDTH)); --default length of 32 bits
 				ELSE
-					rLen <= slv(usg(rEnd) - usg(rStart));
+					rLen <= std_logic_vector(unsigned(rEnd) - unsigned(rStart));
 				END IF;
 			ELSE
-				rLen <= slv(usg(buffReq));
+				rLen <= std_logic_vector(unsigned(buffReq));
 			END IF;
 		END IF;
 		
 		IF (dma_state = request_dma AND DMA_REQ_ACK = '1') THEN
-			rStart <= slv(resize(usg(rStart) + usg(rLen), C_SIMPBUS_AWIDTH));
+			rStart <= std_logic_vector(resize(unsigned(rStart) + unsigned(rLen), C_SIMPBUS_AWIDTH));
 		END IF;
 	END IF;
 END PROCESS;

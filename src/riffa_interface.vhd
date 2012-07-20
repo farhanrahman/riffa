@@ -105,8 +105,6 @@ PORT(
 	BUF_REQD_ERR			: OUT std_logic;
 
 	--BRAM SIGNALS--
-	BRAM_Clk				: OUT std_logic;
-	BRAM_Rst				: OUT std_logic;
 	BRAM_EN					: OUT std_logic;
 	BRAM_WEN				: OUT std_logic_vector(3 DOWNTO 0);
 	BRAM_Dout				: OUT std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);	  --Not sure if length should be 32 bits or length of simplebus
@@ -118,11 +116,6 @@ PORT(
 	
 );
 
-attribute SIGIS : string;
-attribute SIGIS of SYS_CLK     			: signal is "CLK";
-attribute SIGIS of SYS_RST      		: signal is "RST";
-attribute SIGIS of BRAM_Clk      		: signal is "CLK";
-attribute SIGIS of BRAM_Rst      		: signal is "RST";
 
 END ENTITY riffa_interface;
 
@@ -177,10 +170,6 @@ BEGIN
 
 --BRAM enable signal
 BRAM_EN <= '1'; --Always enable the memory
-
---Assign BRAM clk and reset signals
-BRAM_Clk <= SYS_CLK;
-BRAM_Rst <= SYS_RST;
 
 --Assign BRAM address and output signals
 BRAM_Addr <= bramAddress;
@@ -381,6 +370,7 @@ WAIT UNTIL rising_edge(SYS_CLK);
 			r_start <= '1'; --start DMA transfer
 			IF (DONE = '1') THEN
 				r_start <= '0'; --stop the DMA transfer
+				bramAddress <= r_start_addr;
 			END IF;
 		END IF;
 		
