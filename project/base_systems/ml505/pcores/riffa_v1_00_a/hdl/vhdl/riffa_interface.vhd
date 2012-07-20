@@ -318,6 +318,7 @@ WAIT UNTIL rising_edge(SYS_CLK);
 			r_start <= '1'; --start DMA transfer
 			IF (DONE = '1') THEN
 				r_start <= '0'; --stop the DMA transfer
+				bramAddress <= r_start_addr;
 			END IF;
 		END IF;
 		
