@@ -80,7 +80,9 @@ int main(int argc, char* argv[])
 		i++;
 	}
 
-	DATA_POINTS = MAX(0, i-1);	
+	assert(i > 0);
+
+	DATA_POINTS = MAX(1, i-1);	
 
 	fclose(fin);	
 
@@ -147,7 +149,7 @@ int main(int argc, char* argv[])
 			printf("TEST FAILED. gData[%d] = %d is not equal to senddata[%d] = %d\n", i,gData[i],i,senddata[i]);
 			return -1;
 		}
-		printf("gData[%d] = %d is not equal to senddata[%d] = %d\n", i,gData[i],i,senddata[i]);
+		printf("gData[%d] = %d, senddata[%d] = %d\n", i,gData[i],i,senddata[i]);
 	}
 
 	printf("TEST PASSED. All data sent has been received in the same format and order \n");
