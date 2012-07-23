@@ -2,6 +2,7 @@ LIBRARY IEEE;
 USE IEEE.std_logic_1164.ALL;
 USE IEEE.numeric_std.ALL;
 USE work.riffa_interface;
+USE work.project_pak.ALL;
 
 ENTITY riffa_test_bench IS
 	GENERIC(
@@ -17,9 +18,6 @@ SIGNAL reset : std_logic;
 ALIAS slv IS std_logic_vector;
 ALIAS usg IS unsigned;
 ALIAS sg IS signed;
-
-CONSTANT Clk_div_2 	: time := 4 ns;
-CONSTANT Clk_period	: time := 8 ns;
 
 --INTERRUPT SIGNALS
 SIGNAL INTERRUPT		: std_logic;										--OUT
@@ -65,6 +63,8 @@ SIGNAL BRAM_WEN			: std_logic_vector(3 DOWNTO 0);						--OUT
 SIGNAL BRAM_Dout		: std_logic_vector(31 DOWNTO 0);					--OUT
 SIGNAL BRAM_Din			: std_logic_vector(31 DOWNTO 0);					--IN
 SIGNAL BRAM_Addr		: std_logic_vector(31 DOWNTO 0);					--OUT
+
+SIGNAL START_PROCESS	: std_logic;										--OUT
 
 BEGIN
 
@@ -116,16 +116,19 @@ PORT MAP(
 	BRAM_WEN			=> BRAM_WEN, 					--OUT	
 	BRAM_Dout			=> BRAM_Dout,					--OUT
 	BRAM_Din			=> BRAM_Din, 					--IN	
-	BRAM_Addr			=> BRAM_Addr 					--OUT
+	BRAM_Addr			=> BRAM_Addr, 					--OUT
+	
+	--START PROCESS to start core processing
+	START_PROCESS		=> START_PROCESS				--OUT
 );
 
 
 Clk_generate : PROCESS --Process to generate the clk
 BEGIN
 	clk <= '0';
-	WAIT FOR Clk_div_2;
+	WAIT FOR clk_per/2;
 	clk <= '1';
-	WAIT FOR Clk_div_2;
+	WAIT FOR clk_per/2;
 END PROCESS;
 
 Rst_generate : PROCESS --Process to generate the reset in the beginning

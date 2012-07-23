@@ -45,7 +45,7 @@ PORT(
 END ENTITY dma_handler;
 
 
-ARCHITECTURE IMPL OF dma_handler IS
+ARCHITECTURE synth OF dma_handler IS
 
 TYPE dma_states IS (
 					idle,
@@ -202,4 +202,4 @@ BEGIN
 END PROCESS;
 
 
-END ARCHITECTURE IMPL;
+END ARCHITECTURE synth;
