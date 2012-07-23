@@ -144,6 +144,32 @@ BEGIN
 	WAIT UNTIL rising_edge(clk);
 	WAIT UNTIL rising_edge(clk);
 
+--Test for DMA_ERR <= '1'
+
+	DMA_ERR <= '1';
+	DMA_DONE <= '1';
+	
+	WAIT UNTIL rising_edge(BUF_REQ);
+	BUF_REQ_ACK <= '1';
+	DMA_ERR <= '0';
+	DMA_DONE <= '0';
+	
+	BUF_REQ_SIZE 	<= slv(to_unsigned(11, 5));
+	BUF_REQ_ADDR(3) <= '0'; --(3 => '1', OTHERS => '0'); 
+	
+	WAIT UNTIL rising_edge(clk);
+	BUF_REQ_ACK <= '0';
+	BUF_REQ_RDY <= '1';
+	
+	WAIT UNTIL rising_edge(DMA_REQ);
+	DMA_REQ_ACK <= '1';
+	
+	WAIT UNTIL rising_edge(clk);
+	DMA_REQ_ACK <= '0';
+	
+	WAIT UNTIL rising_edge(clk);
+	WAIT UNTIL rising_edge(clk);	
+	
 	DMA_ERR 	<= '0';
 	DMA_DONE 	<= '1';
 	

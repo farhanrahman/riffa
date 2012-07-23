@@ -54,7 +54,8 @@ TYPE dma_states IS (
 					request_dma, 
 					wait_for_dma,
 					done_state,
-					done_err_state
+					done_err_state,
+					revert_changes
 				);
 SIGNAL dma_state, dma_nstate : dma_states := idle;
 
@@ -151,8 +152,11 @@ BEGIN
 				END IF;
 			
 				IF (DMA_ERR = '1') THEN
-					dma_nstate <= done_err_state;
+					--dma_nstate <= done_err_state;
+					dma_nstate <= revert_changes;
 				END IF;
+			WHEN revert_changes =>
+				dma_nstate <= request_buffer;
 			WHEN done_state | done_err_state =>
 				dma_nstate <= idle;
 			WHEN OTHERS => dma_nstate <= idle;
@@ -197,6 +201,10 @@ BEGIN
 		
 		IF (dma_state = request_dma AND DMA_REQ_ACK = '1') THEN
 			rStart <= std_logic_vector(resize(unsigned(rStart) + unsigned(rLen), C_SIMPBUS_AWIDTH));
+		END IF;
+		
+		IF (dma_state = revert_changes) THEN
+			rStart <= std_logic_vector(resize(unsigned(rStart) - unsigned(rLen), C_SIMPBUS_AWIDTH));
 		END IF;
 	END IF;
 END PROCESS;
