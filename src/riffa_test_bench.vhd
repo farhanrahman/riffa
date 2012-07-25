@@ -1,12 +1,11 @@
 LIBRARY IEEE;
 USE IEEE.std_logic_1164.ALL;
 USE IEEE.numeric_std.ALL;
+USE work.project_pak.ALL;
+USE work.utility.ALL;
 USE work.riffa_interface;
 
 ENTITY riffa_test_bench IS
-	GENERIC(
-		C_SIMPBUS_AWIDTH : integer := 32
-	);
 END ENTITY riffa_test_bench;
 
 ARCHITECTURE testbench OF riffa_test_bench IS
@@ -199,33 +198,20 @@ DOORBELL <= '0';
 DOORBELL_LEN <= (OTHERS => '0');
 
 
---DMA STUFF
-WAIT UNTIL rising_edge(BUF_REQ);
-WAIT UNTIL rising_edge(clk);
-BUF_REQ_ACK <= '1';
-
-BUF_REQ_SIZE 	<= slv(to_unsigned(11, 5));
-BUF_REQ_ADDR(3) <= '1'; --(3 => '1', OTHERS => '0'); 
-
-WAIT UNTIL rising_edge(clk);
-BUF_REQ_ACK <= '0';
-BUF_REQ_RDY <= '1';
-
-WAIT UNTIL rising_edge(DMA_REQ);
-DMA_REQ_ACK <= '1';
-
-WAIT UNTIL rising_edge(clk);
-DMA_REQ_ACK <= '0';
-
-WAIT UNTIL rising_edge(clk);
-WAIT UNTIL rising_edge(clk);
-
-DMA_ERR 	<= '0';
-DMA_DONE 	<= '1';
-	
-WAIT UNTIL rising_edge(clk);
-
-DMA_DONE <= '0';
+WHILE (usg(DMA_SRC) /= to_unsigned(32768, C_SIMPBUS_AWIDTH)) LOOP
+	handle_dma_normal(
+			BUF_REQ,
+			clk,
+			BUF_REQ_ACK,
+			BUF_REQ_SIZE,
+			BUF_REQ_ADDR,
+			BUF_REQ_RDY,
+			DMA_REQ,
+			DMA_REQ_ACK,
+			DMA_ERR,
+			DMA_DONE
+		);
+END LOOP;
 
 WAIT UNTIL rising_edge(INTERRUPT);
 
