@@ -3,11 +3,9 @@ USE IEEE.std_logic_1164.ALL;
 USE IEEE.numeric_std.ALL;
 USE work.riffa_interface;
 USE work.project_pak.ALL;
+USE work.utility.ALL;
 
 ENTITY riffa_test_bench IS
-	GENERIC(
-		C_SIMPBUS_AWIDTH : integer := 32
-	);
 END ENTITY riffa_test_bench;
 
 ARCHITECTURE testbench OF riffa_test_bench IS
