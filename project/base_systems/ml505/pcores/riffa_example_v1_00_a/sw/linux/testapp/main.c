@@ -54,8 +54,8 @@ long usecs;
 #define GETUSEC(e,s) e.tv_usec - s.tv_usec 
 #define PRINTUS(u) printf("Time required to send data to FPGA : %ld us\n", us)
 
-unsigned int gData[1];
-unsigned int senddata[1];
+unsigned int gData[DATA_SIZE/4];
+unsigned int senddata[DATA_SIZE/4];
 /**
  * Main entry point.
  */
@@ -75,18 +75,15 @@ int main(int argc, char* argv[])
 	FILE *fin = fopen(FILE_NAME,"r"); 
 	assert(fin != NULL);
 
-/*	while(!feof(fin)){
-		fscanf(fin,"%d", &senddata[i]);
-		i++;
+	while(!feof(fin)){
+		fscanf(fin,"%d", &senddata[i++]);
 	}
-*/
-//	assert(i > 0);
+
+	assert(i > 0);
 
 	DATA_POINTS = MAX(1, i-1);	
 
 	fclose(fin);	
-
-	senddata[0] = 1;
 
 	if ((rtn = fpga_init(&fpgaDev)) < 0) {
 		printf("error opening fpga: %d\n", rtn);
@@ -102,16 +99,6 @@ int main(int argc, char* argv[])
  	printf("Opened.\n");
 	
 	while(1) {
-		/*GETTIME(start);
-		if(rtn = fpga_call_data(fpgaDev, channel, (unsigned char *) senddata, DATA_POINTS*32, (unsigned char *) gData, DATA_POINTS*32) < 0){
-			printf("error sending args to fpga: %d\n", rtn);
-			break;
-		}
-		GETTIME(end);
-		usecs = GETUSEC(end,start);
-
-		printf("Time required to send and receive data to and from FPGA : %ld us\n", usecs);
-*/
 		GETTIME(start);
 		if((rtn = fpga_send_data(fpgaDev, channel, (unsigned char *) senddata, DATA_POINTS*4, 1)) < 0){
 			printf("error sending args to fpga: %d\n", rtn);
@@ -139,19 +126,12 @@ int main(int argc, char* argv[])
 
 	}
 	
-/*	for(i = 0; i < DATA_POINTS; i++){
-		printf("gData[i]: %d\n", gData[i]);
-		printf("senddata[i]: %d \n", senddata[i]);
-	}
-*/
-	
 	for(i = 0; i < DATA_POINTS; i++){
-		//assert(gData[i] == senddata[i]);
 		if(gData[i] != senddata[i]){
 			printf("TEST FAILED. gData[%d] = %d is not equal to senddata[%d] = %d\n", i,gData[i],i,senddata[i]);
 			return -1;
 		}
-		printf("gData[%d] = %d, senddata[%d] = %d\n", i,gData[i],i,senddata[i]);
+//		printf("gData[%d] = %d, senddata[%d] = %d\n", i,gData[i],i,senddata[i]);
 	}
 
 	printf("TEST PASSED. All data sent has been received in the same format and order \n");
