@@ -54,8 +54,8 @@ long usecs;
 #define GETUSEC(e,s) e.tv_usec - s.tv_usec 
 #define PRINTUS(u) printf("Time required to send data to FPGA : %ld us\n", us)
 
-unsigned int gData[DATA_SIZE/4];
-unsigned int senddata[DATA_SIZE/4];
+unsigned int gData[1];
+unsigned int senddata[1];
 /**
  * Main entry point.
  */
@@ -75,16 +75,18 @@ int main(int argc, char* argv[])
 	FILE *fin = fopen(FILE_NAME,"r"); 
 	assert(fin != NULL);
 
-	while(!feof(fin)){
+/*	while(!feof(fin)){
 		fscanf(fin,"%d", &senddata[i]);
 		i++;
 	}
-
-	assert(i > 0);
+*/
+//	assert(i > 0);
 
 	DATA_POINTS = MAX(1, i-1);	
 
 	fclose(fin);	
+
+	senddata[0] = 1;
 
 	if ((rtn = fpga_init(&fpgaDev)) < 0) {
 		printf("error opening fpga: %d\n", rtn);
@@ -111,7 +113,7 @@ int main(int argc, char* argv[])
 		printf("Time required to send and receive data to and from FPGA : %ld us\n", usecs);
 */
 		GETTIME(start);
-		if((rtn = fpga_send_data(fpgaDev, channel, (unsigned char *) senddata, DATA_POINTS*32, 1)) < 0){
+		if((rtn = fpga_send_data(fpgaDev, channel, (unsigned char *) senddata, DATA_POINTS*4, 1)) < 0){
 			printf("error sending args to fpga: %d\n", rtn);
 			break;
 		}
@@ -122,7 +124,7 @@ int main(int argc, char* argv[])
 		printf("Time required to send data to FPGA : %ld us\n", usecs);
 
 		GETTIME(start);
-		if ((rtn = fpga_recv_data(fpgaDev, channel, (unsigned char *)gData, DATA_POINTS*32)) < 0) {
+		if ((rtn = fpga_recv_data(fpgaDev, channel, (unsigned char *)gData, DATA_POINTS*4)) < 0) {
 			printf("error receiving data from fpga: %d\n", rtn);
 			break;
 		}

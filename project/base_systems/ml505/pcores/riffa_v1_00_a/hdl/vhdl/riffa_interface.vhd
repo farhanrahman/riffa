@@ -3,8 +3,6 @@ USE IEEE.std_logic_1164.ALL;
 USE IEEE.numeric_std.ALL;
 USE ieee.math_real.log2;
 USE ieee.math_real.ceil;
---USE work.dma_handler;
---USE work.riffa_pack.ALL;
 
 ENTITY riffa_interface IS
 ------------------------------------------------------------------------------
@@ -119,6 +117,48 @@ END ENTITY riffa_interface;
 
 ARCHITECTURE synth OF riffa_interface IS
 
+COMPONENT dma_handler IS
+GENERIC(
+	C_SIMPBUS_AWIDTH 	: integer := 32;
+	C_BRAM_ADDR			: std_logic_vector(31 DOWNTO 0) := (OTHERS => '0');
+	C_BRAM_SIZE			: integer := 32768
+);
+PORT(
+	--SYSTEM CLOCK AND SYSTEM RESET--
+	SYS_CLK					: IN std_logic;
+	SYS_RST					: IN std_logic;
+
+	--DMA signals
+	DMA_REQ					: OUT std_logic;
+	DMA_REQ_ACK				: IN std_logic;
+	DMA_SRC					: OUT std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
+	DMA_DST					: OUT std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
+	DMA_LEN					: OUT std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
+	DMA_SIG					: OUT std_logic;
+	DMA_DONE				: IN std_logic;
+	DMA_ERR					: IN std_logic;
+	
+	--PC BUFFER REQUEST SIGNALS--
+	BUF_REQ					: OUT std_logic;
+	BUF_REQ_ACK				: IN std_logic;
+	BUF_REQ_ADDR			: IN std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
+	BUF_REQ_SIZE			: IN std_logic_vector(4 DOWNTO 0);
+	BUF_REQ_RDY				: IN std_logic;
+	BUF_REQ_ERR				: IN std_logic;
+	
+	--Start and End addresses to transfer
+	START_ADDR				: IN std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
+	END_ADDR				: IN std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
+	
+	--Start signal
+	START					: IN std_logic;
+	
+	--Done Signal
+	DONE					: OUT std_logic;
+	DONE_ERR				: OUT std_logic
+);
+END COMPONENT dma_handler;
+
 TYPE states IS (
 			idle, 
 			--INPUT DATA TRANSFER STATE (PC 2 FPGA)
@@ -174,7 +214,7 @@ START_ADDR 	<= r_start_addr;
 END_ADDR 	<= r_end_addr;
 START 		<= r_start;
 
-DMA : ENTITY dma_handler
+DMA : COMPONENT dma_handler
 GENERIC MAP(
 	C_SIMPBUS_AWIDTH 		=> C_SIMPBUS_AWIDTH,
 	C_BRAM_ADDR				=> C_BRAM_ADDR,	
@@ -307,7 +347,7 @@ WAIT UNTIL rising_edge(SYS_CLK);
 		r_end_addr	<= (OTHERS => '0');
 		r_start <= '0';
 		
-		IF (state = PC2FPGA_Data_transfer_wait AND DOORBELL = '1' AND DOORBELL_ERR = '0' AND DOORBELL_LEN /= SIMPBUS_ZERO) THEN
+		IF (DOORBELL = '1' AND DOORBELL_ERR = '0' AND DOORBELL_LEN /= SIMPBUS_ZERO) THEN
 			 --Increment the pointer with however many bits were transferred
 			bramAddress <= std_logic_vector(unsigned(bramAddress) + resize(unsigned(DOORBELL_LEN)*8 - 1,C_SIMPBUS_AWIDTH));
 		END IF;

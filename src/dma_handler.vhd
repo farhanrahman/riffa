@@ -22,7 +22,7 @@ PORT(
 	DMA_SIG					: OUT std_logic;
 	DMA_DONE				: IN std_logic;
 	DMA_ERR					: IN std_logic;
-	
+
 	--PC BUFFER REQUEST SIGNALS--
 	BUF_REQ					: OUT std_logic;
 	BUF_REQ_ACK				: IN std_logic;
@@ -30,14 +30,14 @@ PORT(
 	BUF_REQ_SIZE			: IN std_logic_vector(4 DOWNTO 0);
 	BUF_REQ_RDY				: IN std_logic;
 	BUF_REQ_ERR				: IN std_logic;
-	
+
 	--Start and End addresses to transfer
 	START_ADDR				: IN std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
 	END_ADDR				: IN std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
-	
+
 	--Start signal
 	START					: IN std_logic;
-	
+
 	--Done Signal
 	DONE					: OUT std_logic;
 	DONE_ERR				: OUT std_logic
@@ -54,8 +54,7 @@ TYPE dma_states IS (
 					request_dma, 
 					wait_for_dma,
 					done_state,
-					done_err_state,
-					revert_changes
+					done_err_state
 				);
 SIGNAL dma_state, dma_nstate : dma_states := idle;
 
@@ -79,7 +78,7 @@ BEGIN
 	ELSE
 		BUF_REQ <= '0';
 	END IF;
-	
+
 	--Similarly when the state is in the request_dma
 	--state then drive the DMA_REQ signal to signal
 	--the DMA that a buffer is required
@@ -90,8 +89,8 @@ BEGIN
 		DMA_REQ <= '0';
 		DMA_SIG <= '0';
 	END IF;
-	
-	
+
+
 	--Assignments of signals that the DMA transfer is done
 	IF (dma_state = done_state OR dma_state = done_err_state) THEN
 		DONE <= '1';
@@ -104,7 +103,7 @@ BEGIN
 		DONE <= '0';
 		DONE_ERR <= '0';
 	END IF;
-	
+
 	--buffReq <= (to_integer(unsigned(BUF_REQ_SIZE)) => '1', OTHERS => '0');
 	FOR i IN buffReq'RANGE LOOP
 		IF ( i = to_integer(unsigned(BUF_REQ_SIZE))) THEN
@@ -113,7 +112,7 @@ BEGIN
 			buffReq(i) <= '0';
 		END IF;
 	END LOOP;
-	
+
 END PROCESS;
 
 Combinatorial : PROCESS (dma_state, START, BUF_REQ_ACK, BUF_REQ_RDY, DMA_REQ_ACK, DMA_DONE, DMA_ERR, SYS_RST, rStart, rEnd)
@@ -122,7 +121,7 @@ BEGIN
 		dma_nstate <= idle;
 	ELSE
 		dma_nstate <= dma_state;
-		
+
 		CASE (dma_state) IS
 			WHEN idle =>
 				IF (START = '1') THEN
@@ -150,25 +149,23 @@ BEGIN
 						dma_nstate <= request_buffer;
 					END IF;
 				END IF;
-			
+
 				IF (DMA_ERR = '1') THEN
-					--dma_nstate <= done_err_state;
-					dma_nstate <= revert_changes;
+					dma_nstate <= done_err_state;
 				END IF;
-			WHEN revert_changes =>
-				dma_nstate <= request_buffer;
 			WHEN done_state | done_err_state =>
 				dma_nstate <= idle;
 			WHEN OTHERS => dma_nstate <= idle;
 		END CASE;
-		
+
 	END IF;
 END PROCESS;
 
 State_clocked : PROCESS
+VARIABLE temp_start : std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);
 BEGIN
 	WAIT UNTIL rising_edge(SYS_CLK);
-	
+
 	IF (SYS_RST = '1') THEN
 		rStart <= (OTHERS => '0');
 		rLen <= (OTHERS => '0');
@@ -176,16 +173,17 @@ BEGIN
 		dma_state <= idle;
 	ELSE
 		dma_state <= dma_nstate;
-		
+
 		IF (dma_state = idle) THEN
-			rStart <= START_ADDR;
+			temp_start := START_ADDR;
+			rStart <= temp_start;
 			rEnd <= std_logic_vector(resize(unsigned(END_ADDR), C_SIMPBUS_AWIDTH));
-			IF(unsigned(START_ADDR) > unsigned(END_ADDR)) THEN
+			IF(unsigned(temp_start) > unsigned(END_ADDR)) THEN
 				rStart 	<= END_ADDR;
 				rEnd	<= std_logic_vector(resize(unsigned(START_ADDR), C_SIMPBUS_AWIDTH));
 			END IF;
 		END IF;
-		
+
 		IF (dma_state = get_buffer AND BUF_REQ_RDY = '1') THEN
 			rDes <= BUF_REQ_ADDR;
 			IF (unsigned(rEnd) - unsigned(rStart) < unsigned(buffReq)) THEN
@@ -198,13 +196,9 @@ BEGIN
 				rLen <= std_logic_vector(unsigned(buffReq));
 			END IF;
 		END IF;
-		
+
 		IF (dma_state = request_dma AND DMA_REQ_ACK = '1') THEN
 			rStart <= std_logic_vector(resize(unsigned(rStart) + unsigned(rLen), C_SIMPBUS_AWIDTH));
-		END IF;
-		
-		IF (dma_state = revert_changes) THEN
-			rStart <= std_logic_vector(resize(unsigned(rStart) - unsigned(rLen), C_SIMPBUS_AWIDTH));
 		END IF;
 	END IF;
 END PROCESS;
