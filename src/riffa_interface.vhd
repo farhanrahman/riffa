@@ -355,8 +355,8 @@ WAIT UNTIL rising_edge(SYS_CLK);
 		
 		IF (state = dma_transfer) THEN
 			r_start_addr <= C_BRAM_ADDR;
-			--r_end_addr <= std_logic_vector(unsigned(C_BRAM_ADDR) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));--bramAddress;
-			r_end_addr <= bramAddress;
+			r_end_addr <= std_logic_vector(unsigned(C_BRAM_ADDR) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));
+			--r_end_addr <= bramAddress;
 			r_start <= '1'; --start DMA transfer
 			IF (DONE = '1') THEN
 				r_start <= '0'; --stop the DMA transfer

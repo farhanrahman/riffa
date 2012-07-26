@@ -35,7 +35,8 @@ PACKAGE utility IS
 				SIGNAl DMA_REQ		: IN std_logic;
 				SIGNAL DMA_REQ_ACK	: OUT std_logic;
 				SIGNAL DMA_ERR		: OUT std_logic;
-				SIGNAL DMA_DONE		: OUT std_logic
+				SIGNAL DMA_DONE		: OUT std_logic;
+				CONSTANT buf_size	: integer
 	);
 	
 	--Procedure used to handle dma transfer but with an error
@@ -152,7 +153,8 @@ PACKAGE BODY utility IS
 				SIGNAl DMA_REQ		: IN std_logic;
 				SIGNAL DMA_REQ_ACK	: OUT std_logic;
 				SIGNAL DMA_ERR		: OUT std_logic;
-				SIGNAL DMA_DONE		: OUT std_logic
+				SIGNAL DMA_DONE		: OUT std_logic;
+				CONSTANT buf_size	: integer
 	) IS
 
 	BEGIN
@@ -160,7 +162,7 @@ PACKAGE BODY utility IS
 		WAIT UNTIL rising_edge(clk);
 		BUF_REQ_ACK <= '1';
 
-		BUF_REQ_SIZE 	<= std_logic_vector(to_unsigned(15, 5));
+		BUF_REQ_SIZE 	<= std_logic_vector(to_unsigned(buf_size, 5));
 		BUF_REQ_ADDR(3) <= '1'; --(3 => '1', OTHERS => '0'); 
 
 		WAIT UNTIL rising_edge(clk);

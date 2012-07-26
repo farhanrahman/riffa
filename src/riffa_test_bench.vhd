@@ -191,7 +191,8 @@ WHILE (usg(DMA_SRC) /= to_unsigned(bytes_transferred, C_SIMPBUS_AWIDTH)) LOOP
 				DMA_REQ,
 				DMA_REQ_ACK,
 				DMA_ERR,
-				DMA_DONE
+				DMA_DONE,
+				2
 			);
 END LOOP;
 
