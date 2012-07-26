@@ -160,7 +160,7 @@ PACKAGE BODY utility IS
 		WAIT UNTIL rising_edge(clk);
 		BUF_REQ_ACK <= '1';
 
-		BUF_REQ_SIZE 	<= std_logic_vector(to_unsigned(11, 5));
+		BUF_REQ_SIZE 	<= std_logic_vector(to_unsigned(15, 5));
 		BUF_REQ_ADDR(3) <= '1'; --(3 => '1', OTHERS => '0'); 
 
 		WAIT UNTIL rising_edge(clk);

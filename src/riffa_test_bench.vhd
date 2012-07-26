@@ -154,9 +154,7 @@ State_Machine_test : PROCESS
 --     ('0','1')
 --);
 
-VARIABLE counter 			: integer := 0;
-CONSTANT limit		 		: integer :=  32;
-CONSTANT bytes_transferred	: integer := 16;
+CONSTANT bytes_transferred	: integer := 1024;
 BEGIN
 INTERRUPT_ACK 	<= '0';
 DOORBELL		<= '0';		
@@ -177,43 +175,25 @@ BUF_REQ_ERR		<= 	'0';
 
 WAIT UNTIL rising_edge(clk);
 
-BUF_REQD <= '1';
+send_data(clk, BUF_REQD, BUF_REQD_RDY);
 
-WHILE BUF_REQD_RDY /= '1' LOOP
-	WAIT UNTIL rising_edge(clk);
-	counter := counter + 1;
-	IF (counter > limit) THEN
-		REPORT "counter = "&integer'image(counter)&" has reached maximum limit of "&integer'image(limit)&" cycles" SEVERITY failure;
-	END IF;
+send_doorbell(clk, DOORBELL, DOORBELL_LEN, bytes_transferred);
+
+
+WHILE (usg(DMA_SRC) /= to_unsigned(bytes_transferred, C_SIMPBUS_AWIDTH)) LOOP
+		handle_dma_normal(
+				BUF_REQ,
+				clk,
+				BUF_REQ_ACK,
+				BUF_REQ_SIZE,
+				BUF_REQ_ADDR,
+				BUF_REQ_RDY,
+				DMA_REQ,
+				DMA_REQ_ACK,
+				DMA_ERR,
+				DMA_DONE
+			);
 END LOOP;
-
-BUF_REQD <= '0';
-
-WAIT UNTIL rising_edge(clk);
-DOORBELL <= '1';
-DOORBELL_LEN <= slv(to_unsigned(bytes_transferred,C_SIMPBUS_AWIDTH));
-
-WAIT UNTIL rising_edge(clk);
-DOORBELL <= '0';
-DOORBELL_LEN <= (OTHERS => '0');
-
-
-WHILE (usg(DMA_SRC) /= to_unsigned(32768, C_SIMPBUS_AWIDTH)) LOOP
-	handle_dma_normal(
-			BUF_REQ,
-			clk,
-			BUF_REQ_ACK,
-			BUF_REQ_SIZE,
-			BUF_REQ_ADDR,
-			BUF_REQ_RDY,
-			DMA_REQ,
-			DMA_REQ_ACK,
-			DMA_ERR,
-			DMA_DONE
-		);
-END LOOP;
-
-WAIT UNTIL rising_edge(INTERRUPT);
 
 IF (INTERRUPT_ERR = '1') THEN
 	WAIT UNTIL rising_edge(clk);
