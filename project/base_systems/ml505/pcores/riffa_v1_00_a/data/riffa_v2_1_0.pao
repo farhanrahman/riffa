@@ -1,7 +1,7 @@
 ##############################################################################
 ## Filename:          /home/fr909/git/riffa/project/base_systems/ml505/pcores/riffa_v1_00_a/data/riffa_v2_1_0.pao
 ## Description:       Peripheral Analysis Order
-## Date:              Wed Jul 25 18:05:12 2012 (by Create and Import Peripheral Wizard)
+## Date:              Thu Jul 26 19:51:05 2012 (by Create and Import Peripheral Wizard)
 ##############################################################################
 
 lib riffa_v1_00_a riffa vhdl
