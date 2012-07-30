@@ -63,6 +63,8 @@ SIGNAL BRAM_Din			: std_logic_vector(31 DOWNTO 0);					--IN
 SIGNAL BRAM_Addr		: std_logic_vector(31 DOWNTO 0);					--OUT
 
 SIGNAL START_PROCESS	: std_logic;										--OUT
+CONSTANT C_NUM_OF_OUTPUTS_FROM_CORE	: integer := 1;
+SIGNAL CORE_OUTPUTS		: std_logic_vector(C_NUM_OF_OUTPUTS_FROM_CORE*C_SIMPBUS_AWIDTH - 1 DOWNTO 0) := (OTHERS => '0');
 
 BEGIN
 
@@ -120,7 +122,8 @@ PORT MAP(
 	START_PROCESS		=> START_PROCESS,				--OUT
 	
 	FINISHED 			=> '0',							--IN
-	VALID				=> '0'							--IN
+	VALID				=> '0',							--IN
+	CORE_OUTPUTS		=>	CORE_OUTPUTS				--OUT
 );
 
 

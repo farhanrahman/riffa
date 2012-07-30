@@ -81,11 +81,20 @@ BEGIN
 	
 	toggle_start(SYS_CLK, START);
 	WAIT UNTIL rising_edge(FINISHED);
-	WAIT UNTIL rising_edge(SYS_CLK);
-	WAIT UNTIL rising_edge(SYS_CLK);
-	WAIT UNTIL rising_edge(SYS_CLK);
-	WAIT UNTIL rising_edge(SYS_CLK);
-	WAIT UNTIL rising_edge(SYS_CLK);
+	wait_for(SYS_CLK,5);
+	
+	--BUSY signal test
+	
+	BUSY <= '1';
+	
+	toggle_start(SYS_CLK, START);
+	wait_for(SYS_CLK,20);
+	
+	BUSY <= '0';
+	
+	WAIT UNTIL rising_edge(FINISHED);
+	wait_for(SYS_CLK,5);
+	
 	REPORT "TEST FINISHED." SEVERITY failure;
 END PROCESS;
 

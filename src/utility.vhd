@@ -69,6 +69,12 @@ PACKAGE utility IS
 			SIGNAL clk				: IN std_logic;
 			SIGNAL START			: OUT std_logic
 	);
+	
+	--waits for 'cycles' number of clock cycles
+	PROCEDURE wait_for(
+			SIGNAL clk		: std_logic;
+			CONSTANT cycles : integer
+	);
 END PACKAGE utility;
 
 
@@ -246,6 +252,17 @@ PACKAGE BODY utility IS
 		START <= '1';
 		WAIT UNTIL rising_edge(clk);
 		START <= '0';
+	END;
+	
+	PROCEDURE wait_for(
+			SIGNAL clk		: std_logic;
+			CONSTANT cycles : integer
+	) IS
+	
+	BEGIN
+		FOR i IN 0 TO cycles - 1 LOOP
+			WAIT UNTIL rising_edge(clk);
+		END LOOP;
 	END;
 	
 END utility;

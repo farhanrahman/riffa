@@ -66,10 +66,11 @@ ARCHITECTURE synth OF top_connector IS
 	COMPONENT riffa_interface IS
 		GENERIC
 		(
-			C_SIMPBUS_AWIDTH			: integer;
-			C_BRAM_ADDR					: std_logic_vector;
+			C_SIMPBUS_AWIDTH 			: integer;
+			C_BRAM_ADDR					: std_logic_vector(31 DOWNTO 0);
 			C_BRAM_SIZE					: integer;
-			C_NUM_OF_INPUTS_TO_CORE		: integer
+			C_NUM_OF_INPUTS_TO_CORE		: integer;
+			C_NUM_OF_OUTPUTS_FROM_CORE	: integer
 		);
 		PORT(
 			--SYSTEM CLOCK AND SYSTEM RESET--
@@ -129,7 +130,9 @@ ARCHITECTURE synth OF top_connector IS
 			--VALID SIGNAL FROM CORE TO SIGNAL VALID OUTPUT THAT NEEDS TO BE STORED INTO BRAM
 			VALID					: IN std_logic;
 			--BUSY SIGNAL GOING TO CORE
-			BUSY					: OUT std_logic
+			BUSY					: OUT std_logic;
+			--Outputs generated from CORE to Interface
+			CORE_OUTPUTS			: IN std_logic_vector(C_NUM_OF_OUTPUTS_FROM_CORE*C_SIMPBUS_AWIDTH - 1 DOWNTO 0)			
 		);
 	END COMPONENT riffa_interface;
 
@@ -171,15 +174,15 @@ ARCHITECTURE synth OF top_connector IS
 	END COMPONENT test_core;
 	
 	
-	CONSTANT C_NUM_OF_INPUTS_TO_CORE : integer := 4; --Number of inputs expected from the PC to FPGA
+	CONSTANT C_NUM_OF_INPUTS_TO_CORE 	: integer := 4; --Number of inputs expected from the PC to FPGA
+	CONSTANT C_NUM_OF_OUTPUTS_FROM_CORE : integer := 1; --Expected number of outupts from core
 	
 	SIGNAL CORE_INPUTS : std_logic_vector(C_NUM_OF_INPUTS_TO_CORE*C_SIMPBUS_AWIDTH-1 DOWNTO 0); --Inputs to the core organised in a contigous std_logic_vector
 	
-	TYPE buffer_type IS ARRAY (0 TO C_NUM_OF_INPUTS_TO_CORE-1) OF std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0); --Buffer type (array of std_logic_vectors) array size = C_NUM_OF_INPUTS_TO_CORE
+	TYPE buffer_type IS ARRAY (natural RANGE <>) OF std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0); --Buffer type (array of std_logic_vectors) array size = C_NUM_OF_INPUTS_TO_CORE
 
-	SIGNAL input_buffer : buffer_type;
-	
-	SIGNAL OUTPUT : std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0) := (OTHERS => '0');
+	SIGNAL input_buffer 	: buffer_type(0 TO C_NUM_OF_INPUTS_TO_CORE-1);
+	SIGNAL output_buffer 	: buffer_type(0 TO C_NUM_OF_OUTPUTS_FROM_CORE - 1);
 	
 	--Valid signal from core to signal that the output is ready to be stored in the RAM
 	SIGNAL VALID : std_logic := '0';
@@ -196,6 +199,8 @@ ARCHITECTURE synth OF top_connector IS
 	CONSTANT RUNTIME 		: std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0) := std_logic_vector(to_unsigned(30, C_SIMPBUS_AWIDTH));
 	CONSTANT OUTPUT_CYCLE 	: std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0) := std_logic_vector(to_unsigned(10,C_SIMPBUS_AWIDTH));
 	
+	SIGNAL CORE_OUTPUTS		: std_logic_vector(C_NUM_OF_OUTPUTS_FROM_CORE*C_SIMPBUS_AWIDTH - 1 DOWNTO 0) := (OTHERS => '0');
+	
 BEGIN
 
 	--riffa_interface instantiation. The riffa_interface handles the data transfer
@@ -203,10 +208,11 @@ BEGIN
 	RIFFA_INTERFACE_I : COMPONENT riffa_interface
 	GENERIC MAP
 	(
-		C_SIMPBUS_AWIDTH		=> C_SIMPBUS_AWIDTH,
-		C_BRAM_ADDR				=> C_BRAM_ADDR,
-		C_BRAM_SIZE				=> C_BRAM_SIZE,
-		C_NUM_OF_INPUTS_TO_CORE => C_NUM_OF_INPUTS_TO_CORE
+		C_SIMPBUS_AWIDTH			=> C_SIMPBUS_AWIDTH,
+		C_BRAM_ADDR					=> C_BRAM_ADDR,
+		C_BRAM_SIZE					=> C_BRAM_SIZE,
+		C_NUM_OF_INPUTS_TO_CORE 	=> C_NUM_OF_INPUTS_TO_CORE,
+		C_NUM_OF_OUTPUTS_FROM_CORE 	=> C_NUM_OF_OUTPUTS_FROM_CORE
 	)
 	PORT MAP
 	(
@@ -247,13 +253,20 @@ BEGIN
 		START_PROCESS			=> START,
 		FINISHED				=> FINISHED,
 		VALID					=> VALID,
-		BUSY					=> BUSY	
+		BUSY					=> BUSY,
+		CORE_OUTPUTS			=> CORE_OUTPUTS
+		
 	);
 
 	--Assign the input buffers from the outputs of riffa_interface
-	Buff_Assign : FOR i IN input_buffer'RANGE GENERATE
+	Input_Buff_Assign : FOR i IN input_buffer'RANGE GENERATE
 		input_buffer(i) <= CORE_INPUTS(((i+1)*C_SIMPBUS_AWIDTH-1) DOWNTO (((i+1)*C_SIMPBUS_AWIDTH-1)-C_SIMPBUS_AWIDTH + 1));
 	END GENERATE;
+	
+	--Assign output_buffer from core to riffa_interface
+	Output_Buff_Assignment : FOR i IN output_buffer'RANGE GENERATE
+		CORE_OUTPUTS(((i+1)*C_SIMPBUS_AWIDTH-1) DOWNTO (((i+1)*C_SIMPBUS_AWIDTH-1)-C_SIMPBUS_AWIDTH + 1)) <= output_buffer(i);
+	END GENERATE;	
 	
 	
 	--Connect your components here.
@@ -268,7 +281,7 @@ BEGIN
 			INPUT_2 			=> input_buffer(1),
 			INPUT_3 			=> input_buffer(2),
 			INPUT_4 			=> input_buffer(3),
-			OUTPUT				=> OUTPUT,
+			OUTPUT				=> output_buffer(0),
 			VALID				=> VALID,
 			START				=> START,
 			RUNTIME				=> RUNTIME,
@@ -276,5 +289,4 @@ BEGIN
 			BUSY				=> BUSY,
 			OUTPUT_CYCLE		=> OUTPUT_CYCLE
 		);	
-
 END ARCHITECTURE synth;

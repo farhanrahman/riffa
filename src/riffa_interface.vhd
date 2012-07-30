@@ -57,7 +57,8 @@ GENERIC(
 	C_SIMPBUS_AWIDTH 			: integer := 32;
 	C_BRAM_ADDR					: std_logic_vector(31 DOWNTO 0) := (OTHERS => '0');
 	C_BRAM_SIZE					: integer := 32768;
-	C_NUM_OF_INPUTS_TO_CORE		: integer := 4 --CANNOT BE ZERO
+	C_NUM_OF_INPUTS_TO_CORE		: integer := 4; --CANNOT BE ZERO
+	C_NUM_OF_OUTPUTS_FROM_CORE	: integer := 1
 );
 
 PORT(
@@ -118,7 +119,9 @@ PORT(
 	--VALID SIGNAL FROM CORE TO SIGNAL VALID OUTPUT THAT NEEDS TO BE STORED INTO BRAM
 	VALID					: IN std_logic;
 	--BUSY SIGNAL GOING TO CORE
-	BUSY					: OUT std_logic
+	BUSY					: OUT std_logic;	
+	--Outputs generated from CORE to Interface
+	CORE_OUTPUTS			: IN std_logic_vector(C_NUM_OF_OUTPUTS_FROM_CORE*C_SIMPBUS_AWIDTH - 1 DOWNTO 0)
 );
 END ENTITY riffa_interface;
 

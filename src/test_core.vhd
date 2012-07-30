@@ -98,15 +98,16 @@ BEGIN
 					core_nstate <= idle;
 				ELSE
 					IF (unsigned(output_counter) = 0) THEN
-						core_nstate <= output_state;
-					END IF;
-					IF (BUSY = '1') THEN
-						core_nstate <= paused_state;
+						IF (BUSY = '1') THEN
+							core_nstate <= paused_state;
+						ELSE
+							core_nstate <= output_state;
+						END IF;					
 					END IF;
 				END IF;
 			WHEN paused_state =>
 				IF (BUSY /= '1') THEN
-					core_nstate <= wait_state;
+					core_nstate <= output_state;
 				END IF;
 			WHEN output_state =>
 				core_nstate <= wait_state;
@@ -154,7 +155,7 @@ BEGIN
 			END IF;
 		END IF;
 		
-		IF (core_state = output_state) THEN
+		IF (core_nstate = output_state) THEN
 		--Output is simply a counter
 			rOutput <= std_logic_vector(unsigned(rOutput) + 1);
 		END IF;
