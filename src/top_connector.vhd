@@ -114,45 +114,59 @@ ARCHITECTURE synth OF top_connector IS
 			--BRAM SIGNALS--
 			BRAM_EN					: OUT std_logic;
 			BRAM_WEN				: OUT std_logic_vector(3 DOWNTO 0);
-			BRAM_Dout				: OUT std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);
-			BRAM_Din				: IN std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0); 
-			BRAM_Addr				: OUT std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);
+			BRAM_Dout				: OUT std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);	  --Not sure if length should be 32 bits or length of simplebus
+			BRAM_Din				: IN std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);     --Not sure if length should be 32 bits or length of simplebus
+			BRAM_Addr				: OUT std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);    --Not sure if length should be 32 bits or length of simplebus
 			
-			--Outputs from PC to CORE
-			CORE_INPUTS				: OUT std_logic_vector(C_NUM_OF_INPUTS_TO_CORE*C_SIMPBUS_AWIDTH-1 DOWNTO 0)
 			
+			---------------CORE INTERFACE SIGNALS-----------------
+			--Inputs from PC to CORE
+			CORE_INPUTS				: OUT std_logic_vector(C_NUM_OF_INPUTS_TO_CORE*C_SIMPBUS_AWIDTH-1 DOWNTO 0);
+			--Signal to start the core processing
+			START_PROCESS			: OUT std_logic;
+			--FINISHED SIGNAL FROM CORE
+			FINISHED				: IN std_logic;
+			--VALID SIGNAL FROM CORE TO SIGNAL VALID OUTPUT THAT NEEDS TO BE STORED INTO BRAM
+			VALID					: IN std_logic;
+			--BUSY SIGNAL GOING TO CORE
+			BUSY					: OUT std_logic
 		);
 	END COMPONENT riffa_interface;
 
 	--DECLARE YOUR COMPONENT HERE FOR YOUR CORE
 	COMPONENT test_core IS
 		GENERIC(
-			C_SIMPBUS_AWIDTH 	: integer;
-			OUTPUT_CYCLE		: integer
+			C_SIMPBUS_AWIDTH 	: integer := 32
 		);
 		PORT(
-			SYS_CLK	: IN std_logic;
-			SYS_RST : IN std_logic;
+			SYS_CLK			: IN std_logic;
+			SYS_RST 		: IN std_logic;
 		
 			--INPUT SIGNALS
-			INPUT_1 : IN std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);
-			INPUT_2 : IN std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);
-			INPUT_3 : IN std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);
-			INPUT_4 : IN std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);
+			INPUT_1 		: IN std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);
+			INPUT_2 		: IN std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);
+			INPUT_3 		: IN std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);
+			INPUT_4 		: IN std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);
 		
-			OUTPUT	: OUT std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);
+			OUTPUT			: OUT std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);
 			
 			--VALID SIGNAL FOR VALID OUTPUT
-			VALID	: OUT std_logic;
+			VALID			: OUT std_logic;
 			
 			--START SIGNAL TO START PROCESSING
-			START	: IN std_logic;
+			START			: IN std_logic;
 			
 			--RUN TIME OF THE CORE
-			RUNTIME : IN std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);
+			RUNTIME 		: IN std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);
 			
 			--FINISHED SIGNAL
-			FINISHED : OUT std_logic			
+			FINISHED 		: OUT std_logic;
+			
+			--BUSY TO SIGNAL THE CORE TO PAUSE THE PROCESSING
+			BUSY			: IN std_logic;
+			
+			--OUTPUT_CYCLE: Determines after how many cycles the output will be valid
+			OUTPUT_CYCLE 	: IN std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0)
 		);	
 	END COMPONENT test_core;
 	
@@ -169,6 +183,18 @@ ARCHITECTURE synth OF top_connector IS
 	
 	--Valid signal from core to signal that the output is ready to be stored in the RAM
 	SIGNAL VALID : std_logic := '0';
+	
+	--FINISHED signal: flagged high when processing has finished
+	SIGNAL FINISHED : std_logic := '0';
+	
+	--BUSY SIGNAL FROM INTERFACE TO CORE
+	SIGNAL BUSY	: std_logic := '0';
+	
+	--START signal from interface to core to start processing
+	SIGNAL START : std_logic := '0';
+	
+	CONSTANT RUNTIME 		: std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0) := std_logic_vector(to_unsigned(30, C_SIMPBUS_AWIDTH));
+	CONSTANT OUTPUT_CYCLE 	: std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0) := std_logic_vector(to_unsigned(10,C_SIMPBUS_AWIDTH));
 	
 BEGIN
 
@@ -217,7 +243,11 @@ BEGIN
 		BRAM_Dout				=> BRAM_Dout,
 		BRAM_Din				=> BRAM_Din,
 		BRAM_Addr				=> BRAM_Addr,
-		CORE_INPUTS				=> CORE_INPUTS
+		CORE_INPUTS				=> CORE_INPUTS,
+		START_PROCESS			=> START,
+		FINISHED				=> FINISHED,
+		VALID					=> VALID,
+		BUSY					=> BUSY	
 	);
 
 	--Assign the input buffers from the outputs of riffa_interface
@@ -225,10 +255,11 @@ BEGIN
 		input_buffer(i) <= CORE_INPUTS(((i+1)*C_SIMPBUS_AWIDTH-1) DOWNTO (((i+1)*C_SIMPBUS_AWIDTH-1)-C_SIMPBUS_AWIDTH + 1));
 	END GENERATE;
 	
+	
+	--Connect your components here.
 	TEST_CORE_1 : COMPONENT test_core
 		GENERIC MAP(
-			C_SIMPBUS_AWIDTH 	=> C_SIMPBUS_AWIDTH,
-			OUTPUT_CYCLE		=> 10
+			C_SIMPBUS_AWIDTH 	=> C_SIMPBUS_AWIDTH
 		)
 		PORT MAP(
 			SYS_CLK				=> SYS_CLK,
@@ -239,8 +270,11 @@ BEGIN
 			INPUT_4 			=> input_buffer(3),
 			OUTPUT				=> OUTPUT,
 			VALID				=> VALID,
-			START				=> '0',
-			RUNTIME				=> (OTHERS => '0')
+			START				=> START,
+			RUNTIME				=> RUNTIME,
+			FINISHED			=> FINISHED,
+			BUSY				=> BUSY,
+			OUTPUT_CYCLE		=> OUTPUT_CYCLE
 		);	
 
 END ARCHITECTURE synth;

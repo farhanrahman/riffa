@@ -117,7 +117,10 @@ PORT MAP(
 	BRAM_Addr			=> BRAM_Addr, 					--OUT
 	
 	--START PROCESS to start core processing
-	START_PROCESS		=> START_PROCESS				--OUT
+	START_PROCESS		=> START_PROCESS,				--OUT
+	
+	FINISHED 			=> '0',							--IN
+	VALID				=> '0'							--IN
 );
 
 
@@ -176,71 +179,32 @@ BUF_REQ_ERR		<= 	'0';
 
 WAIT UNTIL rising_edge(clk);
 
-BUF_REQD <= '1';
+	--First send the data.
+	send_data(clk,BUF_REQD,BUF_REQD_RDY);
 
-WHILE BUF_REQD_RDY /= '1' LOOP
-	WAIT UNTIL rising_edge(clk);
-	counter := counter + 1;
-	IF (counter > limit) THEN
-		REPORT "counter = "&integer'image(counter)&" has reached maximum limit of "&integer'image(limit)&" cycles" SEVERITY failure;
-	END IF;
-END LOOP;
+	--Send a doorbell with number of bytes transferred
+	send_doorbell(clk,DOORBELL,DOORBELL_LEN,bytes_transferred);
 
-BUF_REQD <= '0';
-
-WAIT UNTIL rising_edge(clk);
-DOORBELL <= '1';
-DOORBELL_LEN <= slv(to_unsigned(bytes_transferred,C_SIMPBUS_AWIDTH));
-
-WAIT UNTIL rising_edge(clk);
-DOORBELL <= '0';
-DOORBELL_LEN <= (OTHERS => '0');
-
-
---DMA STUFF
-WAIT UNTIL rising_edge(BUF_REQ);
-WAIT UNTIL rising_edge(clk);
-BUF_REQ_ACK <= '1';
-
-BUF_REQ_SIZE 	<= slv(to_unsigned(11, 5));
-BUF_REQ_ADDR(3) <= '1'; --(3 => '1', OTHERS => '0'); 
-
-WAIT UNTIL rising_edge(clk);
-BUF_REQ_ACK <= '0';
-BUF_REQ_RDY <= '1';
-
-WAIT UNTIL rising_edge(DMA_REQ);
-DMA_REQ_ACK <= '1';
-
-WAIT UNTIL rising_edge(clk);
-DMA_REQ_ACK <= '0';
-
-WAIT UNTIL rising_edge(clk);
-WAIT UNTIL rising_edge(clk);
-
-DMA_ERR 	<= '0';
-DMA_DONE 	<= '1';
+	--Wait until the processing has finished and the whole BRAM has been transferred
+	--back to the PC
+	WHILE (usg(DMA_SRC) /= to_unsigned(32768, C_SIMPBUS_AWIDTH)) LOOP
+		handle_dma_normal(
+					BUF_REQ,
+					clk,
+					BUF_REQ_ACK,
+					BUF_REQ_SIZE,
+					BUF_REQ_ADDR,
+					BUF_REQ_RDY,
+					DMA_REQ,
+					DMA_REQ_ACK,
+					DMA_ERR,
+					DMA_DONE
+		);
+	END LOOP;
 	
-WAIT UNTIL rising_edge(clk);
-
-DMA_DONE <= '0';
-
-WAIT UNTIL rising_edge(INTERRUPT);
-
-IF (INTERRUPT_ERR = '1') THEN
-	WAIT UNTIL rising_edge(clk);
-	INTERRUPT_ACK <= '1';
-	WAIT UNTIL rising_edge(clk);
-	INTERRUPT_ACK <= '0';
-	REPORT "Error occured in hardware" SEVERITY failure;
-ELSE
-	WAIT UNTIL rising_edge(clk);
-	INTERRUPT_ACK <= '1';
-	WAIT UNTIL rising_edge(clk);
-	INTERRUPT_ACK <= '0';
-	REPORT "Test PASSED." SEVERITY failure;
-END IF;
-
+	--Handle the interrupt signals from the FPGA
+	handle_interrupt(clk,INTERRUPT,INTERRUPT_ERR,INTERRUPT_ACK);
+	
 END PROCESS State_Machine_test;
 
 

@@ -186,7 +186,7 @@ BEGIN
 			rDes <= BUF_REQ_ADDR;
 			IF (unsigned(rEnd) - unsigned(rStart) < unsigned(buffReq)) THEN
 				IF (unsigned(rEnd) = unsigned(rStart)) THEN
-					rLen <= std_logic_vector(to_unsigned(C_SIMPBUS_AWIDTH-1,C_SIMPBUS_AWIDTH)); --default length of 32 bits
+					rLen <= std_logic_vector(to_unsigned(C_SIMPBUS_AWIDTH,C_SIMPBUS_AWIDTH)); --default length of 32 bits
 				ELSE
 					rLen <= std_logic_vector(unsigned(rEnd) - unsigned(rStart));
 				END IF;

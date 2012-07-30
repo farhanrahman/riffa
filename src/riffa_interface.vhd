@@ -107,14 +107,19 @@ PORT(
 	BRAM_Din				: IN std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);     --Not sure if length should be 32 bits or length of simplebus
 	BRAM_Addr				: OUT std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);    --Not sure if length should be 32 bits or length of simplebus
 	
-	--Outputs from PC to CORE
+	
+	---------------CORE INTERFACE SIGNALS-----------------
+	--Inputs from PC to CORE
 	CORE_INPUTS				: OUT std_logic_vector(C_NUM_OF_INPUTS_TO_CORE*C_SIMPBUS_AWIDTH-1 DOWNTO 0);
 	--Signal to start the core processing
-	START_PROCESS			: OUT std_logic
-	
+	START_PROCESS			: OUT std_logic;
+	--FINISHED SIGNAL FROM CORE
+	FINISHED				: IN std_logic;
+	--VALID SIGNAL FROM CORE TO SIGNAL VALID OUTPUT THAT NEEDS TO BE STORED INTO BRAM
+	VALID					: IN std_logic;
+	--BUSY SIGNAL GOING TO CORE
+	BUSY					: OUT std_logic
 );
-
-
 END ENTITY riffa_interface;
 
 
@@ -200,6 +205,7 @@ TYPE buffer_type IS ARRAY (0 TO C_NUM_OF_INPUTS_TO_CORE-1) OF std_logic_vector(C
 SIGNAL input_buffer : buffer_type;
 SIGNAL store_counter : std_logic_vector(C_NUM_INPUTS_LOG - 1 DOWNTO 0) := (OTHERS => '0');
 CONSTANT store_counter_zero : std_logic_vector(C_NUM_INPUTS_LOG - 1 DOWNTO 0) := (OTHERS => '0');
+CONSTANT BYTE_INCR : integer := C_SIMPBUS_AWIDTH/8;
 
 SIGNAL core_inputs_1 : std_logic_vector(C_NUM_OF_INPUTS_TO_CORE*C_SIMPBUS_AWIDTH-1 DOWNTO 0);
 
@@ -295,7 +301,7 @@ BEGIN
 				END IF;
 			WHEN start_process_state =>
 				nstate <= process_data;
-			WHEN process_data => 
+			WHEN process_data =>
 				nstate <= dma_transfer;
 			WHEN dma_transfer =>
 				IF (DONE = '1') THEN
@@ -359,6 +365,15 @@ BEGIN
 		START_PROCESS <= '0';
 	END IF;
 	
+	--For now the BUSY signal will only be high in the dma_transfer state
+	--Later pause signal will only be high when all the buffers are full and
+	--the core has to stop outputting data until one of the buffers is empty
+	IF (state = dma_transfer) THEN
+		BUSY <= '1';
+	ELSE
+		BUSY <= '0';
+	END IF;
+	
 END PROCESS;
 
 State_Assignment : PROCESS
@@ -381,10 +396,12 @@ WAIT UNTIL rising_edge(SYS_CLK);
 		r_end_addr	<= (OTHERS => '0');
 		r_start <= '0';
 		
-		IF (state = PC2FPGA_Data_transfer_wait AND DOORBELL = '1' AND DOORBELL_ERR = '0' AND DOORBELL_LEN /= SIMPBUS_ZERO) THEN
+		IF (DOORBELL = '1' AND DOORBELL_ERR = '0' AND DOORBELL_LEN /= SIMPBUS_ZERO) THEN
 			 --Increment the pointer with however many bits were transferred
 			store_counter <= std_logic_vector(to_unsigned(C_NUM_OF_INPUTS_TO_CORE-1,C_NUM_INPUTS_LOG));
-			bramAddress <= std_logic_vector(unsigned(bramAddress) + resize(unsigned(DOORBELL_LEN)*8 - 1,C_SIMPBUS_AWIDTH));
+			--bramAddress <= std_logic_vector(unsigned(bramAddress) + resize(unsigned(DOORBELL_LEN)*8 - 1,C_SIMPBUS_AWIDTH));
+			--Increment bramAddress with however many bytes were transferred since BRAM is byte addressible
+			bramAddress <= std_logic_vector(resize(unsigned(bramAddress) + unsigned(DOORBELL_LEN), C_SIMPBUS_AWIDTH));
 		END IF;
 		
 		IF (state = prepare_data) THEN
@@ -395,8 +412,11 @@ WAIT UNTIL rising_edge(SYS_CLK);
 			
 			--Decrement bramAddress
 			IF (bramAddress /= C_BRAM_ADDR AND (unsigned(store_counter) > unsigned(store_counter_zero))) THEN
-				IF ((signed(bramAddress) - C_SIMPBUS_AWIDTH) >= 0) THEN --CHECK IF SUBTRACTION IS NEGATIVE
-					bramAddress <= std_logic_vector(unsigned(bramAddress) - C_SIMPBUS_AWIDTH);
+				--Decrement bramAddress by clamping it to C_BRAM_ADDR if necessary
+				IF ((unsigned(C_BRAM_ADDR) + BYTE_INCR) > unsigned(bramAddress)) THEN
+					bramAddress <= C_BRAM_ADDR;
+				ELSE
+					bramAddress <= std_logic_vector(unsigned(bramAddress) - BYTE_INCR);
 				END IF;
 			END IF;
 			
@@ -406,13 +426,14 @@ WAIT UNTIL rising_edge(SYS_CLK);
 			END IF;
 		END IF;
 		
+		--Always do DMA transfer of the whole BRAM block
 		IF (state = dma_transfer) THEN
 			r_start_addr <= C_BRAM_ADDR;
-			r_end_addr <= bramAddress;
+			r_end_addr <= std_logic_vector(unsigned(C_BRAM_ADDR) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));--bramAddress;
 			r_start <= '1'; --start DMA transfer
 			IF (DONE = '1') THEN
 				r_start <= '0'; --stop the DMA transfer
-				bramAddress <= r_start_addr;
+				--bramAddress <= r_start_addr;
 			END IF;
 		END IF;
 		
