@@ -138,6 +138,7 @@ BEGIN bram_block
  PARAMETER INSTANCE = bram_block_0
  PARAMETER HW_VER = 1.00.a
  BUS_INTERFACE PORTA = xps_bram_if_cntlr_0_PORTA
+ BUS_INTERFACE PORTB = riffa_0_BRAMPORT
 END
 
 BEGIN xps_bram_if_cntlr
