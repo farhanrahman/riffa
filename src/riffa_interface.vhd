@@ -410,7 +410,7 @@ BEGIN
 	--For now the BUSY signal will only be high in the dma_transfer or store_state states
 	--Later pause signal will only be high when all the buffers are full and
 	--the core has to stop outputting data until one of the buffers is empty
-	IF (state = dma_transfer OR state = store_state OR dma_transfer_from_store_state) THEN
+	IF (state = dma_transfer OR state = store_state OR state = dma_transfer_from_store_state) THEN
 		BUSY <= '1';
 	ELSE
 		BUSY <= '0';
