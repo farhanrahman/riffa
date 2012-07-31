@@ -1,14 +1,14 @@
 LIBRARY IEEE;
 USE IEEE.std_logic_1164.ALL;
 USE IEEE.numeric_std.ALL;
-USE work.riffa_interface;
+USE work.top_connector;
 USE work.project_pak.ALL;
 USE work.utility.ALL;
 
-ENTITY riffa_test_bench IS
-END ENTITY riffa_test_bench;
+ENTITY top_connector_test_bench IS
+END ENTITY top_connector_test_bench;
 
-ARCHITECTURE testbench OF riffa_test_bench IS
+ARCHITECTURE testbench OF top_connector_test_bench IS
 
 SIGNAL clk : std_logic;
 SIGNAL reset : std_logic;
@@ -62,69 +62,52 @@ SIGNAL BRAM_Dout		: std_logic_vector(31 DOWNTO 0);					--OUT
 SIGNAL BRAM_Din			: std_logic_vector(31 DOWNTO 0);					--IN
 SIGNAL BRAM_Addr		: std_logic_vector(31 DOWNTO 0);					--OUT
 
-SIGNAL START_PROCESS	: std_logic;										--OUT
 CONSTANT C_NUM_OF_OUTPUTS_FROM_CORE	: integer := 1;
-SIGNAL CORE_OUTPUTS		: std_logic_vector(C_NUM_OF_OUTPUTS_FROM_CORE*C_SIMPBUS_AWIDTH - 1 DOWNTO 0) := (OTHERS => '0');
 
 BEGIN
 
-riffa : ENTITY riffa_interface
-PORT MAP(
-	--SYSTEM CLOCK AND SYSTEM RESET--
-	SYS_CLK				=> clk,
-	SYS_RST				=> reset,
-
-	--INTERRUPTS SIGNALS TO PC--
-	INTERRUPT			=> INTERRUPT, 					--OUT
-	INTERRUPT_ERR		=> INTERRUPT_ERR, 				--OUT
-	INTERRUPT_ACK		=> INTERRUPT_ACK, 				--IN
-	
-	--DOORBELL SIGNALS FROM PC--
-	DOORBELL			=> DOORBELL, 					--IN
-	DOORBELL_ERR		=> DOORBELL_ERR, 				--IN
-	DOORBELL_LEN		=> DOORBELL_LEN,				--IN
-	DOORBELL_ARG		=> DOORBELL_ARG, 				--IN
-	
-	--DMA SIGNALS--
-	DMA_REQ				=> DMA_REQ,						--OUT
-	DMA_REQ_ACK			=> DMA_REQ_ACK,					--IN
-	DMA_SRC				=> DMA_SRC,		 				--OUT
-	DMA_DST				=> DMA_DST,		 				--OUT
-	DMA_LEN				=> DMA_LEN,						--OUT
-	DMA_SIG				=> DMA_SIG,						--OUT
-	DMA_DONE			=> DMA_DONE,					--IN
-	DMA_ERR				=> DMA_ERR,						--IN
-	
-	--FPGA TO PC BUFFER--
-	BUF_REQ				=> BUF_REQ,		    			--OUT
-	BUF_REQ_ACK			=> BUF_REQ_ACK,	    			--IN
-	BUF_REQ_ADDR		=> BUF_REQ_ADDR,    			--IN
-	BUF_REQ_SIZE		=> BUF_REQ_SIZE,    			--IN
-	BUF_REQ_RDY			=> BUF_REQ_RDY,	    			--IN
-	BUF_REQ_ERR			=> BUF_REQ_ERR,	    			--IN
-	
-	
-	--PC BUFFER REQUEST SIGNALS--
-	BUF_REQD			=> BUF_REQD,					--IN
-	BUF_REQD_ADDR		=> BUF_REQD_ADDR,				--OUT
-	BUF_REQD_SIZE		=> BUF_REQD_SIZE,				--OUT
-	BUF_REQD_RDY		=> BUF_REQD_RDY,				--OUT
-	BUF_REQD_ERR		=> BUF_REQD_ERR,				--OUT
-
-	--BRAM SIGNALS--
-	BRAM_EN				=> BRAM_EN,	 					--OUT
-	BRAM_WEN			=> BRAM_WEN, 					--OUT	
-	BRAM_Dout			=> BRAM_Dout,					--OUT
-	BRAM_Din			=> BRAM_Din, 					--IN	
-	BRAM_Addr			=> BRAM_Addr, 					--OUT
-	
-	--START PROCESS to start core processing
-	START_PROCESS		=> START_PROCESS,				--OUT
-	
-	FINISHED 			=> '0',							--IN
-	VALID				=> '0',							--IN
-	CORE_OUTPUTS		=>	CORE_OUTPUTS				--OUT
-);
+DUT : ENTITY top_connector
+	GENERIC MAP
+	(
+		C_SIMPBUS_AWIDTH		=> C_SIMPBUS_AWIDTH,
+		C_BRAM_SIZE				=> 32768
+	)
+	PORT MAP
+	(
+		SYS_CLK					=> clk,
+		SYS_RST					=> reset,
+		INTERRUPT				=> INTERRUPT,
+		INTERRUPT_ERR			=> INTERRUPT_ERR,
+		INTERRUPT_ACK			=> INTERRUPT_ACK,
+		DOORBELL				=> DOORBELL,
+		DOORBELL_ERR			=> DOORBELL_ERR,
+		DOORBELL_LEN			=> DOORBELL_LEN,
+		DOORBELL_ARG			=> DOORBELL_ARG,
+		DMA_REQ					=> DMA_REQ,
+		DMA_REQ_ACK				=> DMA_REQ_ACK,
+		DMA_SRC					=> DMA_SRC,
+		DMA_DST					=> DMA_DST,
+		DMA_LEN					=> DMA_LEN,
+		DMA_SIG					=> DMA_SIG,
+		DMA_DONE				=> DMA_DONE,
+		DMA_ERR					=> DMA_ERR,
+		BUF_REQ					=> BUF_REQ,
+		BUF_REQ_ACK				=> BUF_REQ_ACK,
+		BUF_REQ_ADDR			=> BUF_REQ_ADDR,
+		BUF_REQ_SIZE			=> BUF_REQ_SIZE,
+		BUF_REQ_RDY				=> BUF_REQ_RDY,
+		BUF_REQ_ERR				=> BUF_REQ_ERR,
+		BUF_REQD				=> BUF_REQD,
+		BUF_REQD_ADDR			=> BUF_REQD_ADDR,
+		BUF_REQD_SIZE			=> BUF_REQD_SIZE,
+		BUF_REQD_RDY			=> BUF_REQD_RDY,
+		BUF_REQD_ERR			=> BUF_REQD_ERR,
+		BRAM_EN					=> BRAM_EN,
+		BRAM_WEN				=> BRAM_WEN,
+		BRAM_Dout				=> BRAM_Dout,
+		BRAM_Din				=> BRAM_Din,
+		BRAM_Addr				=> BRAM_Addr
+	);
 
 
 Clk_generate : PROCESS --Process to generate the clk
@@ -146,20 +129,6 @@ END PROCESS;
 
 State_Machine_test : PROCESS
 
---TYPE rec IS
---RECORD
---	reset, start: std_logic;
---END RECORD;
---
---TYPE input_data_array_type IS ARRAY (natural RANGE <>) OF rec;
---
---CONSTANT test_input_data : input_data_array_type := (
---	 ('0','0'),
---     ('0','1')
---);
-
-VARIABLE counter 			: integer := 0;
-CONSTANT limit		 		: integer := 32; --cycles wait until BUF_REQD times out
 CONSTANT bytes_transferred	: integer := 16; --in bytes. Assuming for now 4 inputs of 32 bit width
 
 BEGIN
