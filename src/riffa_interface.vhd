@@ -271,7 +271,7 @@ BEGIN
 			WHEN PC2FPGA_Data_transfer_wait =>
 				IF (DOORBELL = '1') THEN
 					IF (DOORBELL_ERR = '0') THEN
-						nstate <= store_data; --go to state where we input the data into the core
+						nstate <= dma_transfer; --go directly to dma_transfer state
 					ELSE
 						nstate <= idle; --reset to idle state if there is an error from host
 					END IF;
@@ -350,7 +350,7 @@ WAIT UNTIL rising_edge(SYS_CLK);
 		IF (DOORBELL = '1' AND DOORBELL_ERR = '0' AND DOORBELL_LEN /= SIMPBUS_ZERO) THEN
 			 --Increment the pointer with however many bits were transferred
 			--bramAddress <= std_logic_vector(unsigned(bramAddress) + resize(unsigned(DOORBELL_LEN)*8 - 1,C_SIMPBUS_AWIDTH));
-			bramAddress <= std_logic_vector(resize(unsigned(bramAddress) + unsigned(DOORBELL_LEN), C_SIMPBUS_AWIDTH));
+			bramAddress <= std_logic_vector(resize(unsigned(C_BRAM_ADDR) + unsigned(DOORBELL_LEN), C_SIMPBUS_AWIDTH));
 		END IF;
 		
 		IF (state = dma_transfer) THEN

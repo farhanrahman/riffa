@@ -10,7 +10,7 @@ PACKAGE utility IS
 				SIGNAL BUF_REQD 		: OUT std_logic;
 				SIGNAL BUF_REQD_RDY		: IN std_logic
 	);
-	
+
 	--Simulates doorbell send with doorbell length set to 
 	--bytes_transferred number of bytes.
 	PROCEDURE send_doorbell(
@@ -35,8 +35,7 @@ PACKAGE utility IS
 				SIGNAl DMA_REQ		: IN std_logic;
 				SIGNAL DMA_REQ_ACK	: OUT std_logic;
 				SIGNAL DMA_ERR		: OUT std_logic;
-				SIGNAL DMA_DONE		: OUT std_logic;
-				CONSTANT buf_size	: integer
+				SIGNAL DMA_DONE		: OUT std_logic
 	);
 	
 	--Procedure used to handle dma transfer but with an error
@@ -53,33 +52,29 @@ PACKAGE utility IS
 				SIGNAL DMA_REQ_ACK	: OUT std_logic;
 				SIGNAL DMA_ERR		: OUT std_logic;
 				SIGNAL DMA_DONE		: OUT std_logic
-	);	
-
+	);
 	
-	PROCEDURE handle_dma(
-				SIGNAL BUF_REQ 		: IN std_logic;
-				SIGNAL clk			: IN std_logic;
-				SIGNAL BUF_REQ_ACK 	: OUT std_logic;
-				SIGNAL BUF_REQ_SIZE	: OUT std_logic_vector(4 DOWNTO 0);
-				SIGNAL BUF_REQ_ADDR : OUT std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);
-				SIGNAL BUF_REQ_RDY	: OUT std_logic;
-				SIGNAl DMA_REQ		: IN std_logic;
-				SIGNAL DMA_REQ_ACK	: OUT std_logic;
-				SIGNAL DMA_ERR		: OUT std_logic;
-				SIGNAL DMA_DONE		: OUT std_logic
-	);	
+	--Procedure used to handle the interrupt from FPGA.
+	--If the FPGA responds with INTERRUPT_ERR then the
+	--method will assert failure.
+	PROCEDURE handle_interrupt(
+			SIGNAL clk				: IN std_logic;	
+			SIGNAL INTERRUPT 		: IN std_logic;
+			SIGNAL INTERRUPT_ERR 	: IN std_logic;
+			SIGNAL INTERRUPT_ACK 	: OUT std_logic
+	);
 	
-	PROCEDURE flag_dma_done (
-				SIGNAL clk 		: IN std_logic;
-				SIGNAL DMA_DONE : OUT std_logic;
-				SIGNAL DMA_ERR	: OUT std_logic
-	);	
+	--Function used to toggle start signal into test_core
+	PROCEDURE toggle_start(
+			SIGNAL clk				: IN std_logic;
+			SIGNAL START			: OUT std_logic
+	);
 	
-	PROCEDURE flag_dma_done_with_err(
-				SIGNAL clk 		: IN std_logic;
-				SIGNAL DMA_DONE : OUT std_logic;
-				SIGNAL DMA_ERR	: OUT std_logic
-	);	
+	--waits for 'cycles' number of clock cycles
+	PROCEDURE wait_for(
+			SIGNAL clk		: std_logic;
+			CONSTANT cycles : integer
+	);
 END PACKAGE utility;
 
 
@@ -153,8 +148,7 @@ PACKAGE BODY utility IS
 				SIGNAl DMA_REQ		: IN std_logic;
 				SIGNAL DMA_REQ_ACK	: OUT std_logic;
 				SIGNAL DMA_ERR		: OUT std_logic;
-				SIGNAL DMA_DONE		: OUT std_logic;
-				CONSTANT buf_size	: integer
+				SIGNAL DMA_DONE		: OUT std_logic
 	) IS
 
 	BEGIN
@@ -162,7 +156,7 @@ PACKAGE BODY utility IS
 		WAIT UNTIL rising_edge(clk);
 		BUF_REQ_ACK <= '1';
 
-		BUF_REQ_SIZE 	<= std_logic_vector(to_unsigned(buf_size, 5));
+		BUF_REQ_SIZE 	<= std_logic_vector(to_unsigned(11, 5));
 		BUF_REQ_ADDR(3) <= '1'; --(3 => '1', OTHERS => '0'); 
 
 		WAIT UNTIL rising_edge(clk);
@@ -221,70 +215,54 @@ PACKAGE BODY utility IS
 
 		DMA_DONE <= '0';
 		DMA_ERR <= '0';
-	END;	
-	
-	PROCEDURE handle_dma(
-				SIGNAL BUF_REQ 		: IN std_logic;
-				SIGNAL clk			: IN std_logic;
-				SIGNAL BUF_REQ_ACK 	: OUT std_logic;
-				SIGNAL BUF_REQ_SIZE	: OUT std_logic_vector(4 DOWNTO 0);
-				SIGNAL BUF_REQ_ADDR : OUT std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);
-				SIGNAL BUF_REQ_RDY	: OUT std_logic;
-				SIGNAl DMA_REQ		: IN std_logic;
-				SIGNAL DMA_REQ_ACK	: OUT std_logic;
-				SIGNAL DMA_ERR		: OUT std_logic;
-				SIGNAL DMA_DONE		: OUT std_logic
+	END;
+
+
+	PROCEDURE handle_interrupt(
+			SIGNAL clk				: IN std_logic;
+			SIGNAL INTERRUPT 		: IN std_logic;
+			SIGNAL INTERRUPT_ERR 	: IN std_logic;
+			SIGNAL INTERRUPT_ACK 	: OUT std_logic
 	) IS
-	
 	BEGIN
-		WAIT UNTIL rising_edge(BUF_REQ);
-		WAIT UNTIL rising_edge(clk);
-		BUF_REQ_ACK <= '1';
+		WAIT UNTIL rising_edge(INTERRUPT);
 
-		BUF_REQ_SIZE 	<= std_logic_vector(to_unsigned(11, 5));
-		BUF_REQ_ADDR(3) <= '1'; --(3 => '1', OTHERS => '0'); 
-
-		WAIT UNTIL rising_edge(clk);
-		BUF_REQ_ACK <= '0';
-		BUF_REQ_RDY <= '1';
-
-		WAIT UNTIL rising_edge(DMA_REQ);
-		DMA_REQ_ACK <= '1';
-
-		WAIT UNTIL rising_edge(clk);
-		DMA_REQ_ACK <= '0';
+		IF (INTERRUPT_ERR = '1') THEN
+			WAIT UNTIL rising_edge(clk);
+			INTERRUPT_ACK <= '1';
+			WAIT UNTIL rising_edge(clk);
+			INTERRUPT_ACK <= '0';
+			--REPORT "Error occured in hardware" SEVERITY failure;
+		ELSE
+			WAIT UNTIL rising_edge(clk);
+			INTERRUPT_ACK <= '1';
+			WAIT UNTIL rising_edge(clk);
+			INTERRUPT_ACK <= '0';
+			--REPORT "Test PASSED." SEVERITY failure;
+		END IF;
 	END;
 	
-	PROCEDURE flag_dma_done (
-				SIGNAL clk 		: IN std_logic;
-				SIGNAL DMA_DONE : OUT std_logic;
-				SIGNAL DMA_ERR	: OUT std_logic
+	PROCEDURE toggle_start(
+			SIGNAL clk				: IN std_logic;
+			SIGNAL START			: OUT std_logic
 	) IS
-	
-	BEGIN
-		
-		DMA_ERR 	<= '0';
-		DMA_DONE 	<= '1';
-			
-		WAIT UNTIL rising_edge(clk);
 
-		DMA_DONE <= '0';			
+	BEGIN
+		WAIT UNTIL rising_edge(clk);
+		START <= '1';
+		WAIT UNTIL rising_edge(clk);
+		START <= '0';
 	END;
 	
-	PROCEDURE flag_dma_done_with_err(
-				SIGNAL clk 		: IN std_logic;
-				SIGNAL DMA_DONE : OUT std_logic;
-				SIGNAL DMA_ERR	: OUT std_logic
+	PROCEDURE wait_for(
+			SIGNAL clk		: std_logic;
+			CONSTANT cycles : integer
 	) IS
 	
 	BEGIN
-		DMA_ERR 	<= '1';
-		DMA_DONE 	<= '1';
-			
-		WAIT UNTIL rising_edge(clk);
-
-		DMA_DONE <= '0';
-		DMA_ERR <= '0';
-	END;		
+		FOR i IN 0 TO cycles - 1 LOOP
+			WAIT UNTIL rising_edge(clk);
+		END LOOP;
+	END;
 	
 END utility;

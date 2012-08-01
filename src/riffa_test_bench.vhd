@@ -70,6 +70,9 @@ SIGNAL BRAM_Addr		: std_logic_vector(31 DOWNTO 0);					--OUT
 BEGIN
 
 riffa : ENTITY riffa_interface
+--GENERIC MAP(
+--	C_BRAM_ADDR => "00000000100100000000000000000000"
+--)
 PORT MAP(
 	--SYSTEM CLOCK AND SYSTEM RESET--
 	SYS_CLK				=> clk,
@@ -126,9 +129,9 @@ PORT MAP(
 Clk_generate : PROCESS --Process to generate the clk
 BEGIN
 	clk <= '0';
-	WAIT FOR Clk_div_2;
+	WAIT FOR clk_per/2;
 	clk <= '1';
-	WAIT FOR Clk_div_2;
+	WAIT FOR clk_per/2;
 END PROCESS;
 
 Rst_generate : PROCESS --Process to generate the reset in the beginning
@@ -139,30 +142,28 @@ BEGIN
 	WAIT;
 END PROCESS;
 
+Interrupt_handling : PROCESS
+BEGIN
+	--Handle the interrupt signals from the FPGA
+	INTERRUPT_ACK 	<= '0';
+	handle_interrupt(clk,INTERRUPT,INTERRUPT_ERR,INTERRUPT_ACK);
+	wait_for(clk, 10);
+	REPORT "Test PASSED." SEVERITY failure;
+	WAIT;
+END PROCESS;
+
 
 State_Machine_test : PROCESS
 
---TYPE rec IS
---RECORD
---	reset, start: std_logic;
---END RECORD;
---
---TYPE input_data_array_type IS ARRAY (natural RANGE <>) OF rec;
---
---CONSTANT test_input_data : input_data_array_type := (
---	 ('0','0'),
---     ('0','1')
---);
+CONSTANT bytes_transferred	: integer := 16; --in bytes. Assuming for now 4 inputs of 32 bit width
 
-CONSTANT bytes_transferred	: integer := 1024;
 BEGIN
-INTERRUPT_ACK 	<= '0';
 DOORBELL		<= '0';		
 DOORBELL_ERR	<= '0';
 DOORBELL_LEN	<= (OTHERS => '0');
 DOORBELL_ARG	<= (OTHERS => '0');
 BUF_REQD		<= '0';
-BRAM_Din 		<= (OTHERS => '0');
+BRAM_Din 		<= slv(to_unsigned(1024, C_SIMPBUS_AWIDTH));--(OTHERS => '0');
 
 DMA_REQ_ACK 	<= 	'0';
 DMA_DONE		<=	'0';
@@ -175,41 +176,29 @@ BUF_REQ_ERR		<= 	'0';
 
 WAIT UNTIL rising_edge(clk);
 
-send_data(clk, BUF_REQD, BUF_REQD_RDY);
+	--First send the data.
+	send_data(clk,BUF_REQD,BUF_REQD_RDY);
 
-send_doorbell(clk, DOORBELL, DOORBELL_LEN, bytes_transferred);
+	--Send a doorbell with number of bytes transferred
+	send_doorbell(clk,DOORBELL,DOORBELL_LEN,bytes_transferred);
 
-
-WHILE (usg(DMA_SRC) /= to_unsigned(bytes_transferred, C_SIMPBUS_AWIDTH)) LOOP
+	--Wait until the processing has finished and the whole BRAM has been transferred
+	--back to the PC
+	WHILE (TRUE) LOOP
 		handle_dma_normal(
-				BUF_REQ,
-				clk,
-				BUF_REQ_ACK,
-				BUF_REQ_SIZE,
-				BUF_REQ_ADDR,
-				BUF_REQ_RDY,
-				DMA_REQ,
-				DMA_REQ_ACK,
-				DMA_ERR,
-				DMA_DONE,
-				2
-			);
-END LOOP;
-
-IF (INTERRUPT_ERR = '1') THEN
-	WAIT UNTIL rising_edge(clk);
-	INTERRUPT_ACK <= '1';
-	WAIT UNTIL rising_edge(clk);
-	INTERRUPT_ACK <= '0';
-	REPORT "Error occured in hardware" SEVERITY failure;
-ELSE
-	WAIT UNTIL rising_edge(clk);
-	INTERRUPT_ACK <= '1';
-	WAIT UNTIL rising_edge(clk);
-	INTERRUPT_ACK <= '0';
-	REPORT "Test PASSED." SEVERITY failure;
-END IF;
-
+					BUF_REQ,
+					clk,
+					BUF_REQ_ACK,
+					BUF_REQ_SIZE,
+					BUF_REQ_ADDR,
+					BUF_REQ_RDY,
+					DMA_REQ,
+					DMA_REQ_ACK,
+					DMA_ERR,
+					DMA_DONE
+		);
+	END LOOP;
+	WAIT;
 END PROCESS State_Machine_test;
 
 
