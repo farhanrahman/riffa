@@ -1,7 +1,7 @@
 import os
 if __name__=="__main__":
 	count = 0
-	for i in range(1,100):
+	for i in range(0,100):
 		output = os.system("./riffaexample > log.txt")
 		if output != 0:
 			count = count+1

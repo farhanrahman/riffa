@@ -16,8 +16,7 @@ entity system is
     fpga_0_clk_1_sys_clk_pin : in std_logic;
     fpga_0_rst_1_sys_rst_pin : in std_logic;
     fpga_0_PCIe_Diff_Clk_IBUF_DS_P_pin : in std_logic;
-    fpga_0_PCIe_Diff_Clk_IBUF_DS_N_pin : in std_logic;
-    riffa_0_SYS_CLK_pin : in std_logic
+    fpga_0_PCIe_Diff_Clk_IBUF_DS_N_pin : in std_logic
   );
 end system;
 
@@ -1117,6 +1116,13 @@ architecture STRUCTURE of system is
   signal pgassign2 : std_logic_vector(0 to 0);
   signal pgassign3 : std_logic_vector(0 to 0);
   signal pgassign4 : std_logic_vector(0 to 0);
+  signal riffa_0_BRAMPORT_BRAM_Addr : std_logic_vector(0 to 31);
+  signal riffa_0_BRAMPORT_BRAM_Clk : std_logic;
+  signal riffa_0_BRAMPORT_BRAM_Din : std_logic_vector(0 to 31);
+  signal riffa_0_BRAMPORT_BRAM_Dout : std_logic_vector(0 to 31);
+  signal riffa_0_BRAMPORT_BRAM_EN : std_logic;
+  signal riffa_0_BRAMPORT_BRAM_Rst : std_logic;
+  signal riffa_0_BRAMPORT_BRAM_WEN : std_logic_vector(0 to 3);
   signal riffa_0_CHANNEL_BUF_REQ : std_logic;
   signal riffa_0_CHANNEL_BUF_REQD : std_logic;
   signal riffa_0_CHANNEL_BUF_REQD_ADDR : std_logic_vector(31 downto 0);
@@ -1971,13 +1977,13 @@ begin
       BRAM_Addr_A => xps_bram_if_cntlr_0_PORTA_BRAM_Addr,
       BRAM_Din_A => xps_bram_if_cntlr_0_PORTA_BRAM_Din,
       BRAM_Dout_A => xps_bram_if_cntlr_0_PORTA_BRAM_Dout,
-      BRAM_Rst_B => net_gnd0,
-      BRAM_Clk_B => net_gnd0,
-      BRAM_EN_B => net_gnd0,
-      BRAM_WEN_B => net_gnd4(3 downto 0),
-      BRAM_Addr_B => net_gnd32,
-      BRAM_Din_B => open,
-      BRAM_Dout_B => net_gnd32
+      BRAM_Rst_B => riffa_0_BRAMPORT_BRAM_Rst,
+      BRAM_Clk_B => riffa_0_BRAMPORT_BRAM_Clk,
+      BRAM_EN_B => riffa_0_BRAMPORT_BRAM_EN,
+      BRAM_WEN_B => riffa_0_BRAMPORT_BRAM_WEN,
+      BRAM_Addr_B => riffa_0_BRAMPORT_BRAM_Addr,
+      BRAM_Din_B => riffa_0_BRAMPORT_BRAM_Din,
+      BRAM_Dout_B => riffa_0_BRAMPORT_BRAM_Dout
     );
 
   xps_bram_if_cntlr_0 : system_xps_bram_if_cntlr_0_wrapper
@@ -2161,13 +2167,13 @@ begin
       BUF_REQD_SIZE => riffa_0_CHANNEL_BUF_REQD_SIZE,
       BUF_REQD_RDY => riffa_0_CHANNEL_BUF_REQD_RDY,
       BUF_REQD_ERR => riffa_0_CHANNEL_BUF_REQD_ERR,
-      BRAM_Rst => open,
-      BRAM_Clk => open,
-      BRAM_EN => open,
-      BRAM_WEN => open,
-      BRAM_Addr => open,
-      BRAM_Din => net_gnd32,
-      BRAM_Dout => open
+      BRAM_Rst => riffa_0_BRAMPORT_BRAM_Rst,
+      BRAM_Clk => riffa_0_BRAMPORT_BRAM_Clk,
+      BRAM_EN => riffa_0_BRAMPORT_BRAM_EN,
+      BRAM_WEN => riffa_0_BRAMPORT_BRAM_WEN,
+      BRAM_Addr => riffa_0_BRAMPORT_BRAM_Addr,
+      BRAM_Din => riffa_0_BRAMPORT_BRAM_Din,
+      BRAM_Dout => riffa_0_BRAMPORT_BRAM_Dout
     );
 
   ibufgds_0 : IBUFGDS

@@ -193,7 +193,7 @@ SIGNAL END_ADDR, r_end_addr			: std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0) :=
 --
 --SIGNAL input_buffer : buffer_type;
 --SIGNAL store_counter : std_logic_vector(C_BRAM_SIZE - 1 DOWNTO 0) := (OTHERS => '1');
-
+SIGNAL bramDIN : std_logic_vector(31 DOWNTO 0) := (OTHERS => '0');
 
 BEGIN
 
@@ -271,7 +271,7 @@ BEGIN
 			WHEN PC2FPGA_Data_transfer_wait =>
 				IF (DOORBELL = '1') THEN
 					IF (DOORBELL_ERR = '0') THEN
-						nstate <= store_data; --go to state where we input the data into the core
+						nstate <= dma_transfer; --go directly to dma_transfer state
 					ELSE
 						nstate <= idle; --reset to idle state if there is an error from host
 					END IF;
@@ -303,11 +303,11 @@ BEGIN
 	
 	--Write enable BRAM when waiting for PC to transfer
 	--data to FPGA
-	IF (state = PC2FPGA_Data_transfer_wait) THEN
-		BRAM_WEN <= (OTHERS => '1');
-	ELSE
+	--IF (state = PC2FPGA_Data_transfer_wait) THEN
+	--	BRAM_WEN <= (OTHERS => '1');
+	--ELSE
 		BRAM_WEN <= (OTHERS => '0');
-	END IF;
+	--END IF;
 
 	--BUF_REQD_RDY is only high if state = wait for PC to transfer data to FPGA	
 	IF (state = PC2FPGA_Data_transfer_wait) THEN
@@ -341,16 +341,17 @@ WAIT UNTIL rising_edge(SYS_CLK);
 		r_start_addr <= (OTHERS => '0');
 		r_end_addr	<= (OTHERS => '0');
 		r_start <= '0';
+		bramDIN <= BRAM_Din;
 	ELSE
 		state <= nstate; -- assign the state to next state
 		r_start_addr <= C_BRAM_ADDR;
 		r_end_addr	<= (OTHERS => '0');
 		r_start <= '0';
-		
+		bramDataOut <= (OTHERS => '0');
+		bramDIN <= BRAM_Din;
 		IF (DOORBELL = '1' AND DOORBELL_ERR = '0' AND DOORBELL_LEN /= SIMPBUS_ZERO) THEN
 			 --Increment the pointer with however many bits were transferred
-			--bramAddress <= std_logic_vector(unsigned(bramAddress) + resize(unsigned(DOORBELL_LEN)*8 - 1,C_SIMPBUS_AWIDTH));
-			bramAddress <= std_logic_vector(resize(unsigned(bramAddress) + unsigned(DOORBELL_LEN), C_SIMPBUS_AWIDTH));
+			bramAddress <= std_logic_vector(resize(unsigned(C_BRAM_ADDR) + unsigned(DOORBELL_LEN), C_SIMPBUS_AWIDTH));
 		END IF;
 		
 		IF (state = dma_transfer) THEN
