@@ -1466,8 +1466,8 @@ begin
   clock_generator_0 : system_clock_generator_0_wrapper
     port map (
       CLKIN => CLK_S,
-      CLKOUT0 => clk_125_0000MHz,
-      CLKOUT1 => open,
+      CLKOUT0 => open,
+      CLKOUT1 => clk_125_0000MHz,
       CLKOUT2 => open,
       CLKOUT3 => open,
       CLKOUT4 => open,
