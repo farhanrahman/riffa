@@ -232,13 +232,13 @@ PACKAGE BODY utility IS
 			INTERRUPT_ACK <= '1';
 			WAIT UNTIL rising_edge(clk);
 			INTERRUPT_ACK <= '0';
-			REPORT "Error occured in hardware" SEVERITY failure;
+			--REPORT "Error occured in hardware" SEVERITY failure;
 		ELSE
 			WAIT UNTIL rising_edge(clk);
 			INTERRUPT_ACK <= '1';
 			WAIT UNTIL rising_edge(clk);
 			INTERRUPT_ACK <= '0';
-			REPORT "Test PASSED." SEVERITY failure;
+			--REPORT "Test PASSED." SEVERITY failure;
 		END IF;
 	END;
 	

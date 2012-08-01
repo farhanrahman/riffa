@@ -70,7 +70,7 @@ DUT : ENTITY top_connector
 	GENERIC MAP
 	(
 		C_SIMPBUS_AWIDTH		=> C_SIMPBUS_AWIDTH,
-		C_BRAM_SIZE				=> 32768
+		C_BRAM_SIZE				=> 4
 	)
 	PORT MAP
 	(
@@ -126,13 +126,22 @@ BEGIN
 	WAIT;
 END PROCESS;
 
+Interrupt_handling : PROCESS
+BEGIN
+	--Handle the interrupt signals from the FPGA
+	INTERRUPT_ACK 	<= '0';
+	handle_interrupt(clk,INTERRUPT,INTERRUPT_ERR,INTERRUPT_ACK);
+	wait_for(clk, 10);
+	REPORT "Test PASSED." SEVERITY failure;
+	WAIT;
+END PROCESS;
+
 
 State_Machine_test : PROCESS
 
 CONSTANT bytes_transferred	: integer := 16; --in bytes. Assuming for now 4 inputs of 32 bit width
 
 BEGIN
-INTERRUPT_ACK 	<= '0';
 DOORBELL		<= '0';		
 DOORBELL_ERR	<= '0';
 DOORBELL_LEN	<= (OTHERS => '0');
@@ -159,7 +168,7 @@ WAIT UNTIL rising_edge(clk);
 
 	--Wait until the processing has finished and the whole BRAM has been transferred
 	--back to the PC
-	WHILE (usg(DMA_SRC) /= to_unsigned(32768, C_SIMPBUS_AWIDTH)) LOOP
+	WHILE (TRUE) LOOP
 		handle_dma_normal(
 					BUF_REQ,
 					clk,
@@ -173,10 +182,7 @@ WAIT UNTIL rising_edge(clk);
 					DMA_DONE
 		);
 	END LOOP;
-	
-	--Handle the interrupt signals from the FPGA
-	handle_interrupt(clk,INTERRUPT,INTERRUPT_ERR,INTERRUPT_ACK);
-	
+	WAIT;
 END PROCESS State_Machine_test;
 
 

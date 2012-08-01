@@ -95,7 +95,9 @@ BEGIN
 				core_nstate <= wait_state;
 			WHEN wait_state =>
 				IF (finished1 = '1') THEN
-					core_nstate <= idle;
+					IF (BUSY = '0') THEN
+						core_nstate <= idle;
+					END IF;
 				ELSE
 					IF (unsigned(output_counter) = 0) THEN
 						IF (BUSY = '1') THEN

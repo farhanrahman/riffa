@@ -324,6 +324,7 @@ BEGIN
 					ELSE
 						nstate <= dma_transfer;
 					END IF;
+					nstate <= dma_transfer;
 				END IF;
 				
 			WHEN dma_transfer =>
@@ -455,7 +456,7 @@ WAIT UNTIL rising_edge(SYS_CLK);
 			input_buffer(to_integer(unsigned(store_counter))) <= BRAM_Din;
 			
 			--Decrement bramAddress
-			IF (bramAddress /= C_BRAM_ADDR AND (unsigned(store_counter) > unsigned(store_counter_zero))) THEN
+			IF (bramAddress /= C_BRAM_ADDR) THEN
 				--Decrement bramAddress by clamping it to C_BRAM_ADDR if necessary
 				IF ((unsigned(C_BRAM_ADDR) + BYTE_INCR) > unsigned(bramAddress)) THEN
 					bramAddress <= C_BRAM_ADDR;
@@ -473,11 +474,12 @@ WAIT UNTIL rising_edge(SYS_CLK);
 		--Always do DMA transfer of the whole BRAM block
 		IF (state = dma_transfer) THEN
 			r_start_addr <= C_BRAM_ADDR;
-			r_end_addr <= std_logic_vector(unsigned(C_BRAM_ADDR) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));--bramAddress;
+			--r_end_addr <= std_logic_vector(unsigned(C_BRAM_ADDR) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));
+			r_end_addr <= bramAddress;
 			r_start <= '1'; --start DMA transfer
 			IF (DONE = '1') THEN
 				r_start <= '0'; --stop the DMA transfer
-				--bramAddress <= r_start_addr;
+				bramAddress <= r_start_addr;
 			END IF;
 		END IF;
 		
