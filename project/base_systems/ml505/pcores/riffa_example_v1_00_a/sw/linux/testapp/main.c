@@ -42,7 +42,6 @@
 #include <unistd.h>
 
 #define DATA_SIZE (1*1024*1024)
-
 #define FILE_NAME "data.txt"
 
 #define MAX(a,b) a > b ? a : b
@@ -101,7 +100,7 @@ int main(int argc, char* argv[])
 	while(1) {
 //		printf("rtn= %d\n", fpga_send_args(fpgaDev, channel, arg, arg, 2, 1));
 		GETTIME(start);
-		if((rtn = fpga_send_data(fpgaDev, channel, (unsigned char *) senddata, DATA_SIZE, 1)) < 0){
+		if((rtn = fpga_send_data(fpgaDev, channel, (unsigned char *) senddata, DATA_POINTS*4, 1)) < 0){
 			printf("error sending args to fpga: %d\n", rtn);
 			break;
 		}
@@ -112,22 +111,25 @@ int main(int argc, char* argv[])
 		printf("Time required to send data to FPGA : %ld us\n", usecs);
 
 		GETTIME(start);
-		if ((rtn = fpga_recv_data(fpgaDev, channel, (unsigned char *)gData, DATA_SIZE)) < 0) {
+/*		if ((rtn = fpga_recv_data(fpgaDev, channel, (unsigned char *)gData, DATA_SIZE)) < 0) {
 			printf("error receiving data from fpga: %d\n", rtn);
 			break;
 		}
+*/
+		fpga_recv_data_begin(fpgaDev, channel, (unsigned char * ) gData, DATA_SIZE);
+		
 		GETTIME(end);
 		
 		usecs = GETUSEC(end,start);
-		
+		fpga_wait_interrupt(fpgaDev, channel);
 		printf("Time required to receive data from FPGA : %ld us\n", usecs);
 		
-		printf("Received data response, length: 0x%x\n", rtn);
+	//	printf("Received data response, length: 0x%x\n", rtn);
 		break;
 
 	}
 	
-	for(i = 0; i < DATA_POINTS; i++){
+	for(i = 0; i < 20; i++){
 		if(gData[i] != senddata[i]){
 //			printf("TEST FAILED. gData[%d] = %d is not equal to senddata[%d] = %d\n", i,gData[i],i,senddata[i]);
 //			return -1;
