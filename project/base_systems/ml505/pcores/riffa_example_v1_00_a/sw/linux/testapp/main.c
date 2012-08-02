@@ -38,10 +38,24 @@
 #include <stdlib.h>
 #include "fpga_comm.h"
 #include <assert.h>
+#include <sys/time.h>
+#include <unistd.h>
+
 #define DATA_SIZE (1*1024*1024)
 
-unsigned int gData[DATA_SIZE/4]; // 1 MB (should be good)
+#define FILE_NAME "data.txt"
 
+#define MAX(a,b) a > b ? a : b
+
+struct timeval start, end;
+long usecs;
+
+#define GETTIME(t) gettimeofday(&t, NULL)
+#define GETUSEC(e,s) e.tv_usec - s.tv_usec 
+#define PRINTUS(u) printf("Time required to send data to FPGA : %ld us\n", us)
+
+unsigned int gData[DATA_SIZE/4];
+unsigned int senddata[DATA_SIZE/4];
 /**
  * Main entry point.
  */
@@ -49,14 +63,27 @@ int main(int argc, char* argv[])
 {
 	fpga_dev * fpgaDev;
 	int rtn, channel, timeout;
-	unsigned int arg0, arg1;
-	timeout = 3000*1000; // 10 secs.
+	int i = 0;
+	int DATA_POINTS = 0;
+	unsigned int arg = 4294967295;
+
+	timeout = 5*1000; // 5 secs.
 	channel = argc == 2 ? atoi(argv[1]) : 0;
 	printf("channel = %d \n", channel);
-	arg0 = (unsigned int)rand();
-	arg1 = (unsigned int)rand();
 
-	printf("sending arguments arg0: %d, arg1: %d \n", arg0, arg1);
+
+	FILE *fin = fopen(FILE_NAME,"r"); 
+	assert(fin != NULL);
+
+	while(!feof(fin)){
+		fscanf(fin,"%d", &senddata[i++]);
+	}
+
+	assert(i > 0);
+
+	DATA_POINTS = MAX(1, i-1);	
+
+	fclose(fin);	
 
 	if ((rtn = fpga_init(&fpgaDev)) < 0) {
 		printf("error opening fpga: %d\n", rtn);
@@ -68,27 +95,47 @@ int main(int argc, char* argv[])
 		return rtn;
 	}
 
- 	printf("Opened.\n");
 
-	while (1) {
-		if ((rtn = fpga_send_args(fpgaDev, channel, arg0, arg1, 2, 1)) < 0) {
+ 	printf("Opened.\n");
+	
+	while(1) {
+//		printf("rtn= %d\n", fpga_send_args(fpgaDev, channel, arg, arg, 2, 1));
+		GETTIME(start);
+		if((rtn = fpga_send_data(fpgaDev, channel, (unsigned char *) senddata, DATA_SIZE, 1)) < 0){
 			printf("error sending args to fpga: %d\n", rtn);
 			break;
 		}
+		GETTIME(end);
 
-		printf("Called with args: 0x%x, 0x%x.\n", arg0, arg1);
+		usecs = GETUSEC(end,start);
 
+		printf("Time required to send data to FPGA : %ld us\n", usecs);
+
+		GETTIME(start);
 		if ((rtn = fpga_recv_data(fpgaDev, channel, (unsigned char *)gData, DATA_SIZE)) < 0) {
 			printf("error receiving data from fpga: %d\n", rtn);
 			break;
 		}
-
+		GETTIME(end);
+		
+		usecs = GETUSEC(end,start);
+		
+		printf("Time required to receive data from FPGA : %ld us\n", usecs);
+		
 		printf("Received data response, length: 0x%x\n", rtn);
-		printf("Response values 0 & 1: 0x%x, 0x%x should equal 0x%x, 0x%x\n", 
-		fpga_flip_endian(gData[0]), fpga_flip_endian(gData[1]), arg0, arg1);
 		break;
+
+	}
+	
+	for(i = 0; i < DATA_POINTS; i++){
+		if(gData[i] != senddata[i]){
+//			printf("TEST FAILED. gData[%d] = %d is not equal to senddata[%d] = %d\n", i,gData[i],i,senddata[i]);
+//			return -1;
+		}
+		printf("gData[%d] = %d, senddata[%d] = %d\n", i,gData[i],i,senddata[i]);
 	}
 
+//	printf("TEST PASSED. All data sent has been received in the same format and order \n");
   	printf("Done.\n");
 
 	fpga_channel_close(fpgaDev, 0);
