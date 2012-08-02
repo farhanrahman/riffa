@@ -369,7 +369,7 @@ BEGIN
 	--data into the RAM or in the reset_rest state where
 	--the rest of the contents of the BRAM has to be
 	--re-initialised
-	IF (state = PC2FPGA_Data_transfer_wait OR state = store_state OR state = reset_rest) THEN
+	IF (state = store_state OR state = reset_rest) THEN
 		BRAM_WEN <= (OTHERS => '1');
 	ELSE
 		BRAM_WEN <= (OTHERS => '0');

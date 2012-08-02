@@ -9,7 +9,8 @@ ENTITY top_connector IS
 		(
 			C_SIMPBUS_AWIDTH			: integer					:= 32;
 			C_BRAM_ADDR					: std_logic_vector			:= X"00000000";
-			C_BRAM_SIZE					: integer					:= 32768
+			C_BRAM_SIZE					: integer					:= 32768;
+			C_USE_DOORBELL_RESET		: boolean					:= true
 		);
 		PORT(
 			--SYSTEM CLOCK AND SYSTEM RESET--
@@ -135,7 +136,23 @@ ARCHITECTURE synth OF top_connector IS
 			CORE_OUTPUTS			: IN std_logic_vector(C_NUM_OF_OUTPUTS_FROM_CORE*C_SIMPBUS_AWIDTH - 1 DOWNTO 0)			
 		);
 	END COMPONENT riffa_interface;
-
+	
+	--DOORBELL_RESET component declaration
+	COMPONENT doorbell_reset IS
+		GENERIC(
+			ARGUMENT_ZERO_VAL 	: std_logic_vector(31 DOWNTO 0);
+			ARGUMENT_ONE_VAL 	: std_logic_vector(31 DOWNTO 0)
+		);
+		PORT(
+			SYS_CLK			: IN std_logic;
+			SYS_RST			: IN std_logic;
+			RESET			: OUT std_logic;
+			DOORBELL		: IN std_logic;
+			DOORBELL_ARG	: IN std_logic_vector(31 DOWNTO 0);
+			DOORBELL_ERR	: IN std_logic
+		);
+	END COMPONENT doorbell_reset;
+	
 	--DECLARE YOUR COMPONENT HERE FOR YOUR CORE
 	COMPONENT test_core IS
 		GENERIC(
@@ -201,6 +218,9 @@ ARCHITECTURE synth OF top_connector IS
 	
 	SIGNAL CORE_OUTPUTS		: std_logic_vector(C_NUM_OF_OUTPUTS_FROM_CORE*C_SIMPBUS_AWIDTH - 1 DOWNTO 0) := (OTHERS => '0');
 	
+	SIGNAL RESET : std_logic := '0';
+	CONSTANT ARGUMENT_ZERO_VAL	:	std_logic_vector(31 DOWNTO 0) := (OTHERS => '1'); --default values (update them there)
+	CONSTANT ARGUMENT_ONE_VAL	:	std_logic_vector(31 DOWNTO 0) := (OTHERS => '1'); --default values (update them there)
 BEGIN
 
 	--riffa_interface instantiation. The riffa_interface handles the data transfer
@@ -217,7 +237,7 @@ BEGIN
 	PORT MAP
 	(
 		SYS_CLK					=> SYS_CLK,
-		SYS_RST					=> SYS_RST,
+		SYS_RST					=> RESET,
 		INTERRUPT				=> INTERRUPT,
 		INTERRUPT_ERR			=> INTERRUPT_ERR,
 		INTERRUPT_ACK			=> INTERRUPT_ACK,
@@ -268,6 +288,29 @@ BEGIN
 		CORE_OUTPUTS(((i+1)*C_SIMPBUS_AWIDTH-1) DOWNTO (((i+1)*C_SIMPBUS_AWIDTH-1)-C_SIMPBUS_AWIDTH + 1)) <= output_buffer(i);
 	END GENERATE;	
 	
+	--Instantiation of DOORBELL_RESET if user wants to use doorbell_reset in design
+	RST_ASSIGN : BLOCK
+	BEGIN
+		DR_INSTANTIATION : IF (C_USE_DOORBELL_RESET = true) GENERATE
+			DR : COMPONENT doorbell_reset
+				GENERIC MAP(
+					ARGUMENT_ZERO_VAL 	=>	ARGUMENT_ZERO_VAL, 				
+					ARGUMENT_ONE_VAL 	=>	ARGUMENT_ONE_VAL 				
+				)
+				PORT MAP(
+					SYS_CLK			=> SYS_CLK,			
+					SYS_RST			=> SYS_RST,			
+					RESET			=> RESET,			
+					DOORBELL		=> DOORBELL,		
+					DOORBELL_ARG	=> DOORBELL_ARG,	
+					DOORBELL_ERR	=> DOORBELL_ERR				
+				);
+		END GENERATE;
+		
+		DEFAULT_RST_ASSIGN : IF (C_USE_DOORBELL_RESET = false) GENERATE
+			RESET <= SYS_RST;
+		END GENERATE;
+	END BLOCK RST_ASSIGN;
 	
 	--Connect your components here.
 	TEST_CORE_1 : COMPONENT test_core
@@ -276,7 +319,7 @@ BEGIN
 		)
 		PORT MAP(
 			SYS_CLK				=> SYS_CLK,
-			SYS_RST 			=> SYS_RST,
+			SYS_RST 			=> RESET,
 			INPUT_1 			=> input_buffer(0),
 			INPUT_2 			=> input_buffer(1),
 			INPUT_3 			=> input_buffer(2),

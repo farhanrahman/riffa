@@ -160,6 +160,8 @@ BUF_REQ_ERR		<= 	'0';
 
 WAIT UNTIL rising_edge(clk);
 
+	--Check for doorbell reset
+	send_doorbell_arguments(clk, DOORBELL, ARG_0, ARG_1, DOORBELL_ARG, DOORBELL_ERR, DOORBELL_LEN);
 	--First send the data.
 	send_data(clk,BUF_REQD,BUF_REQD_RDY);
 
