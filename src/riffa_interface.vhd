@@ -439,7 +439,6 @@ WAIT UNTIL rising_edge(SYS_CLK);
 		r_start_addr <= C_BRAM_ADDR;
 		r_end_addr	<= (OTHERS => '0');
 		r_start <= '0';
-		bramDataOut <= (OTHERS => '0');
 		
 		IF (DOORBELL = '1' AND DOORBELL_ERR = '0' AND DOORBELL_LEN /= SIMPBUS_ZERO) THEN
 			 --Increment the pointer with however many bits were transferred
@@ -458,11 +457,11 @@ WAIT UNTIL rising_edge(SYS_CLK);
 			--Decrement bramAddress
 			IF (bramAddress /= C_BRAM_ADDR) THEN
 				--Decrement bramAddress by clamping it to C_BRAM_ADDR if necessary
-				IF ((unsigned(C_BRAM_ADDR) + BYTE_INCR) > unsigned(bramAddress)) THEN
-					bramAddress <= C_BRAM_ADDR;
-				ELSE
+				--IF ((unsigned(C_BRAM_ADDR) + BYTE_INCR) > unsigned(bramAddress)) THEN
+				--	bramAddress <= C_BRAM_ADDR;
+				--ELSE
 					bramAddress <= std_logic_vector(unsigned(bramAddress) - BYTE_INCR);
-				END IF;
+				--END IF;
 			END IF;
 			
 			--Decrement store_counter
@@ -500,11 +499,11 @@ WAIT UNTIL rising_edge(SYS_CLK);
 			END IF;
 
 			--Increment bramAddress by clamping it to C_BRAM_SIZE
-			IF ((unsigned(bramAddress) + BYTE_INCR) > to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH)) THEN
-				bramAddress <= std_logic_vector(to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));
-			ELSE
+			--IF ((unsigned(bramAddress) + BYTE_INCR) > to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH)) THEN
+			--	bramAddress <= std_logic_vector(to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));
+		--	ELSE
 				bramAddress <= std_logic_vector(unsigned(bramAddress) + BYTE_INCR);
-			END IF;			
+		--	END IF;			
 		END IF;
 		
 		--If the BRAM was full while storing data, first transfer the data
@@ -522,11 +521,11 @@ WAIT UNTIL rising_edge(SYS_CLK);
 		--Reset whatever data has been present in the remaining part of the BRAM
 		IF (state = reset_rest) THEN
 			--Increment bramAddress by clamping it to C_BRAM_SIZE
-			IF ((unsigned(bramAddress) + BYTE_INCR) > to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH)) THEN
-				bramAddress <= std_logic_vector(to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));
-			ELSE
+			--IF ((unsigned(bramAddress) + BYTE_INCR) > to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH)) THEN
+			--	bramAddress <= std_logic_vector(to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));
+			--ELSE
 				bramAddress <= std_logic_vector(unsigned(bramAddress) + BYTE_INCR);
-			END IF;			
+			--END IF;			
 		END IF;
 		
 	END IF;
