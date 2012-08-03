@@ -10,7 +10,7 @@ ENTITY top_connector IS
 			C_SIMPBUS_AWIDTH			: integer					:= 32;
 			C_BRAM_ADDR					: std_logic_vector			:= X"00000000";
 			C_BRAM_SIZE					: integer					:= 32768;
-			C_USE_DOORBELL_RESET		: boolean					:= false
+			C_USE_DOORBELL_RESET		: boolean					:= true
 		);
 		PORT(
 			--SYSTEM CLOCK AND SYSTEM RESET--

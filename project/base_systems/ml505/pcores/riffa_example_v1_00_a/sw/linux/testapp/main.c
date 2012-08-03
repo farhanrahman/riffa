@@ -111,20 +111,20 @@ int main(int argc, char* argv[])
 		printf("Time required to send data to FPGA : %ld us\n", usecs);
 
 		GETTIME(start);
-/*		if ((rtn = fpga_recv_data(fpgaDev, channel, (unsigned char *)gData, DATA_SIZE)) < 0) {
+		if ((rtn = fpga_recv_data(fpgaDev, channel, (unsigned char *)gData, DATA_SIZE)) < 0) {
 			printf("error receiving data from fpga: %d\n", rtn);
 			break;
 		}
-*/
-		fpga_recv_data_begin(fpgaDev, channel, (unsigned char * ) gData, DATA_SIZE);
+
+//		fpga_recv_data_begin(fpgaDev, channel, (unsigned char * ) gData, DATA_SIZE);
 		
 		GETTIME(end);
 		
 		usecs = GETUSEC(end,start);
-		fpga_wait_interrupt(fpgaDev, channel);
+//		fpga_wait_interrupt(fpgaDev, channel);
 		printf("Time required to receive data from FPGA : %ld us\n", usecs);
 		
-	//	printf("Received data response, length: 0x%x\n", rtn);
+		printf("Received data response, length: 0x%x\n", rtn);
 		break;
 
 	}
@@ -134,7 +134,7 @@ int main(int argc, char* argv[])
 //			printf("TEST FAILED. gData[%d] = %d is not equal to senddata[%d] = %d\n", i,gData[i],i,senddata[i]);
 //			return -1;
 		}
-		printf("gData[%d] = %d, senddata[%d] = %d\n", i,gData[i],i,senddata[i]);
+		printf("gData[%d] = %d, senddata[%d] = %d\n", i,fpga_flip_endian(gData[i]),i,senddata[i]);
 	}
 
 //	printf("TEST PASSED. All data sent has been received in the same format and order \n");
