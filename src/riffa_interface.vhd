@@ -216,6 +216,7 @@ SIGNAL input_buffer : buffer_type;
 SIGNAL store_counter : std_logic_vector(C_NUM_IOS_LOG - 1 DOWNTO 0) := (OTHERS => '0');
 CONSTANT store_counter_zero : std_logic_vector(C_NUM_IOS_LOG - 1 DOWNTO 0) := (OTHERS => '0');
 CONSTANT BYTE_INCR : integer := C_SIMPBUS_AWIDTH/8;
+CONSTANT BYTE_INCR_USG : unsigned := to_unsigned(BYTE_INCR,C_SIMPBUS_AWIDTH);
 
 SIGNAL core_inputs_1 : std_logic_vector(C_NUM_OF_INPUTS_TO_CORE*C_SIMPBUS_AWIDTH-1 DOWNTO 0);
 
@@ -445,7 +446,7 @@ WAIT UNTIL rising_edge(SYS_CLK);
 			store_counter <= std_logic_vector(to_unsigned(C_NUM_OF_INPUTS_TO_CORE-1,C_NUM_IOS_LOG));
 			--bramAddress <= std_logic_vector(unsigned(bramAddress) + resize(unsigned(DOORBELL_LEN)*8 - 1,C_SIMPBUS_AWIDTH));
 			--Increment bramAddress with however many bytes were transferred since BRAM is byte addressible
-			bramAddress <= std_logic_vector(resize(unsigned(bramAddress) + unsigned(DOORBELL_LEN), C_SIMPBUS_AWIDTH));
+			bramAddress <= std_logic_vector(resize(unsigned(bramAddress) + unsigned(DOORBELL_LEN) - BYTE_INCR_USG, C_SIMPBUS_AWIDTH));
 		END IF;
 		
 		IF (state = prepare_data) THEN

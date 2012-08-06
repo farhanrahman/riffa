@@ -4,6 +4,7 @@ USE IEEE.numeric_std.ALL;
 USE work.top_connector;
 USE work.project_pak.ALL;
 USE work.utility.ALL;
+USE work.bram;
 
 ENTITY top_connector_test_bench IS
 END ENTITY top_connector_test_bench;
@@ -64,13 +65,15 @@ SIGNAL BRAM_Addr		: std_logic_vector(31 DOWNTO 0);					--OUT
 
 CONSTANT C_NUM_OF_OUTPUTS_FROM_CORE	: integer := 1;
 
+CONSTANT C_BRAM_SIZE : integer := 32768;
+
 BEGIN
 
 DUT : ENTITY top_connector
 	GENERIC MAP
 	(
 		C_SIMPBUS_AWIDTH		=> C_SIMPBUS_AWIDTH,
-		C_BRAM_SIZE				=> 4
+		C_BRAM_SIZE				=> C_BRAM_SIZE
 	)
 	PORT MAP
 	(
@@ -109,7 +112,20 @@ DUT : ENTITY top_connector
 		BRAM_Addr				=> BRAM_Addr
 	);
 
-
+RAM : ENTITY BRAM
+GENERIC MAP(
+	C_BRAM_SIZE => C_BRAM_SIZE
+)
+PORT MAP(
+	SYS_CLK		=> clk,
+	SYS_RST		=> reset,
+	BRAM_EN		=> BRAM_EN,
+	BRAM_WEN	=> BRAM_WEN,
+	BRAM_Dout	=> BRAM_Dout,
+	BRAM_Din	=> BRAM_Din,
+	BRAM_Addr	=> BRAM_Addr
+);
+	
 Clk_generate : PROCESS --Process to generate the clk
 BEGIN
 	clk <= '0';
@@ -147,7 +163,6 @@ DOORBELL_ERR	<= '0';
 DOORBELL_LEN	<= (OTHERS => '0');
 DOORBELL_ARG	<= (OTHERS => '0');
 BUF_REQD		<= '0';
-BRAM_Din 		<= slv(to_unsigned(1024, C_SIMPBUS_AWIDTH));--(OTHERS => '0');
 
 DMA_REQ_ACK 	<= 	'0';
 DMA_DONE		<=	'0';
