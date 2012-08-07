@@ -213,7 +213,7 @@ ARCHITECTURE synth OF top_connector IS
 	--START signal from interface to core to start processing
 	SIGNAL START : std_logic := '0';
 	
-	CONSTANT RUNTIME 		: std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0) := std_logic_vector(to_unsigned(30, C_SIMPBUS_AWIDTH));
+	CONSTANT RUNTIME 		: std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0) := std_logic_vector(to_unsigned(30000, C_SIMPBUS_AWIDTH));
 	CONSTANT OUTPUT_CYCLE 	: std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0) := std_logic_vector(to_unsigned(10,C_SIMPBUS_AWIDTH));
 	
 	SIGNAL CORE_OUTPUTS		: std_logic_vector(C_NUM_OF_OUTPUTS_FROM_CORE*C_SIMPBUS_AWIDTH - 1 DOWNTO 0) := (OTHERS => '0');

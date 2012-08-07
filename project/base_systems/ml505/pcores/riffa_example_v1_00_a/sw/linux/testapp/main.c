@@ -136,7 +136,7 @@ int main(int argc, char* argv[])
 //			printf("TEST FAILED. gData[%d] = %d is not equal to senddata[%d] = %d\n", i,gData[i],i,senddata[i]);
 //			return -1;
 		}
-		printf("gData[%d]\t= %10d, fpga_flip_endian(gData[%d])\t= %10d,	senddata[%d]\t= %10d\n",i,gData[i],i,fpga_flip_endian(gData[i]),i,senddata[i]);
+//		printf("gData[%d]\t= %10d, fpga_flip_endian(gData[%d])\t= %10d,	senddata[%d]\t= %10d\n",i,gData[i],i,fpga_flip_endian(gData[i]),i,senddata[i]);
 	}
 
 //	printf("TEST PASSED. All data sent has been received in the same format and order \n");

@@ -167,7 +167,10 @@ ARCHITECTURE synth OF riffa_interface IS
 			
 			--Done Signal
 			DONE					: OUT std_logic;
-			DONE_ERR				: OUT std_logic
+			DONE_ERR				: OUT std_logic;
+			
+			--START Acknowledge signal
+			START_ACK				: OUT std_logic			
 		);
 	END COMPONENT dma_handler;
 
@@ -209,6 +212,7 @@ SIGNAL DONE, DONE_ERR		 		: std_logic := '0';
 SIGNAL START, r_start				: std_logic := '0';
 SIGNAL START_ADDR, r_start_addr		: std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0) := (OTHERS => '0');
 SIGNAL END_ADDR, r_end_addr			: std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0) := (OTHERS => '0');
+SIGNAL START_ACK					: std_logic := '0';
 
 TYPE buffer_type IS ARRAY (0 TO C_NUM_OF_INPUTS_TO_CORE-1) OF std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
 --
@@ -280,7 +284,10 @@ PORT MAP(
 		
 	--Done Signal	
 	DONE					=> 	DONE,			--OUT
-	DONE_ERR				=> 	DONE_ERR		--OUT
+	DONE_ERR				=> 	DONE_ERR,		--OUT
+	
+	--Start ack signal
+	START_ACK				=> START_ACK		--OUT
 );
 
 
@@ -476,9 +483,13 @@ WAIT UNTIL rising_edge(SYS_CLK);
 			r_start_addr <= C_BRAM_ADDR;
 			--r_end_addr <= std_logic_vector(unsigned(C_BRAM_ADDR) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));
 			r_end_addr <= bramAddress;
-			r_start <= '1'; --start DMA transfer
+			IF (START_ACK = '1') THEN
+				r_start <= '0'; --start DMA transfer
+			ELSE
+				r_start <= '1';
+			END IF;
 			IF (DONE = '1') THEN
-				r_start <= '0'; --stop the DMA transfer
+				--r_start <= '0'; --stop the DMA transfer
 				bramAddress <= r_start_addr;
 			END IF;
 		END IF;
@@ -512,7 +523,12 @@ WAIT UNTIL rising_edge(SYS_CLK);
 		IF (state = dma_transfer_from_store_state) THEN
 			r_start_addr <= C_BRAM_ADDR;
 			r_end_addr <= std_logic_vector(unsigned(C_BRAM_ADDR) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));
-			r_start <= '1'; --start DMA transfer
+			--r_start <= '1'; --start DMA transfer
+			IF (START_ACK = '1') THEN
+				r_start <= '0'; --start DMA transfer
+			ELSE
+				r_start <= '1';
+			END IF;			
 			IF (DONE = '1') THEN
 				r_start <= '0'; --stop the DMA transfer
 				bramAddress <= r_start_addr;

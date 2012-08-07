@@ -40,7 +40,10 @@ PORT(
 
 	--Done Signal
 	DONE					: OUT std_logic;
-	DONE_ERR				: OUT std_logic
+	DONE_ERR				: OUT std_logic;
+	
+	--START Acknowledge signal
+	START_ACK				: OUT std_logic
 );
 END ENTITY dma_handler;
 
@@ -112,7 +115,13 @@ BEGIN
 			buffReq(i) <= '0';
 		END IF;
 	END LOOP;
-
+	
+	--Start Ack signal assignment
+	IF (dma_state /= idle) THEN
+		START_ACK <= '1';
+	ELSE
+		START_ACK <= '0';
+	END IF;
 END PROCESS;
 
 Combinatorial : PROCESS (dma_state, START, BUF_REQ_ACK, BUF_REQ_RDY, DMA_REQ_ACK, DMA_DONE, DMA_ERR, SYS_RST, rStart, rEnd)
