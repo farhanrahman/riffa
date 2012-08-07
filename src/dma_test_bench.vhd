@@ -41,6 +41,7 @@ SIGNAL 	END_ADDR				: std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);	--IN
 	
 --Start signal
 SIGNAL	START					: std_logic;										--IN
+SIGNAL  START_ACK				: std_logic;										--OUT
 	
 --Done Signal
 SIGNAL 	DONE					: std_logic;										--IN
@@ -88,7 +89,10 @@ PORT MAP(
 		
 	--Done Signal	
 	DONE					=> 	DONE,			--OUT
-	DONE_ERR				=> 	DONE_ERR		--OUT
+	DONE_ERR				=> 	DONE_ERR,		--OUT
+	
+	--Start Ack
+	START_ACK				=> START_ACK
 );
 
 Clk_generate : PROCESS
