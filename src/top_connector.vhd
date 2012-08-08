@@ -327,9 +327,9 @@ BEGIN
 			OUTPUT				=> output_buffer(0),
 			VALID				=> VALID,
 			START				=> START,
-			RUNTIME				=> RUNTIME,
+			RUNTIME				=> input_buffer(0),
 			FINISHED			=> FINISHED,
 			BUSY				=> BUSY,
-			OUTPUT_CYCLE		=> OUTPUT_CYCLE
+			OUTPUT_CYCLE		=> input_buffer(1)
 		);	
 END ARCHITECTURE synth;

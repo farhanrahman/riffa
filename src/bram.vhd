@@ -51,22 +51,17 @@ BEGIN
 	
 	IF (SYS_RST = '1') THEN
 		--WORD 0
-		bram(0) <= std_logic_vector(to_unsigned(1,8));
+		bram(0) <= std_logic_vector(to_unsigned(40,8));
 		bram(1) <= std_logic_vector(to_unsigned(0,8));
 		bram(2) <= std_logic_vector(to_unsigned(0,8));
 		bram(3) <= std_logic_vector(to_unsigned(0,8));
 		
 		--WORD 1
-		bram(4) <= std_logic_vector(to_unsigned(1,8));
+		bram(4) <= std_logic_vector(to_unsigned(10,8));
 		bram(5) <= std_logic_vector(to_unsigned(0,8));
 		bram(6) <= std_logic_vector(to_unsigned(0,8));
 		bram(7) <= std_logic_vector(to_unsigned(0,8));
-
-		--WORD 2
-		bram(8) <= std_logic_vector(to_unsigned(1,8));
-		bram(9) <= std_logic_vector(to_unsigned(0,8));
-		bram(10) <= std_logic_vector(to_unsigned(0,8));
-		bram(11) <= std_logic_vector(to_unsigned(0,8));		
+		
 	END IF;
 	
 	IF (BRAM_WEN = BRAM_WEN_ALL_1 AND BRAM_EN = '1') THEN
