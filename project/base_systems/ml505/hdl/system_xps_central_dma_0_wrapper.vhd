@@ -198,7 +198,7 @@ begin
 
   xps_central_dma_0 : xps_central_dma
     generic map (
-      C_FIFO_DEPTH => 48,
+      C_FIFO_DEPTH => 32,
       C_RD_BURST_SIZE => 16,
       C_WR_BURST_SIZE => 16,
       C_BASEADDR => X"80200000",
