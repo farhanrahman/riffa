@@ -57,7 +57,7 @@ BEGIN
 		bram(3) <= std_logic_vector(to_unsigned(0,8));
 		
 		--WORD 1
-		bram(4) <= std_logic_vector(to_unsigned(10,8));
+		bram(4) <= std_logic_vector(to_unsigned(2,8));
 		bram(5) <= std_logic_vector(to_unsigned(0,8));
 		bram(6) <= std_logic_vector(to_unsigned(0,8));
 		bram(7) <= std_logic_vector(to_unsigned(0,8));

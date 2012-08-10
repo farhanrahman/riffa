@@ -321,7 +321,11 @@ BEGIN
 				nstate <= process_data;
 			WHEN process_data =>
 				IF (VALID = '1') THEN
-					nstate <= store_state;
+					IF (bramAddress = std_logic_vector(to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH))) THEN
+						nstate <= dma_transfer_from_store_state;
+					ELSE
+						nstate <= store_state;
+					END IF;
 				END IF;
 				
 				IF (FINISHED = '1') THEN
@@ -350,10 +354,6 @@ BEGIN
 			WHEN store_state =>
 				IF (store_counter = store_counter_zero) THEN
 					nstate <= process_data;
-				END IF;
-				
-				IF (bramAddress = std_logic_vector(to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH))) THEN
-					nstate <= dma_transfer_from_store_state;
 				END IF;
 			WHEN reset_rest =>
 				IF (bramAddress = std_logic_vector(to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH))) THEN

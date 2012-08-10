@@ -87,7 +87,7 @@ BEGIN
 	--the DMA that a buffer is required
 	IF (dma_state = request_dma) THEN
 		DMA_REQ <= '1';
-		DMA_SIG <= '1';
+		DMA_SIG <= '0';
 	ELSE
 		DMA_REQ <= '0';
 		DMA_SIG <= '0';

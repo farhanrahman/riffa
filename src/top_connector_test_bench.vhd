@@ -65,7 +65,7 @@ SIGNAL BRAM_Addr		: std_logic_vector(31 DOWNTO 0);					--OUT
 
 CONSTANT C_NUM_OF_OUTPUTS_FROM_CORE	: integer := 1;
 
-CONSTANT C_BRAM_SIZE : integer := 32768;
+CONSTANT C_BRAM_SIZE : integer := 16;
 
 BEGIN
 
