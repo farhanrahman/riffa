@@ -146,7 +146,7 @@ ARCHITECTURE synth OF riffa_interface IS
 			DMA_SRC					: OUT std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
 			DMA_DST					: OUT std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
 			DMA_LEN					: OUT std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
-			DMA_SIG					: OUT std_logic;
+			--DMA_SIG					: OUT std_logic;
 			DMA_DONE				: IN std_logic;
 			DMA_ERR					: IN std_logic;
 			
@@ -218,6 +218,7 @@ TYPE buffer_type IS ARRAY (0 TO C_NUM_OF_INPUTS_TO_CORE-1) OF std_logic_vector(C
 --
 SIGNAL input_buffer : buffer_type;
 SIGNAL store_counter : std_logic_vector(C_NUM_IOS_LOG - 1 DOWNTO 0) := (OTHERS => '0');
+SIGNAL output_store_counter : std_logic_vector(C_NUM_IOS_LOG - 1 DOWNTO 0) := (OTHERS => '0');
 CONSTANT store_counter_zero : std_logic_vector(C_NUM_IOS_LOG - 1 DOWNTO 0) := (OTHERS => '0');
 CONSTANT BYTE_INCR : integer := C_SIMPBUS_AWIDTH/8;
 CONSTANT BYTE_INCR_USG : unsigned := to_unsigned(BYTE_INCR,C_SIMPBUS_AWIDTH);
@@ -263,7 +264,7 @@ PORT MAP(
 	DMA_SRC					=>	DMA_SRC,		--OUT
 	DMA_DST					=>	DMA_DST,		--OUT
 	DMA_LEN					=>	DMA_LEN,		--OUT
-	DMA_SIG					=>	DMA_SIG,		--OUT
+--	DMA_SIG					=>	DMA_SIG,		--OUT
 	DMA_DONE				=>	DMA_DONE,		--IN
 	DMA_ERR					=>	DMA_ERR,		--IN
 	
@@ -291,7 +292,7 @@ PORT MAP(
 );
 
 
-Combinatorial : PROCESS (SYS_RST, DOORBELL, DOORBELL_ERR, BUF_REQD, INTERRUPT_ACK, DONE, DONE_ERR, state, bramAddress, store_counter, VALID, FINISHED)
+Combinatorial : PROCESS (SYS_RST, DOORBELL, DOORBELL_ERR, BUF_REQD, INTERRUPT_ACK, DONE, DONE_ERR, state, bramAddress, store_counter, output_store_counter, VALID, FINISHED)
 BEGIN
 	IF (SYS_RST = '1') THEN
 		nstate <= idle;
@@ -321,7 +322,11 @@ BEGIN
 				nstate <= process_data;
 			WHEN process_data =>
 				IF (VALID = '1') THEN
-					nstate <= store_state;
+					IF (bramAddress = std_logic_vector(to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH))) THEN
+						nstate <= dma_transfer_from_store_state;
+					ELSE
+						nstate <= store_state;
+					END IF;
 				END IF;
 				
 				IF (FINISHED = '1') THEN
@@ -348,13 +353,12 @@ BEGIN
 					nstate <= idle; --go to idle state if PC sends interrupt ack signal back
 				END IF;
 			WHEN store_state =>
-				IF (store_counter = store_counter_zero) THEN
+				IF (output_store_counter = store_counter_zero) THEN
 					nstate <= process_data;
-				END IF;
-				
-				IF (bramAddress = std_logic_vector(to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH))) THEN
+				ELSIF (bramAddress = std_logic_vector(to_unsigned(C_BRAM_SIZE - BYTE_INCR, C_SIMPBUS_AWIDTH))) THEN
 					nstate <= dma_transfer_from_store_state;
 				END IF;
+				
 			WHEN reset_rest =>
 				IF (bramAddress = std_logic_vector(to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH))) THEN
 					nstate <= dma_transfer;
@@ -369,7 +373,8 @@ BEGIN
 
 END PROCESS Combinatorial;
 
-AssignCombinatorialOutputs : PROCESS (state, input_buffer)
+AssignCombinatorialOutputs : PROCESS (state, input_buffer, output_store_counter, CORE_OUTPUTS)
+VARIABLE s : integer;
 BEGIN
 	
 	--Write enable BRAM when waiting for PC to transfer
@@ -424,16 +429,25 @@ BEGIN
 	ELSE
 		BUSY <= '0';
 	END IF;
+
+	s := to_integer(unsigned(output_store_counter));
+	bramDataOut <= CORE_OUTPUTS(((s+1)*C_SIMPBUS_AWIDTH-1) DOWNTO (((s+1)*C_SIMPBUS_AWIDTH-1)-C_SIMPBUS_AWIDTH + 1));	
+	
+	IF (state = dma_transfer) THEN
+		DMA_SIG <= '1';
+	ELSE
+		DMA_SIG <= '0';
+	END IF;
 	
 END PROCESS;
 
 State_Assignment : PROCESS
-VARIABLE s : integer;
+--VARIABLE s : integer;
 BEGIN
 WAIT UNTIL rising_edge(SYS_CLK);
 	IF(SYS_RST = '1') THEN --Synchronous reset signal
 		state <= idle;
-		bramDataOut <= (OTHERS => '0');
+--		bramDataOut <= (OTHERS => '0');
 		bramAddress <= C_BRAM_ADDR;
 		r_start_addr <= (OTHERS => '0');
 		r_end_addr	<= (OTHERS => '0');
@@ -442,6 +456,7 @@ WAIT UNTIL rising_edge(SYS_CLK);
 			input_buffer(i) <= (OTHERS => '0');
 		END LOOP;
 		store_counter <= (OTHERS => '0');
+		output_store_counter <= (OTHERS => '0');
 	ELSE
 		state <= nstate; -- assign the state to next state
 		r_start_addr <= C_BRAM_ADDR;
@@ -496,18 +511,18 @@ WAIT UNTIL rising_edge(SYS_CLK);
 		
 		--Reset the store_counter to C_NUM_OF_OUTPUTS_FROM_CORE before going to store_state
 		--Only reset the counter if transitioning from process_data state to store_state
-		IF (nstate = store_state AND state = process_data) THEN
-			store_counter <= std_logic_vector(to_unsigned(C_NUM_OF_OUTPUTS_FROM_CORE-1,C_NUM_IOS_LOG));
+		IF (nstate = store_state AND state = process_data) OR (nstate = dma_transfer_from_store_state AND state = process_data) THEN
+			output_store_counter <= std_logic_vector(to_unsigned(C_NUM_OF_OUTPUTS_FROM_CORE-1,C_NUM_IOS_LOG));
 		END IF;
 		
 		--If in the store state, decrement the store_counter and store the incoming data
 		--Also increment the BRAM address
 		IF (state = store_state) THEN
-			s := to_integer(unsigned(store_counter));
-			bramDataOut <= CORE_OUTPUTS(((s+1)*C_SIMPBUS_AWIDTH-1) DOWNTO (((s+1)*C_SIMPBUS_AWIDTH-1)-C_SIMPBUS_AWIDTH + 1));
+			--s := to_integer(unsigned(store_counter));
+			--bramDataOut <= CORE_OUTPUTS(((s+1)*C_SIMPBUS_AWIDTH-1) DOWNTO (((s+1)*C_SIMPBUS_AWIDTH-1)-C_SIMPBUS_AWIDTH + 1));
 			--Decrement store_counter
-			IF (store_counter /= store_counter_zero) THEN
-				store_counter <= std_logic_vector(unsigned(store_counter) - 1);
+			IF (output_store_counter /= store_counter_zero) THEN
+				output_store_counter <= std_logic_vector(unsigned(output_store_counter) - 1);
 			END IF;
 
 			--Increment bramAddress by clamping it to C_BRAM_SIZE

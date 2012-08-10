@@ -331,5 +331,9 @@ BEGIN
 			FINISHED			=> FINISHED,
 			BUSY				=> BUSY,
 			OUTPUT_CYCLE		=> input_buffer(1)
-		);	
+		);
+		--output_buffer(1) <= output_buffer(0);
+		--output_buffer(2) <= output_buffer(0);
+		--output_buffer(3) <= output_buffer(0);
+		--output_buffer(4) <= output_buffer(0);
 END ARCHITECTURE synth;

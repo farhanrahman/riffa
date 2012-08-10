@@ -19,7 +19,7 @@ PORT(
 	DMA_SRC					: OUT std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
 	DMA_DST					: OUT std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
 	DMA_LEN					: OUT std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
-	DMA_SIG					: OUT std_logic;
+--	DMA_SIG					: OUT std_logic;
 	DMA_DONE				: IN std_logic;
 	DMA_ERR					: IN std_logic;
 
@@ -87,10 +87,10 @@ BEGIN
 	--the DMA that a buffer is required
 	IF (dma_state = request_dma) THEN
 		DMA_REQ <= '1';
-		DMA_SIG <= '1';
+--		DMA_SIG <= '0';
 	ELSE
 		DMA_REQ <= '0';
-		DMA_SIG <= '0';
+--		DMA_SIG <= '0';
 	END IF;
 
 
