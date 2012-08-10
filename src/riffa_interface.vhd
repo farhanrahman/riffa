@@ -146,7 +146,7 @@ ARCHITECTURE synth OF riffa_interface IS
 			DMA_SRC					: OUT std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
 			DMA_DST					: OUT std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
 			DMA_LEN					: OUT std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
-			DMA_SIG					: OUT std_logic;
+			--DMA_SIG					: OUT std_logic;
 			DMA_DONE				: IN std_logic;
 			DMA_ERR					: IN std_logic;
 			
@@ -264,7 +264,7 @@ PORT MAP(
 	DMA_SRC					=>	DMA_SRC,		--OUT
 	DMA_DST					=>	DMA_DST,		--OUT
 	DMA_LEN					=>	DMA_LEN,		--OUT
-	DMA_SIG					=>	DMA_SIG,		--OUT
+--	DMA_SIG					=>	DMA_SIG,		--OUT
 	DMA_DONE				=>	DMA_DONE,		--IN
 	DMA_ERR					=>	DMA_ERR,		--IN
 	
@@ -432,6 +432,12 @@ BEGIN
 
 	s := to_integer(unsigned(output_store_counter));
 	bramDataOut <= CORE_OUTPUTS(((s+1)*C_SIMPBUS_AWIDTH-1) DOWNTO (((s+1)*C_SIMPBUS_AWIDTH-1)-C_SIMPBUS_AWIDTH + 1));	
+	
+	IF (state = dma_transfer) THEN
+		DMA_SIG <= '1';
+	ELSE
+		DMA_SIG <= '0';
+	END IF;
 	
 END PROCESS;
 

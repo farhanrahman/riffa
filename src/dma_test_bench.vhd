@@ -68,7 +68,7 @@ PORT MAP(
 	DMA_SRC					=>	DMA_SRC,		--OUT
 	DMA_DST					=>	DMA_DST,		--OUT
 	DMA_LEN					=>	DMA_LEN,		--OUT
-	DMA_SIG					=>	DMA_SIG,		--OUT
+--	DMA_SIG					=>	DMA_SIG,		--OUT
 	DMA_DONE				=>	DMA_DONE,		--IN
 	DMA_ERR					=>	DMA_ERR,		--IN
 	
