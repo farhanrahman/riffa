@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
 
 	assert(i > 0);
 
-	DATA_POINTS = MAX(1, i-1);	
+	DATA_POINTS = MAX(1, i);	
 
 	fclose(fin);	
 
