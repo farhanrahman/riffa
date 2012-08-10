@@ -98,6 +98,9 @@ int main(int argc, char* argv[])
 	printf("DATA_POINTS: %d\n",DATA_POINTS);
 	fclose(fin);
 
+	for(i = 0; i < DATA_POINTS; i++){
+		printf("senddata[%d] = %d\n",i,senddata[i]);
+	}
 
 	for(i = 0; i < DATA_POINTS; i++){
 		senddata[i] = fpga_flip_endian(senddata[i]);

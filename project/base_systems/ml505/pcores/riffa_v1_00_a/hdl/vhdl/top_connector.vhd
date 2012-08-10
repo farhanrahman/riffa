@@ -191,7 +191,7 @@ ARCHITECTURE synth OF top_connector IS
 	END COMPONENT test_core;
 	
 	
-	CONSTANT C_NUM_OF_INPUTS_TO_CORE 	: integer := 4; --Number of inputs expected from the PC to FPGA
+	CONSTANT C_NUM_OF_INPUTS_TO_CORE 	: integer := 2; --Number of inputs expected from the PC to FPGA
 	CONSTANT C_NUM_OF_OUTPUTS_FROM_CORE : integer := 1; --Expected number of outupts from core
 	
 	SIGNAL CORE_INPUTS : std_logic_vector(C_NUM_OF_INPUTS_TO_CORE*C_SIMPBUS_AWIDTH-1 DOWNTO 0); --Inputs to the core organised in a contigous std_logic_vector
@@ -322,8 +322,8 @@ BEGIN
 			SYS_RST 			=> RESET,
 			INPUT_1 			=> input_buffer(0),
 			INPUT_2 			=> input_buffer(1),
-			INPUT_3 			=> input_buffer(2),
-			INPUT_4 			=> input_buffer(3),
+			INPUT_3 			=> input_buffer(0),
+			INPUT_4 			=> input_buffer(1),
 			OUTPUT				=> output_buffer(0),
 			VALID				=> VALID,
 			START				=> START,

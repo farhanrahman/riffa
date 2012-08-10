@@ -37,24 +37,52 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "fpga_comm.h"
+#include <assert.h>
 
 #define DATA_SIZE (1*1024*1024)
 
-unsigned int gData[DATA_SIZE/4]; // 1 MB (should be good)
+#define FILE_NAME "data.txt"
 
+#define MAX(a,b) a > b ? a : b
+
+unsigned int gData[DATA_SIZE/4]; // 1 MB (should be good)
+unsigned int senddata[DATA_SIZE/4];
 /**
  * Main entry point.
  */
 int main(int argc, char* argv[]) 
 {
 	fpga_dev * fpgaDev;
-  int rtn, channel, timeout;
+  	int rtn, channel, timeout;
 	unsigned int arg0, arg1;
-
+	unsigned int c;
+	int i = 0;
+	int DATA_POINTS = 0;
 	timeout = 10*1000; // 10 secs.
 	channel = 1;
 	arg0 = (unsigned int)rand();
 	arg1 = (unsigned int)rand();
+
+	FILE *fin = fopen(FILE_NAME,"r"); 
+	assert(fin != NULL);
+
+	while(!feof(fin)){
+		fscanf(fin,"%d", &c);
+		if(!feof(fin)){
+			senddata[i++] = c;
+		}
+	}
+
+	assert(i > 0);
+
+	DATA_POINTS = MAX(1, i);	
+	printf("DATA_POINTS: %d\n",DATA_POINTS);
+	fclose(fin);
+
+
+	for(i = 0; i < DATA_POINTS; i++){
+		senddata[i] = fpga_flip_endian(senddata[i]);
+	}
 
 	if ((rtn = fpga_init(&fpgaDev)) < 0) {
 		printf("error opening fpga: %d\n", rtn);
@@ -65,10 +93,15 @@ int main(int argc, char* argv[])
 		return rtn;
 	}
 
-  printf("Opened.\n");
+  	printf("Opened.\n");
 
 	while (1) {
-		if ((rtn = fpga_send_args(fpgaDev, channel, arg0, arg1, 2, 1)) < 0) {
+		/*if ((rtn = fpga_send_args(fpgaDev, channel, arg0, arg1, 2, 1)) < 0) {
+			printf("error sending args to fpga: %d\n", rtn);
+			break;
+		}*/
+		printf("bytes transfered: %d\n",DATA_POINTS*4);
+		if((rtn = fpga_send_data(fpgaDev, channel, (unsigned char *) senddata, DATA_POINTS*4, 1)) < 0){
 			printf("error sending args to fpga: %d\n", rtn);
 			break;
 		}
@@ -81,17 +114,23 @@ int main(int argc, char* argv[])
 		}
 
 		printf("Received data response, length: 0x%x\n", rtn);
-		printf("Response values 0 & 1: 0x%x, 0x%x should equal 0x%x, 0x%x\n", 
-			fpga_flip_endian(gData[0]), fpga_flip_endian(gData[1]), arg0, arg1);
+		/*printf("Response values 0 & 1: 0x%x, 0x%x should equal 0x%x, 0x%x\n", 
+			fpga_flip_endian(gData[0]), fpga_flip_endian(gData[1]), arg0, arg1);*/
 
 		break;
 	}
 
-  printf("Done.\n");
+  	printf("Done.\n");
 
 	fpga_channel_close(fpgaDev, 0);
-  fpga_free(fpgaDev);
-  printf("Exiting.\n");
+  	fpga_free(fpgaDev);
+
+	for(i = 0; i < DATA_POINTS; i++){
+		printf("gData[%d]\t= %10d, fpga_flip_endian(gData[%d])\t= %10d,	senddata[%d]\t= %10d, fpga_flip_endian(senddata[%d])\t=%10d\n",i,gData[i],i,fpga_flip_endian(gData[i]),i,senddata[i],i,fpga_flip_endian(senddata[i]));
+	}
+
+
+  	printf("Exiting.\n");
 
 	return 0;
 }

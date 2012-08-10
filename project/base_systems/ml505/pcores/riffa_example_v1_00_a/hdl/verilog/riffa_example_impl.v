@@ -163,19 +163,19 @@ always @(posedge SYS_CLK or posedge SYS_RST) begin
 	else begin
 		case (rState)
 			4'd0: begin // Wait for doorbell (start request).
-				if (DOORBELL && DOORBELL_LEN == 0) begin
+				if (DOORBELL /*&& DOORBELL_LEN == 0*/) begin
 					rSrc <= 0;
 					rState <= (DOORBELL_ERR ? 0 : 1);
 				end
 			end
 			4'd1: begin // Save ARG0 to BRAM.
-				rWen <= 1;
+				rWen <= 0;
 				rData <= DOORBELL_ARG;
 				rAddr <= 0;
 				rState <= 2;
 			end
 			4'd2: begin // Save ARG1 to BRAM.
-				rWen <= 1;
+				rWen <= 0;
 				rData <= DOORBELL_ARG;
 				rAddr <= 4;
 				rState <= 3;
