@@ -77,6 +77,7 @@ int main(int argc, char* argv[])
 	int DATA_POINTS = 0;
 	unsigned int arg = 4294967295;
 	unsigned int c;
+	unsigned int lastVal = 0;
 	timeout = 5*1000; // 5 secs.
 	channel = argc == 2 ? atoi(argv[1]) : 0;
 	printf("channel = %d \n", channel);
@@ -101,6 +102,12 @@ int main(int argc, char* argv[])
 	for(i = 0; i < DATA_POINTS; i++){
 		printf("senddata[%d] = %d\n",i,senddata[i]);
 	}
+
+	lastVal = senddata[DATA_POINTS-1];
+	for(i = DATA_POINTS - 1; i > 0; i--){
+		senddata[i] = senddata[i-1];
+	}
+	senddata[0] = lastVal;
 
 	for(i = 0; i < DATA_POINTS; i++){
 		senddata[i] = fpga_flip_endian(senddata[i]);
