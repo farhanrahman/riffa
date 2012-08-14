@@ -433,7 +433,7 @@ BEGIN
 	s := to_integer(unsigned(output_store_counter));
 	bramDataOut <= CORE_OUTPUTS(((s+1)*C_SIMPBUS_AWIDTH-1) DOWNTO (((s+1)*C_SIMPBUS_AWIDTH-1)-C_SIMPBUS_AWIDTH + 1));	
 	
-	IF (state = dma_transfer) THEN
+	IF (state = dma_transfer OR state = dma_transfer_from_store_state) THEN
 		DMA_SIG <= '1';
 	ELSE
 		DMA_SIG <= '0';
@@ -545,7 +545,7 @@ WAIT UNTIL rising_edge(SYS_CLK);
 				r_start <= '1';
 			END IF;			
 			IF (DONE = '1') THEN
-				r_start <= '0'; --stop the DMA transfer
+				--r_start <= '0'; --stop the DMA transfer
 				bramAddress <= r_start_addr;
 			END IF;
 		END IF;
