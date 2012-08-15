@@ -155,7 +155,7 @@ END PROCESS;
 
 State_Machine_test : PROCESS
 
-CONSTANT bytes_transferred	: integer := 16; --in bytes. Assuming for now 4 inputs of 32 bit width
+CONSTANT bytes_transferred	: integer := 8; --in bytes. Assuming for now 4 inputs of 32 bit width
 
 BEGIN
 DOORBELL		<= '0';		
