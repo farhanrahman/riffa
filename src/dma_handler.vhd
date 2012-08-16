@@ -65,7 +65,7 @@ SIGNAL dma_state, dma_nstate : dma_states := idle;
 
 SIGNAL rStart, rEnd, rDes, rLen : std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0) := (OTHERS => '0');
 SIGNAL buffReq : std_logic_vector(31 DOWNTO 0);
-
+SIGNAL buffReqTmp : std_logic_vector(31 DOWNTO 0);
 
 BEGIN
 
@@ -192,6 +192,7 @@ BEGIN
 		rLen <= (OTHERS => '0');
 		rDes <= (OTHERS => '0');
 		dma_state <= idle;
+		buffReqTmp <= (OTHERS => '0');
 	ELSE
 		dma_state <= dma_nstate;
 
@@ -207,6 +208,7 @@ BEGIN
 
 		IF (dma_state = get_buffer AND BUF_REQ_RDY = '1') THEN
 			rDes <= BUF_REQ_ADDR;
+			buffReqTmp <= buffReq;
 			IF (unsigned(rEnd) - unsigned(rStart) < unsigned(buffReq)) THEN
 				IF (unsigned(rEnd) = unsigned(rStart)) THEN
 					rLen <= std_logic_vector(to_unsigned(4,C_SIMPBUS_AWIDTH)); --default length of 4 bytes
@@ -224,17 +226,18 @@ BEGIN
 		
 		IF (DMA_DONE = '1' AND dma_state = wait_for_dma) THEN
 			rDes <= std_logic_vector(unsigned(rDes) + unsigned(rLen));
+			buffReqTmp <= std_logic_vector(unsigned(buffReqTmp) - unsigned(rLen));
 		END IF;
 		
 		IF (dma_nstate = request_dma AND dma_state = wait_for_next_dma) THEN
-			IF (unsigned(rEnd) - unsigned(rStart) < unsigned(buffReq)) THEN
+			IF (unsigned(rEnd) - unsigned(rStart) < unsigned(buffReqTmp)) THEN
 				IF (unsigned(rEnd) = unsigned(rStart)) THEN
 					rLen <= std_logic_vector(to_unsigned(4,C_SIMPBUS_AWIDTH)); --default length of 4 bytes
 				ELSE
 					rLen <= std_logic_vector(unsigned(rEnd) - unsigned(rStart));
 				END IF;
 			ELSE
-				rLen <= std_logic_vector(unsigned(buffReq));
+				rLen <= std_logic_vector(unsigned(buffReqTmp));
 			END IF;	
 		END IF;
 	END IF;
