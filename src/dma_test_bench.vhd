@@ -68,7 +68,7 @@ PORT MAP(
 	DMA_SRC					=>	DMA_SRC,		--OUT
 	DMA_DST					=>	DMA_DST,		--OUT
 	DMA_LEN					=>	DMA_LEN,		--OUT
---	DMA_SIG					=>	DMA_SIG,		--OUT
+	DMA_SIG					=>	DMA_SIG,		--IN
 	DMA_DONE				=>	DMA_DONE,		--IN
 	DMA_ERR					=>	DMA_ERR,		--IN
 	
@@ -124,6 +124,7 @@ BEGIN
 	START_ADDR		<= 	(OTHERS => '0');
 	END_ADDR	    <= 	(OTHERS => '0');
 	START 			<= 	'0';
+	DMA_SIG 		<= '1';
 	WAIT UNTIL rising_edge(clk);
 	--END_ADDR(4) <= '1'; --(4 => '1', OTHERS => '0')
 	START <= '1';
