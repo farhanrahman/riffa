@@ -465,7 +465,7 @@ WAIT UNTIL rising_edge(SYS_CLK);
 	ELSE
 		state <= nstate; -- assign the state to next state
 		r_start_addr <= C_BRAM_ADDR;
-		r_end_addr	<= (OTHERS => '0');
+		r_end_addr	<= bramAddress;
 		r_start <= '0';
 		
 		IF (DOORBELL = '1' AND DOORBELL_ERR = '0' AND DOORBELL_LEN /= SIMPBUS_ZERO) THEN

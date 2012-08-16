@@ -225,6 +225,18 @@ BEGIN
 		IF (DMA_DONE = '1' AND dma_state = wait_for_dma) THEN
 			rDes <= std_logic_vector(unsigned(rDes) + unsigned(rLen));
 		END IF;
+		
+		IF (dma_nstate = request_dma AND dma_state = wait_for_next_dma) THEN
+			IF (unsigned(rEnd) - unsigned(rStart) < unsigned(buffReq)) THEN
+				IF (unsigned(rEnd) = unsigned(rStart)) THEN
+					rLen <= std_logic_vector(to_unsigned(4,C_SIMPBUS_AWIDTH)); --default length of 4 bytes
+				ELSE
+					rLen <= std_logic_vector(unsigned(rEnd) - unsigned(rStart));
+				END IF;
+			ELSE
+				rLen <= std_logic_vector(unsigned(buffReq));
+			END IF;	
+		END IF;
 	END IF;
 END PROCESS;
 
