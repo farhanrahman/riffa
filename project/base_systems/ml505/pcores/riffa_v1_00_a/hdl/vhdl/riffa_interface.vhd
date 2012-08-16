@@ -146,7 +146,7 @@ ARCHITECTURE synth OF riffa_interface IS
 			DMA_SRC					: OUT std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
 			DMA_DST					: OUT std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
 			DMA_LEN					: OUT std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
-			--DMA_SIG					: OUT std_logic;
+			DMA_SIG					: IN std_logic;
 			DMA_DONE				: IN std_logic;
 			DMA_ERR					: IN std_logic;
 			
@@ -225,6 +225,8 @@ CONSTANT BYTE_INCR_USG : unsigned := to_unsigned(BYTE_INCR,C_SIMPBUS_AWIDTH);
 
 SIGNAL core_inputs_1 : std_logic_vector(C_NUM_OF_INPUTS_TO_CORE*C_SIMPBUS_AWIDTH-1 DOWNTO 0);
 
+SIGNAL DMA_SIG_1	: std_logic := '0';
+
 BEGIN
 
 --BRAM enable signal
@@ -247,6 +249,9 @@ START 		<= r_start;
 --Core outputs assignments
 CORE_INPUTS <= core_inputs_1;
 
+--DMA_SIG assignment from combinatorial to output of entity
+DMA_SIG <= DMA_SIG_1;
+
 DMA : COMPONENT dma_handler
 GENERIC MAP(
 	C_SIMPBUS_AWIDTH 		=> C_SIMPBUS_AWIDTH,
@@ -264,7 +269,7 @@ PORT MAP(
 	DMA_SRC					=>	DMA_SRC,		--OUT
 	DMA_DST					=>	DMA_DST,		--OUT
 	DMA_LEN					=>	DMA_LEN,		--OUT
---	DMA_SIG					=>	DMA_SIG,		--OUT
+	DMA_SIG					=>	DMA_SIG_1,		--IN
 	DMA_DONE				=>	DMA_DONE,		--IN
 	DMA_ERR					=>	DMA_ERR,		--IN
 	
@@ -434,9 +439,9 @@ BEGIN
 	bramDataOut <= CORE_OUTPUTS(((s+1)*C_SIMPBUS_AWIDTH-1) DOWNTO (((s+1)*C_SIMPBUS_AWIDTH-1)-C_SIMPBUS_AWIDTH + 1));	
 	
 	IF (state = dma_transfer) THEN
-		DMA_SIG <= '1';
+		DMA_SIG_1 <= '1';
 	ELSE
-		DMA_SIG <= '0';
+		DMA_SIG_1 <= '0';
 	END IF;
 	
 END PROCESS;
@@ -460,7 +465,7 @@ WAIT UNTIL rising_edge(SYS_CLK);
 	ELSE
 		state <= nstate; -- assign the state to next state
 		r_start_addr <= C_BRAM_ADDR;
-		r_end_addr	<= (OTHERS => '0');
+		r_end_addr	<= bramAddress;
 		r_start <= '0';
 		
 		IF (DOORBELL = '1' AND DOORBELL_ERR = '0' AND DOORBELL_LEN /= SIMPBUS_ZERO) THEN
