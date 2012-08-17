@@ -172,9 +172,7 @@ BUF_REQ_ADDR	<= 	(OTHERS => '0');
 BUF_REQ_SIZE	<= 	(OTHERS => '0');
 BUF_REQ_RDY		<= 	'0';
 BUF_REQ_ERR		<= 	'0';
-DMA_REQ_ACK <= '1';
-DMA_ERR 	<= '0';
-DMA_DONE 	<= '1';
+
 WAIT UNTIL rising_edge(clk);
 
 	--Check for doorbell reset
@@ -195,7 +193,10 @@ WAIT UNTIL rising_edge(clk);
 					BUF_REQ_SIZE,
 					BUF_REQ_ADDR,
 					BUF_REQ_RDY,
-					DMA_REQ
+					DMA_REQ,
+					DMA_REQ_ACK,
+					DMA_ERR,
+					DMA_DONE
 		);
 	END LOOP;
 	WAIT;

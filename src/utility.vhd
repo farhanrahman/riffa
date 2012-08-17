@@ -32,13 +32,15 @@ PACKAGE utility IS
 				SIGNAL BUF_REQ_SIZE	: OUT std_logic_vector(4 DOWNTO 0);
 				SIGNAL BUF_REQ_ADDR : OUT std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);
 				SIGNAL BUF_REQ_RDY	: OUT std_logic;
-				SIGNAl DMA_REQ		: IN std_logic
+				SIGNAl DMA_REQ		: IN std_logic;
+				SIGNAL DMA_REQ_ACK	: OUT std_logic;
+				SIGNAL DMA_ERR		: OUT std_logic;
+				SIGNAL DMA_DONE		: OUT std_logic
 	);
 	
 	--Procedure used to handle dma transfer but with an error
 	--at the end i.e. DMA_ERR will be kept high along with
 	--DMA_DONE at the end of a dma transfer.
-	--DEPRECATED
 	PROCEDURE handle_dma_with_err(
 				SIGNAL BUF_REQ 		: IN std_logic;
 				SIGNAL clk			: IN std_logic;
@@ -156,7 +158,10 @@ PACKAGE BODY utility IS
 				SIGNAL BUF_REQ_SIZE	: OUT std_logic_vector(4 DOWNTO 0);
 				SIGNAL BUF_REQ_ADDR : OUT std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);
 				SIGNAL BUF_REQ_RDY	: OUT std_logic;
-				SIGNAl DMA_REQ		: IN std_logic
+				SIGNAl DMA_REQ		: IN std_logic;
+				SIGNAL DMA_REQ_ACK	: OUT std_logic;
+				SIGNAL DMA_ERR		: OUT std_logic;
+				SIGNAL DMA_DONE		: OUT std_logic
 	) IS
 
 	BEGIN
@@ -172,6 +177,17 @@ PACKAGE BODY utility IS
 		BUF_REQ_RDY <= '1';
 
 		WAIT UNTIL rising_edge(DMA_REQ);
+		DMA_REQ_ACK <= '1';
+
+		WAIT UNTIL rising_edge(clk);
+		DMA_REQ_ACK <= '0';
+					
+		DMA_ERR 	<= '0';
+		DMA_DONE 	<= '1';
+			
+		WAIT UNTIL rising_edge(clk);
+
+		DMA_DONE <= '0';
 	END;
 	
 	PROCEDURE handle_dma_with_err(

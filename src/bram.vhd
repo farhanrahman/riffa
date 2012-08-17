@@ -51,7 +51,7 @@ BEGIN
 	
 	IF (SYS_RST = '1') THEN
 		--WORD 0
-		bram(0) <= std_logic_vector(to_unsigned(60,8));
+		bram(0) <= std_logic_vector(to_unsigned(40,8));
 		bram(1) <= std_logic_vector(to_unsigned(0,8));
 		bram(2) <= std_logic_vector(to_unsigned(0,8));
 		bram(3) <= std_logic_vector(to_unsigned(0,8));
