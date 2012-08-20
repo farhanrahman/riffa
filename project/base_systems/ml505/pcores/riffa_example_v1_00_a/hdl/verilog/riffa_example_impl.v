@@ -36,188 +36,138 @@
 // History:				@mattj: Initial pre-release. Version 0.9.
 //-----------------------------------------------------------------------------
 
-module riffa_example_impl (
-	SYS_CLK,
-	SYS_RST,
-	INTERRUPT,
-	INTERRUPT_ERR,
-	INTERRUPT_ACK,
-	DOORBELL,
-	DOORBELL_ERR,
-	DOORBELL_LEN,
-	DOORBELL_ARG,
-	DMA_REQ,
-	DMA_REQ_ACK,
-	DMA_SRC,
-	DMA_DST,
-	DMA_LEN,
-	DMA_SIG,
-	DMA_DONE,
-	DMA_ERR,
-	BUF_REQ,
-	BUF_REQ_ACK,
-	BUF_REQ_ADDR,
-	BUF_REQ_SIZE,
-	BUF_REQ_RDY,
-	BUF_REQ_ERR,
-	BUF_REQD,
-	BUF_REQD_ADDR,
-	BUF_REQD_SIZE,
-	BUF_REQD_RDY,
-	BUF_REQD_ERR,
-	MEM_EN,
-	MEM_WEN,
-	MEM_DATA_OUT,
-	MEM_DATA_IN,
-	MEM_ADDR
+module riffa_example_impl #(
+	parameter C_SIMPBUS_AWIDTH = 32,
+	parameter C_BRAM_ADDR = 'h00000000,
+	parameter C_BRAM_SIZE = 'h4000
+)
+(
+	input	 							SYS_CLK,
+	input								SYS_RST,
+	output								INTERRUPT,
+	output								INTERRUPT_ERR,
+	input								INTERRUPT_ACK,
+	input								DOORBELL,
+	input								DOORBELL_ERR,
+	input	[C_SIMPBUS_AWIDTH-1:0]		DOORBELL_LEN,
+	input	[31:0]						DOORBELL_ARG,
+	output								DMA_REQ,
+	input								DMA_REQ_ACK,
+	output	[C_SIMPBUS_AWIDTH-1:0]		DMA_SRC,
+	output	[C_SIMPBUS_AWIDTH-1:0]		DMA_DST,
+	output	[C_SIMPBUS_AWIDTH-1:0]		DMA_LEN,
+	output								DMA_SIG,
+	input								DMA_DONE,
+	input								DMA_ERR,
+	output								BUF_REQ,
+	input								BUF_REQ_ACK,
+	input	[C_SIMPBUS_AWIDTH-1:0]		BUF_REQ_ADDR,
+	input	[4:0]						BUF_REQ_SIZE,
+	input								BUF_REQ_RDY,
+	input								BUF_REQ_ERR,
+	input								BUF_REQD,
+	output	[C_SIMPBUS_AWIDTH-1:0]		BUF_REQD_ADDR,
+	output	[4:0]						BUF_REQD_SIZE,
+	output								BUF_REQD_RDY,
+	output								BUF_REQD_ERR,
+	output								MEM_EN,
+	output	[3:0]						MEM_WEN,
+	output	[31:0]						MEM_DATA_OUT,
+	input	[31:0]						MEM_DATA_IN,
+	output	[31:0]						MEM_ADDR
 );
 
-parameter C_BRAM_ADDR = 'h00000000;
-parameter C_BRAM_SIZE = 'h8000;
-parameter C_BRAM_SIZE_LOG2 = 15;
-parameter C_SIMPBUS_AWIDTH = 32;
-
-input	 				SYS_CLK;
-input					SYS_RST;
-
-output					INTERRUPT;
-output					INTERRUPT_ERR;
-input					INTERRUPT_ACK;
-input					DOORBELL;
-input					DOORBELL_ERR;
-input	[C_SIMPBUS_AWIDTH-1:0]		DOORBELL_LEN;
-input	[31:0]				DOORBELL_ARG;
-
-
-output					DMA_REQ;
-input					DMA_REQ_ACK;
-output	[C_SIMPBUS_AWIDTH-1:0]		DMA_SRC;
-output	[C_SIMPBUS_AWIDTH-1:0]		DMA_DST;
-output	[C_SIMPBUS_AWIDTH-1:0]		DMA_LEN;
-output					DMA_SIG;
-input					DMA_DONE;
-input					DMA_ERR;
-output					BUF_REQ;
-input					BUF_REQ_ACK;
-input	[C_SIMPBUS_AWIDTH-1:0]		BUF_REQ_ADDR;
-input	[4:0]				BUF_REQ_SIZE;
-input					BUF_REQ_RDY;
-input					BUF_REQ_ERR;
-input					BUF_REQD;
-output	[C_SIMPBUS_AWIDTH-1:0]		BUF_REQD_ADDR;
-output	[4:0]				BUF_REQD_SIZE;
-output					BUF_REQD_RDY;
-output					BUF_REQD_ERR;
-output					MEM_EN;
-output	[3:0]				MEM_WEN;
-output	[31:0]				MEM_DATA_OUT;
-input	[31:0]				MEM_DATA_IN;
-output	[31:0]				MEM_ADDR;
-
-
-reg	[3:0]				rState=0;
-reg	[31:0]				rAddr=0;
-reg	[31:0]				rData=0;
-reg					rWen=0;
-reg	[31:0]				rSrc=0;
-reg	[31:0]				rDst=0;
-reg	[31:0]				rLen=0;
-
-wire	[31:0]				wBufSize;
+reg		[2:0]						rState=0;
+reg		[31:0]						rAddr=0;
+reg		[31:0]						rData=0;
+reg		[31:0]						rDst=0;
+reg									rWen=0;
+reg									rDidFirstDma=0;
 
 
 assign MEM_EN = 1;
 assign MEM_WEN = (rWen == 1 ? 4'b1111 : 0);
-assign MEM_DATA_OUT = rData;
+assign MEM_DATA_OUT = (rData[7:0]<<24 | rData[15:8]<<16 | rData[23:16]<<8 | rData[31:24]);
 assign MEM_ADDR = rAddr;
 
-assign INTERRUPT = (rState == 9 || rState == 10);
-assign INTERRUPT_ERR = (rState == 10);
+assign INTERRUPT = (rState == 7);
+assign INTERRUPT_ERR = 0;
 
-assign DMA_REQ = (rState == 6);
-assign DMA_SRC = C_BRAM_ADDR + rSrc;
+assign DMA_REQ = (rState == 5);
+assign DMA_SRC = C_BRAM_ADDR;
 assign DMA_DST = rDst;
-assign DMA_LEN = rLen;
+assign DMA_LEN = C_BRAM_SIZE;
 assign DMA_SIG = 1;
 
-assign BUF_REQ = (rState == 4);
-assign wBufSize = (1<<BUF_REQ_SIZE);
+assign BUF_REQ = (rState == 3);
 
 assign BUF_REQD_ADDR = C_BRAM_ADDR;
-assign BUF_REQD_SIZE = C_BRAM_SIZE_LOG2;
+assign BUF_REQD_SIZE = 14;
 assign BUF_REQD_RDY = 1;
 assign BUF_REQD_ERR = 0;
-
-
 
 always @(posedge SYS_CLK or posedge SYS_RST) begin
 	if (SYS_RST) begin
 		rState <= 0;
-		rSrc <= 0;
 		rDst <= 0;
-		rLen <= 0;
 		rAddr <= 0;
 		rData <= 0;
 		rWen <= 0;
+		rDidFirstDma <= 0;
 	end
 	else begin
 		case (rState)
-			4'd0: begin // Wait for doorbell (start request).
-				if (DOORBELL /*&& DOORBELL_LEN == 0*/) begin
-					rSrc <= 0;
+			3'd0: begin // Wait for request.
+				rDidFirstDma <= 0;
+				if (DOORBELL) begin
+					// Save DOORBELL_LEN in BRAM position 0
+					rData <= DOORBELL_LEN;
+					rAddr <= 0*4;
+					rWen <= 1;
 					rState <= (DOORBELL_ERR ? 0 : 1);
 				end
+				else begin
+					rAddr <= 0;
+					rData <= 0;
+					rWen <= 0;
+					rState <= 0;
+				end
 			end
-			4'd1: begin // Save ARG0 to BRAM.
-				rWen <= 0;
+			3'd1: begin // Save ARG0 in BRAM position 1.
 				rData <= DOORBELL_ARG;
-				rAddr <= 0;
+				rAddr <= 1*4;
+				rWen <= 1;
 				rState <= 2;
 			end
-			4'd2: begin // Save ARG1 to BRAM.
-				rWen <= 0;
+			3'd2: begin // Save ARG1 in BRAM position 2.
 				rData <= DOORBELL_ARG;
-				rAddr <= 4;
+				rAddr <= 2*4;
+				rWen <= 1;
 				rState <= 3;
 			end
-			4'd3: begin // Do processing here if you like.
-				// In this case, we just wait a cycle and then
-				// "return" the results (which are just the 
-				// BRAM contents with args written to it).
+			3'd3: begin // Request PC buffer.
 				rWen <= 0;
-				rState <= 4;
+				rState <= (BUF_REQ_ACK ? 4 : 3);
 			end
-			4'd4: begin // Request buffer.
-				if (BUF_REQ_ACK) begin
-					/*Go to the next state only if 
-					 *Acknowledgement received from PC*/
-					rState <= 5;
-				end
-			end
-			4'd5: begin // Get buffer.
+			3'd4: begin // Get PC buffer (assumes it's at least C_BRAM_SIZE, it's usually configured to be 1MB).
 				if (BUF_REQ_RDY) begin
 					rDst <= BUF_REQ_ADDR;
-					rLen <= (C_BRAM_SIZE-rSrc < wBufSize ? C_BRAM_SIZE-rSrc : wBufSize); 
-					rState <= (BUF_REQ_ERR ? 10 : 6);
+					rState <= (BUF_REQ_ERR ? 0 : 5);
 				end
 			end
-			4'd6: begin // Request DMA data to PC.
-				if (DMA_REQ_ACK) begin
-					rSrc <= rSrc + rLen;
-					rState <= 8; 
-				end
+			3'd5: begin // DMA data to PC.
+				rState <= (DMA_REQ_ACK ? 6 : 5);
 			end
-			4'd8: begin // Wait for DMA to complete.
+			3'd6: begin // Wait for DMA to complete.
 				if (DMA_DONE) begin
-					// Repeat if necessary, until all the data is transferred.
-					rState <= (DMA_ERR ? 10 : (C_BRAM_SIZE > rSrc ? 4 : 9));
+					rDidFirstDma <= 1;
+					rState <= (DMA_ERR ? 0 : (rDidFirstDma ? 7 : 3));
 				end
 			end
-			4'd9: begin // Signal an interrupt (signal done).
-				rState <= (INTERRUPT_ACK ? 0 : 9);
-			end
-			4'd10: begin // Signal an interrupt (signal error).
-				rState <= (INTERRUPT_ACK ? 0 : 10);
+			3'd7: begin // Signal an interrupt (for done).
+				if (INTERRUPT_ACK) begin
+					rState <= 0;
+				end
 			end
 			default: begin
 				rState <= 0;
