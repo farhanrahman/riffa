@@ -480,11 +480,11 @@ WAIT UNTIL rising_edge(SYS_CLK);
 		IF (state = dma_transfer OR state = dma_transfer_from_store_state) THEN
 			r_start_addr <= C_BRAM_ADDR;
 			--r_end_addr <= std_logic_vector(unsigned(C_BRAM_ADDR) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));
-			IF (state = dma_transfer) THEN
-				r_end_addr <= bramAddress;
-			ELSE
+--			IF (state = dma_transfer) THEN
+--				r_end_addr <= bramAddress;
+--			ELSE
 				r_end_addr <= std_logic_vector(unsigned(C_BRAM_ADDR) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));
-			END IF;
+--			END IF;
 			
 			IF (START_ACK = '1') THEN
 				r_start <= '0'; --start DMA transfer
