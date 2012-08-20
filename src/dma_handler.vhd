@@ -43,10 +43,7 @@ PORT(
 	DONE_ERR				: OUT std_logic;
 	
 	--START Acknowledge signal
-	START_ACK				: OUT std_logic;
-	
-	--Number of dma transfers that has occured since the doorbell start signal
-	DMA_NUMBER				: IN std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0)
+	START_ACK				: OUT std_logic
 );
 END ENTITY dma_handler;
 
@@ -175,7 +172,6 @@ END PROCESS;
 
 State_clocked : PROCESS
 --VARIABLE temp_start : std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);
-VARIABLE mult : std_logic_vector(C_SIMPBUS_AWIDTH*2 - 1 DOWNTO 0);
 BEGIN
 	WAIT UNTIL rising_edge(SYS_CLK);
 
@@ -198,8 +194,7 @@ BEGIN
 		END IF;
 
 		IF (BUF_REQ_RDY = '1') THEN
-			mult := std_logic_vector(unsigned(DMA_NUMBER)*to_unsigned(C_BRAM_SIZE,C_SIMPBUS_AWIDTH));
-			rDes <= std_logic_vector(unsigned(BUF_REQ_ADDR) + unsigned(mult(C_SIMPBUS_AWIDTH - 1 DOWNTO 0)));
+			rDes <= BUF_REQ_ADDR;
 		END IF;
 
 		IF (dma_state = get_buffer AND BUF_REQ_RDY = '1') THEN

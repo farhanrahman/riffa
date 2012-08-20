@@ -47,8 +47,6 @@ SIGNAL  START_ACK				: std_logic;										--OUT
 SIGNAL 	DONE					: std_logic;										--IN
 SIGNAL 	DONE_ERR				: std_logic;										--IN
 
-SIGNAL dma_number				: std_logic_vector(31 DOWNTO 0) := (OTHERS => '0');
-
 ALIAS slv IS std_logic_vector;
 ALIAS usg IS unsigned;
 
@@ -94,8 +92,7 @@ PORT MAP(
 	DONE_ERR				=> 	DONE_ERR,		--OUT
 	
 	--Start Ack
-	START_ACK				=> START_ACK,
-	DMA_NUMBER				=> dma_number
+	START_ACK				=> START_ACK
 );
 
 Clk_generate : PROCESS
