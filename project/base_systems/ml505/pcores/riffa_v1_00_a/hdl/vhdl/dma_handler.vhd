@@ -171,7 +171,7 @@ BEGIN
 END PROCESS;
 
 State_clocked : PROCESS
-VARIABLE temp_start : std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);
+--VARIABLE temp_start : std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);
 BEGIN
 	WAIT UNTIL rising_edge(SYS_CLK);
 
@@ -184,17 +184,21 @@ BEGIN
 		dma_state <= dma_nstate;
 
 		IF (dma_state = idle) THEN
-			temp_start := START_ADDR;
-			rStart <= temp_start;
+			--temp_start := START_ADDR;
+			rStart <= START_ADDR;
 			rEnd <= std_logic_vector(resize(unsigned(END_ADDR), C_SIMPBUS_AWIDTH));
-			IF(unsigned(temp_start) > unsigned(END_ADDR)) THEN
-				rStart 	<= END_ADDR;
-				rEnd	<= std_logic_vector(resize(unsigned(START_ADDR), C_SIMPBUS_AWIDTH));
-			END IF;
+			--IF(unsigned(temp_start) > unsigned(END_ADDR)) THEN
+			--	rStart 	<= END_ADDR;
+			--	rEnd	<= std_logic_vector(resize(unsigned(START_ADDR), C_SIMPBUS_AWIDTH));
+			--END IF;
+		END IF;
+
+		IF (BUF_REQ_RDY = '1') THEN
+			rDes <= BUF_REQ_ADDR;
 		END IF;
 
 		IF (dma_state = get_buffer AND BUF_REQ_RDY = '1') THEN
-			rDes <= BUF_REQ_ADDR;
+			--rDes <= BUF_REQ_ADDR;
 			IF (unsigned(rEnd) - unsigned(rStart) < unsigned(buffReq)) THEN
 				IF (unsigned(rEnd) = unsigned(rStart)) THEN
 					rLen <= std_logic_vector(to_unsigned(4,C_SIMPBUS_AWIDTH)); --default length of 4 bytes

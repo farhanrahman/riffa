@@ -127,8 +127,8 @@ int main(int argc, char* argv[])
  	printf("Opened.\n");
 	
 	while(1) {
-		//printf("rtn= %d\n", fpga_send_args(fpgaDev, channel, arg, arg, 2, 1));
-		//printf("rtn= %d\n", fpga_send_args(fpgaDev, channel, 0, 0, 2, 1));
+//		printf("rtn= %d\n", fpga_send_args(fpgaDev, channel, arg, arg, 2, 1));
+//		printf("rtn= %d\n", fpga_send_args(fpgaDev, channel, 0, 0, 2, 1));
 		GETTIME(start);
 		if((rtn = fpga_send_data(fpgaDev, channel, (unsigned char *) senddata, DATA_POINTS*4, 1)) < 0){
 			printf("error sending args to fpga: %d\n", rtn);
@@ -167,7 +167,11 @@ int main(int argc, char* argv[])
 		}
 //		printf("gData[%d]\t= %10d, fpga_flip_endian(gData[%d])\t= %10d,	senddata[%d]\t= %10d, fpga_flip_endian(senddata[%d])\t=%10d\n",i,gData[i],i,fpga_flip_endian(gData[i]),i,senddata[i],i,fpga_flip_endian(senddata[i]));
 	}
+i = 0;
+		printf("gData[%d]\t= %10d, fpga_flip_endian(gData[%d])\t= %10d,	senddata[%d]\t= %10d, fpga_flip_endian(senddata[%d])\t=%10d\n",i,gData[i],i,fpga_flip_endian(gData[i]),i,senddata[i],i,fpga_flip_endian(senddata[i]));
+i = DATA_POINTS - 1;
 
+		printf("gData[%d]\t= %10d, fpga_flip_endian(gData[%d])\t= %10d,	senddata[%d]\t= %10d, fpga_flip_endian(senddata[%d])\t=%10d\n",i,gData[i],i,fpga_flip_endian(gData[i]),i,senddata[i],i,fpga_flip_endian(senddata[i]));
 //	printf("TEST PASSED. All data sent has been received in the same format and order \n");
   	printf("Done.\n");
 

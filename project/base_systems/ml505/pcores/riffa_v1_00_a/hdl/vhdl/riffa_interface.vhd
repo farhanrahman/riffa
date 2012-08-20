@@ -197,8 +197,6 @@ TYPE states IS (
 			interrupt_err_state,
 			--STORE DATA INTO RAM
 			store_state,
-			--RESET REST OF THE THE BRAM DATA
-			reset_rest,
 			--DMA TRANFER INITIATED FROM STORE STATE
 			dma_transfer_from_store_state
 			);
@@ -330,13 +328,6 @@ BEGIN
 				END IF;
 				
 				IF (FINISHED = '1') THEN
-					IF (bramAddress /= std_logic_vector(to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH))) THEN					
-					--Only reset the rest of the RAM if the RAM is not full. If the RAM is full
-					--then reset the rest of the contents of the RAM before doing a DMA transfer
-						nstate <= reset_rest;
-					ELSE
-						nstate <= dma_transfer;
-					END IF;
 					nstate <= dma_transfer;
 				END IF;
 				
@@ -358,11 +349,6 @@ BEGIN
 				ELSIF (bramAddress = std_logic_vector(to_unsigned(C_BRAM_SIZE - BYTE_INCR, C_SIMPBUS_AWIDTH))) THEN
 					nstate <= dma_transfer_from_store_state;
 				END IF;
-				
-			WHEN reset_rest =>
-				IF (bramAddress = std_logic_vector(to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH))) THEN
-					nstate <= dma_transfer;
-				END IF;
 			WHEN dma_transfer_from_store_state =>
 				IF (DONE = '1') THEN
 					nstate <= store_state;
@@ -379,10 +365,8 @@ BEGIN
 	
 	--Write enable BRAM when waiting for PC to transfer
 	--data to FPGA or when in the store state to store
-	--data into the RAM or in the reset_rest state where
-	--the rest of the contents of the BRAM has to be
-	--re-initialised
-	IF (state = store_state OR state = reset_rest) THEN
+	--data into the RAM
+	IF (state = store_state) THEN
 		BRAM_WEN <= (OTHERS => '1');
 	ELSE
 		BRAM_WEN <= (OTHERS => '0');
@@ -489,11 +473,19 @@ WAIT UNTIL rising_edge(SYS_CLK);
 			END IF;
 		END IF;
 		
-		--Always do DMA transfer of the whole BRAM block
-		IF (state = dma_transfer) THEN
+		--If state is in the final dma_transfer then initiate the dma_transfer upto
+		--the point where the data has been stored. If the contents of bram needs 
+		--to be sent back to the PC because its full then do the dma transfer of
+		--the whole bram.
+		IF (state = dma_transfer OR state = dma_transfer_from_store_state) THEN
 			r_start_addr <= C_BRAM_ADDR;
 			--r_end_addr <= std_logic_vector(unsigned(C_BRAM_ADDR) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));
-			r_end_addr <= bramAddress;
+--			IF (state = dma_transfer) THEN
+--				r_end_addr <= bramAddress;
+--			ELSE
+				r_end_addr <= std_logic_vector(unsigned(C_BRAM_ADDR) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));
+--			END IF;
+			
 			IF (START_ACK = '1') THEN
 				r_start <= '0'; --start DMA transfer
 			ELSE
@@ -527,33 +519,6 @@ WAIT UNTIL rising_edge(SYS_CLK);
 		--	ELSE
 				bramAddress <= std_logic_vector(unsigned(bramAddress) + BYTE_INCR);
 		--	END IF;			
-		END IF;
-		
-		--If the BRAM was full while storing data, first transfer the data
-		--back to PC and then go back to storing the data
-		IF (state = dma_transfer_from_store_state) THEN
-			r_start_addr <= C_BRAM_ADDR;
-			r_end_addr <= std_logic_vector(unsigned(C_BRAM_ADDR) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));
-			--r_start <= '1'; --start DMA transfer
-			IF (START_ACK = '1') THEN
-				r_start <= '0'; --start DMA transfer
-			ELSE
-				r_start <= '1';
-			END IF;			
-			IF (DONE = '1') THEN
-				--r_start <= '0'; --stop the DMA transfer
-				bramAddress <= r_start_addr;
-			END IF;
-		END IF;
-
-		--Reset whatever data has been present in the remaining part of the BRAM
-		IF (state = reset_rest) THEN
-			--Increment bramAddress by clamping it to C_BRAM_SIZE
-			--IF ((unsigned(bramAddress) + BYTE_INCR) > to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH)) THEN
-			--	bramAddress <= std_logic_vector(to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));
-			--ELSE
-				bramAddress <= std_logic_vector(unsigned(bramAddress) + BYTE_INCR);
-			--END IF;			
 		END IF;
 		
 	END IF;
