@@ -170,7 +170,8 @@ ARCHITECTURE synth OF riffa_interface IS
 			DONE_ERR				: OUT std_logic;
 			
 			--START Acknowledge signal
-			START_ACK				: OUT std_logic			
+			START_ACK				: OUT std_logic;
+			DMA_NUMBER				: IN std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0)
 		);
 	END COMPONENT dma_handler;
 
@@ -179,6 +180,9 @@ ARCHITECTURE synth OF riffa_interface IS
 CONSTANT SIMPBUS_ZERO : std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0) := (OTHERS => '0');
 CONSTANT C_BRAM_LOG : integer := integer(ceil(log2(real(C_BRAM_SIZE))));
 CONSTANT C_NUM_IOS_LOG : integer := integer(ceil(log2(real(realmax(real(C_NUM_OF_INPUTS_TO_CORE),real(C_NUM_OF_OUTPUTS_FROM_CORE))))));
+
+SIGNAL DMA_NUMBER_1 : std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0) := (OTHERS => '0');
+SIGNAL DMA_NUMBER	: std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0) := (OTHERS => '0');
 
 TYPE states IS (
 			idle, 
@@ -245,6 +249,8 @@ START 		<= r_start;
 --Core outputs assignments
 CORE_INPUTS <= core_inputs_1;
 
+DMA_NUMBER <= DMA_NUMBER_1;
+
 DMA : COMPONENT dma_handler
 GENERIC MAP(
 	C_SIMPBUS_AWIDTH 		=> C_SIMPBUS_AWIDTH,
@@ -286,7 +292,9 @@ PORT MAP(
 	DONE_ERR				=> 	DONE_ERR,		--OUT
 	
 	--Start ack signal
-	START_ACK				=> START_ACK		--OUT
+	START_ACK				=> START_ACK,		--OUT
+	
+	DMA_NUMBER				=> DMA_NUMBER
 );
 
 
@@ -437,11 +445,16 @@ WAIT UNTIL rising_edge(SYS_CLK);
 		END LOOP;
 		store_counter <= (OTHERS => '0');
 		output_store_counter <= (OTHERS => '0');
+		DMA_NUMBER_1 <= (OTHERS => '0');
 	ELSE
 		state <= nstate; -- assign the state to next state
 		r_start_addr <= C_BRAM_ADDR;
 		r_end_addr	<= (OTHERS => '0');
 		r_start <= '0';
+		
+		IF (state = idle) THEN
+			DMA_NUMBER_1 <= (OTHERS => '0');
+		END IF;
 		
 		IF (DOORBELL = '1' AND DOORBELL_ERR = '0' AND DOORBELL_LEN /= SIMPBUS_ZERO) THEN
 			 --Increment the pointer with however many bits were transferred
@@ -494,6 +507,7 @@ WAIT UNTIL rising_edge(SYS_CLK);
 			IF (DONE = '1') THEN
 				--r_start <= '0'; --stop the DMA transfer
 				bramAddress <= r_start_addr;
+				DMA_NUMBER_1 <= std_logic_vector(unsigned(DMA_NUMBER_1) + to_unsigned(1,C_SIMPBUS_AWIDTH));
 			END IF;
 		END IF;
 		
