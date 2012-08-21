@@ -92,8 +92,8 @@ int main(int argc, char* argv[])
 		printf("Received data response, length: %d (0x%x)\n", rtn, rtn);
 		printf("Values 1 & 2: 0x%x, 0x%x (from first half DMA transfer) should equal 0x%x, 0x%x\n", 
 			gData[1], gData[2], arg0, arg1);
-		printf("Values 256KB + 1 & 256KB + 2: 0x%x, 0x%x (from second half DMA transfer) should equal 0x%x, 0x%x\n", 
-			gData[(256*1024/4) + 1], gData[(256*1024/4) + 2], arg0, arg1);
+		printf("Values 64KB + 1 & 64KB + 2: 0x%x, 0x%x (from second half DMA transfer) should equal 0x%x, 0x%x\n", 
+			gData[(64*1024/4) + 1], gData[(64*1024/4) + 2], arg0, arg1);
 
 		break;
 	}

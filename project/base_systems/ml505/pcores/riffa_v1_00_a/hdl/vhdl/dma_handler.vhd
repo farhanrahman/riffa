@@ -186,7 +186,7 @@ BEGIN
 		IF (dma_state = idle) THEN
 			--temp_start := START_ADDR;
 			rStart <= START_ADDR;
-			rEnd <= std_logic_vector(resize(unsigned(END_ADDR), C_SIMPBUS_AWIDTH));
+			rEnd <= std_logic_vector(unsigned(C_BRAM_ADDR) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));
 			--IF(unsigned(temp_start) > unsigned(END_ADDR)) THEN
 			--	rStart 	<= END_ADDR;
 			--	rEnd	<= std_logic_vector(resize(unsigned(START_ADDR), C_SIMPBUS_AWIDTH));
@@ -211,7 +211,7 @@ BEGIN
 		END IF;
 
 		IF (dma_state = request_dma AND DMA_REQ_ACK = '1') THEN
-			rStart <= std_logic_vector(resize(unsigned(rStart) + unsigned(rLen), C_SIMPBUS_AWIDTH));
+			rStart <= std_logic_vector(unsigned(rStart) + unsigned(rLen));
 		END IF;
 	END IF;
 END PROCESS;

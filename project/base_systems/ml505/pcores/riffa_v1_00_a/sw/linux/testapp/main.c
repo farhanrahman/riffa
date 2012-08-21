@@ -160,19 +160,12 @@ int main(int argc, char* argv[])
 
 	}
 	
-	for(i = 0; i < DATA_POINTS; i++){
-		if(gData[i] != senddata[i]){
-//			printf("TEST FAILED. gData[%d] = %d is not equal to senddata[%d] = %d\n", i,gData[i],i,senddata[i]);
-//			return -1;
-		}
-//		printf("gData[%d]\t= %10d, fpga_flip_endian(gData[%d])\t= %10d,	senddata[%d]\t= %10d, fpga_flip_endian(senddata[%d])\t=%10d\n",i,gData[i],i,fpga_flip_endian(gData[i]),i,senddata[i],i,fpga_flip_endian(senddata[i]));
-	}
 i = 0;
 		printf("gData[%d]\t= %10d, fpga_flip_endian(gData[%d])\t= %10d,	senddata[%d]\t= %10d, fpga_flip_endian(senddata[%d])\t=%10d\n",i,gData[i],i,fpga_flip_endian(gData[i]),i,senddata[i],i,fpga_flip_endian(senddata[i]));
 i = DATA_POINTS - 1;
 
 		printf("gData[%d]\t= %10d, fpga_flip_endian(gData[%d])\t= %10d,	senddata[%d]\t= %10d, fpga_flip_endian(senddata[%d])\t=%10d\n",i,gData[i],i,fpga_flip_endian(gData[i]),i,senddata[i],i,fpga_flip_endian(senddata[i]));
-//	printf("TEST PASSED. All data sent has been received in the same format and order \n");
+
   	printf("Done.\n");
 
 	fpga_channel_close(fpgaDev, 0);
