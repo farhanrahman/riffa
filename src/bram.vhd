@@ -6,7 +6,9 @@ USE IEEE.numeric_std.ALL;
 
 ENTITY bram IS
 GENERIC(
-	C_BRAM_SIZE : integer := 32768
+	C_BRAM_SIZE : integer := 32768;
+	RUNTIME		: std_logic_vector(31 DOWNTO 0);
+	OUTPUT_CYCLE: std_logic_vector(31 DOWNTO 0)
 );
 PORT(
 	SYS_CLK			: IN std_logic;
@@ -51,16 +53,16 @@ BEGIN
 	
 	IF (SYS_RST = '1') THEN
 		--WORD 0
-		bram(0) <= std_logic_vector(to_unsigned(40,8));
-		bram(1) <= std_logic_vector(to_unsigned(0,8));
-		bram(2) <= std_logic_vector(to_unsigned(0,8));
-		bram(3) <= std_logic_vector(to_unsigned(0,8));
+		bram(0) <= RUNTIME(7 DOWNTO 0);
+		bram(1) <= RUNTIME(15 DOWNTO 8);
+		bram(2) <= RUNTIME(23 DOWNTO 16);
+		bram(3) <= RUNTIME(31 DOWNTO 24);
 		
 		--WORD 1
-		bram(4) <= std_logic_vector(to_unsigned(2,8));
-		bram(5) <= std_logic_vector(to_unsigned(0,8));
-		bram(6) <= std_logic_vector(to_unsigned(0,8));
-		bram(7) <= std_logic_vector(to_unsigned(0,8));
+		bram(4) <= OUTPUT_CYCLE(7 DOWNTO 0);
+		bram(5) <= OUTPUT_CYCLE(15 DOWNTO 8);
+		bram(6) <= OUTPUT_CYCLE(23 DOWNTO 16);
+		bram(7) <= OUTPUT_CYCLE(31 DOWNTO 24);
 		
 	END IF;
 	

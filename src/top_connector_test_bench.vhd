@@ -67,6 +67,9 @@ CONSTANT C_NUM_OF_OUTPUTS_FROM_CORE	: integer := 1;
 
 CONSTANT C_BRAM_SIZE : integer := 16;
 
+CONSTANT RUNTIME		: std_logic_vector(31 DOWNTO 0) := std_logic_vector(to_unsigned(40,32));
+CONSTANT OUTPUT_CYCLE	: std_logic_vector(31 DOWNTO 0) := std_logic_vector(to_unsigned(2,32));
+
 BEGIN
 
 DUT : ENTITY top_connector
@@ -114,7 +117,9 @@ DUT : ENTITY top_connector
 
 RAM : ENTITY BRAM
 GENERIC MAP(
-	C_BRAM_SIZE => C_BRAM_SIZE
+	C_BRAM_SIZE => C_BRAM_SIZE,
+	RUNTIME		=> RUNTIME,
+	OUTPUT_CYCLE=> OUTPUT_CYCLE
 )
 PORT MAP(
 	SYS_CLK		=> clk,
