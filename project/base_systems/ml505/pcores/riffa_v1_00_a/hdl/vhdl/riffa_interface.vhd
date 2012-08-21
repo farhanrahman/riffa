@@ -347,7 +347,7 @@ BEGIN
 				nstate <= process_data;
 			WHEN process_data =>
 				IF (VALID = '1') THEN
-					IF (bramAddress = std_logic_vector(to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH))) THEN
+					IF (bramAddress = std_logic_vector(unsigned(C_BRAM_ADDR) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH) ) ) THEN
 						nstate <= dma_transfer_from_store_state;
 					ELSE
 						nstate <= store_state;
@@ -373,7 +373,7 @@ BEGIN
 			WHEN store_state =>
 				IF (output_store_counter = store_counter_zero) THEN
 					nstate <= process_data;
-				ELSIF (bramAddress = std_logic_vector(to_unsigned(C_BRAM_SIZE - BYTE_INCR, C_SIMPBUS_AWIDTH))) THEN
+				ELSIF (bramAddress = std_logic_vector(unsigned(C_BRAM_ADDR) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH) - to_unsigned(BYTE_INCR, C_SIMPBUS_AWIDTH) ) ) THEN
 					nstate <= dma_transfer_from_store_state;
 				END IF;
 			WHEN dma_transfer_from_store_state =>

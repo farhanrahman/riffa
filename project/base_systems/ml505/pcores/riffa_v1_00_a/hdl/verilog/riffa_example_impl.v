@@ -80,12 +80,7 @@ assign START_ACK = (rState != 0);
 
 assign BUF_REQ = (rState == 1);
 
-assign BUF_REQD_ADDR = C_BRAM_ADDR;
-assign BUF_REQD_SIZE = 14;
-assign BUF_REQD_RDY = 1;
-assign BUF_REQD_ERR = 0;
-
-assign DONE_ERR = 0;
+assign DONE_ERR = (rState == 6);
 assign DONE = (rState == 5);
 
 always @(posedge SYS_CLK or posedge SYS_RST) begin
@@ -114,10 +109,13 @@ always @(posedge SYS_CLK or posedge SYS_RST) begin
 			end
 			3'd4: begin // Wait for DMA to complete.
 				if (DMA_DONE) begin
-					rState <= 5;
+					rState <= (DMA_ERR ? 6 : 5);
 				end
 			end
 			3'd5: begin //Flag DONE
+				rState <= 0;
+			end
+			3'd6: begin //Flag Error
 				rState <= 0;
 			end
 			default: begin
