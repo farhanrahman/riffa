@@ -10,6 +10,7 @@ lib riffa_v1_00_a riffa_interface vhdl
 lib riffa_v1_00_a doorbell_reset vhdl
 lib riffa_v1_00_a dma_handler vhdl
 lib riffa_v1_00_a test_core vhdl
+lib riffa_v1_00_a riffa_example_impl verilog
 lib proc_common_v3_00_a family vhdl
 lib proc_common_v3_00_a family_support vhdl
 lib proc_common_v3_00_a coregen_comp_defs vhdl

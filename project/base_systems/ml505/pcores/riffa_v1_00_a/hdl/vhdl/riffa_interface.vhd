@@ -174,7 +174,38 @@ ARCHITECTURE synth OF riffa_interface IS
 		);
 	END COMPONENT dma_handler;
 
+	component riffa_example_impl is
+		generic
+		(
+			C_SIMPBUS_AWIDTH				: integer				:= 32;
+			C_BRAM_ADDR					: std_logic_vector			:= X"00000000";
+			C_BRAM_SIZE					: integer				:= 65536
+		);
+		port
+		(
+			SYS_CLK						: in std_logic;
+			SYS_RST						: in std_logic;
+			DMA_REQ						: out std_logic;
+			DMA_REQ_ACK					: in std_logic;
+			DMA_SRC						: out std_logic_vector(C_SIMPBUS_AWIDTH-1 downto 0);
+			DMA_DST						: out std_logic_vector(C_SIMPBUS_AWIDTH-1 downto 0);
+			DMA_LEN						: out std_logic_vector(C_SIMPBUS_AWIDTH-1 downto 0);
+			DMA_SIG						: out std_logic;
+			DMA_DONE					: in std_logic;
+			DMA_ERR						: in std_logic;
+			BUF_REQ						: out std_logic;
+			BUF_REQ_ACK					: in std_logic;
+			BUF_REQ_ADDR					: in std_logic_vector(C_SIMPBUS_AWIDTH-1 downto 0);
+			BUF_REQ_SIZE					: in std_logic_vector(4 downto 0);
+			BUF_REQ_RDY					: in std_logic;
+			BUF_REQ_ERR					: in std_logic;
+			START						: in std_logic;
+			START_ACK					: out std_logic;
+			DONE						: out std_logic;
+			DONE_ERR					: out std_logic
 
+		);
+	end component riffa_example_impl;
 
 CONSTANT SIMPBUS_ZERO : std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0) := (OTHERS => '0');
 CONSTANT C_BRAM_LOG : integer := integer(ceil(log2(real(C_BRAM_SIZE))));
@@ -245,9 +276,9 @@ START 		<= r_start;
 --Core outputs assignments
 CORE_INPUTS <= core_inputs_1;
 
-DMA : COMPONENT dma_handler
+DMA : COMPONENT riffa_example_impl
 GENERIC MAP(
-	C_SIMPBUS_AWIDTH 		=> C_SIMPBUS_AWIDTH,
+	C_SIMPBUS_AWIDTH 			=> C_SIMPBUS_AWIDTH,
 	C_BRAM_ADDR				=> C_BRAM_ADDR,	
 	C_BRAM_SIZE				=> C_BRAM_SIZE	
 )
@@ -262,22 +293,18 @@ PORT MAP(
 	DMA_SRC					=>	DMA_SRC,		--OUT
 	DMA_DST					=>	DMA_DST,		--OUT
 	DMA_LEN					=>	DMA_LEN,		--OUT
---	DMA_SIG					=>	DMA_SIG,		--OUT
+	DMA_SIG					=>	DMA_SIG,		--OUT
 	DMA_DONE				=>	DMA_DONE,		--IN
 	DMA_ERR					=>	DMA_ERR,		--IN
 	
 	--PC BUFFER REQUEST SIGNALS--
 	BUF_REQ					=> 	BUF_REQ,		--OUT
 	BUF_REQ_ACK				=> 	BUF_REQ_ACK,	--IN
-	BUF_REQ_ADDR			=> 	BUF_REQ_ADDR,	--IN
-	BUF_REQ_SIZE			=> 	BUF_REQ_SIZE,	--IN
+	BUF_REQ_ADDR				=> 	BUF_REQ_ADDR,	--IN
+	BUF_REQ_SIZE				=> 	BUF_REQ_SIZE,	--IN
 	BUF_REQ_RDY				=> 	BUF_REQ_RDY,	--IN
 	BUF_REQ_ERR				=> 	BUF_REQ_ERR,	--IN
-		
-	--Start and End addresses t	o transfer
-	START_ADDR				=> 	START_ADDR,		--IN
-	END_ADDR				=> 	END_ADDR,		--IN
-		
+	
 	--Start signal	
 	START					=> 	START,			--IN
 		
@@ -351,7 +378,11 @@ BEGIN
 				END IF;
 			WHEN dma_transfer_from_store_state =>
 				IF (DONE = '1') THEN
-					nstate <= store_state;
+					IF (DONE_ERR = '1') THEN
+						nstate <= interrupt_err_state;
+					ELSE
+						nstate <= store_state;
+					END IF;
 				END IF;				
 			WHEN OTHERS => nstate <= idle;	
 		END CASE;
@@ -415,9 +446,7 @@ BEGIN
 	END IF;
 
 	s := to_integer(unsigned(output_store_counter));
-	bramDataOut <= CORE_OUTPUTS(((s+1)*C_SIMPBUS_AWIDTH-1) DOWNTO (((s+1)*C_SIMPBUS_AWIDTH-1)-C_SIMPBUS_AWIDTH + 1));	
-
-	DMA_SIG <= '1';
+	bramDataOut <= CORE_OUTPUTS(((s+1)*C_SIMPBUS_AWIDTH-1) DOWNTO (((s+1)*C_SIMPBUS_AWIDTH-1)-C_SIMPBUS_AWIDTH + 1));
 	
 END PROCESS;
 

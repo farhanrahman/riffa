@@ -67,9 +67,9 @@ SIGNAL buffReq : std_logic_vector(31 DOWNTO 0);
 
 BEGIN
 
-DMA_SRC <= rStart;
+DMA_SRC <= C_BRAM_ADDR;
 DMA_DST <= rDes;
-DMA_LEN <= rLen;
+DMA_LEN <= std_logic_vector(to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));
 
 CombinatorialSignalAssignments : PROCESS (dma_state, BUF_REQ_SIZE)
 BEGIN
@@ -124,7 +124,7 @@ BEGIN
 	END IF;
 END PROCESS;
 
-Combinatorial : PROCESS (dma_state, START, BUF_REQ_ACK, BUF_REQ_RDY, DMA_REQ_ACK, DMA_DONE, DMA_ERR, SYS_RST, rStart, rEnd)
+Combinatorial : PROCESS (dma_state, START, BUF_REQ_ACK, BUF_REQ_RDY, DMA_REQ_ACK, DMA_DONE, DMA_ERR, SYS_RST)
 BEGIN
 	IF(SYS_RST = '1') THEN
 		dma_nstate <= idle;
@@ -152,11 +152,11 @@ BEGIN
 				IF (DMA_DONE = '1') THEN
 					--check if all data was transferred. If not then go to
 					--request_buffer state to start another DMA transfer
-					IF (unsigned(rStart)>= unsigned(rEnd)) THEN
+					--IF (unsigned(rStart)>= unsigned(rEnd)) THEN
 						dma_nstate <= done_state;
-					ELSE
-						dma_nstate <= request_buffer;
-					END IF;
+					--ELSE
+					--	dma_nstate <= request_buffer;
+					--END IF;
 				END IF;
 
 				IF (DMA_ERR = '1') THEN
@@ -183,36 +183,37 @@ BEGIN
 	ELSE
 		dma_state <= dma_nstate;
 
-		IF (dma_state = idle) THEN
+		--IF (START = '1') THEN
 			--temp_start := START_ADDR;
-			rStart <= START_ADDR;
+			rStart <= C_BRAM_ADDR;
 			rEnd <= std_logic_vector(unsigned(C_BRAM_ADDR) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));
 			--IF(unsigned(temp_start) > unsigned(END_ADDR)) THEN
 			--	rStart 	<= END_ADDR;
 			--	rEnd	<= std_logic_vector(resize(unsigned(START_ADDR), C_SIMPBUS_AWIDTH));
 			--END IF;
-		END IF;
+		--END IF;
 
 		IF (BUF_REQ_RDY = '1') THEN
 			rDes <= BUF_REQ_ADDR;
 		END IF;
 
-		IF (dma_state = get_buffer AND BUF_REQ_RDY = '1') THEN
+		--IF (dma_state = get_buffer AND BUF_REQ_RDY = '1') THEN
 			--rDes <= BUF_REQ_ADDR;
-			IF (unsigned(rEnd) - unsigned(rStart) < unsigned(buffReq)) THEN
-				IF (unsigned(rEnd) = unsigned(rStart)) THEN
-					rLen <= std_logic_vector(to_unsigned(4,C_SIMPBUS_AWIDTH)); --default length of 4 bytes
-				ELSE
-					rLen <= std_logic_vector(unsigned(rEnd) - unsigned(rStart));
-				END IF;
-			ELSE
-				rLen <= std_logic_vector(unsigned(buffReq));
-			END IF;
-		END IF;
+			--IF (unsigned(rEnd) - unsigned(rStart) < unsigned(buffReq)) THEN
+			--	IF (unsigned(rEnd) = unsigned(rStart)) THEN
+			--		rLen <= std_logic_vector(to_unsigned(4,C_SIMPBUS_AWIDTH)); --default length of 4 bytes
+			--	ELSE
+			--		rLen <= std_logic_vector(unsigned(rEnd) - unsigned(rStart));
+			--	END IF;
+			--ELSE
+			--	rLen <= std_logic_vector(unsigned(buffReq));
+			--END IF;
+			rLen <= std_logic_vector(to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));
+		--END IF;
 
-		IF (dma_state = request_dma AND DMA_REQ_ACK = '1') THEN
-			rStart <= std_logic_vector(unsigned(rStart) + unsigned(rLen));
-		END IF;
+		--IF (DMA_REQ_ACK = '1') THEN
+		--	rStart <= std_logic_vector(unsigned(rStart) + unsigned(rLen));
+		--END IF;
 	END IF;
 END PROCESS;
 

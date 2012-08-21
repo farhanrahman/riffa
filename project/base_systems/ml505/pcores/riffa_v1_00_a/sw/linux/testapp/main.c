@@ -41,7 +41,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-#define DATA_SIZE (1*1024*1024)
+#define DATA_SIZE (1*1024*1024/2)
 #define FILE_NAME "data.txt"
 
 #define MAX(a,b) a > b ? a : b
@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
 	unsigned int arg = 4294967295;
 	unsigned int c;
 	unsigned int lastVal = 0;
-	timeout = 5*1000; // 5 secs.
+	timeout = 10*1000; // 5 secs.
 	channel = argc == 2 ? atoi(argv[1]) : 0;
 	printf("channel = %d \n", channel);
 
