@@ -41,9 +41,11 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-#define DATA_SIZE (1*1024*1024/2)
+#define DATA_SIZE (1*1024*1024)
 #define FILE_NAME "data.txt"
-
+#define LOG_FILE "log.txt"
+#define DEBUG 	0
+#define INFO 	0
 #define MAX(a,b) a > b ? a : b
 
 struct timeval start, end;
@@ -80,8 +82,10 @@ int main(int argc, char* argv[])
 	unsigned int lastVal = 0;
 	timeout = 10*1000; // 5 secs.
 	channel = argc == 2 ? atoi(argv[1]) : 0;
-	printf("channel = %d \n", channel);
 
+	#if INFO == 1
+	printf("channel = %d \n", channel);
+	#endif
 
 	FILE *fin = fopen(FILE_NAME,"r"); 
 	assert(fin != NULL);
@@ -95,13 +99,17 @@ int main(int argc, char* argv[])
 
 	assert(i > 0);
 
-	DATA_POINTS = MAX(1, i);	
+	DATA_POINTS = MAX(1, i);
+	#if INFO == 1	
 	printf("DATA_POINTS: %d\n",DATA_POINTS);
+	#endif
 	fclose(fin);
 
+	#if INFO == 1
 	for(i = 0; i < DATA_POINTS; i++){
 		printf("senddata[%d] = %d\n",i,senddata[i]);
 	}
+	#endif
 
 	lastVal = senddata[DATA_POINTS-1];
 	for(i = DATA_POINTS - 1; i > 0; i--){
@@ -114,64 +122,77 @@ int main(int argc, char* argv[])
 	}
 
 	if ((rtn = fpga_init(&fpgaDev)) < 0) {
+		#if DEBUG == 1
 		printf("error opening fpga: %d\n", rtn);
+		#endif	
 		return rtn;
 	}
 
 	if ((rtn = fpga_channel_open(fpgaDev, channel, timeout)) < 0) {
+		#if DEBUG == 1
 		printf("error opening fpga channel: %d\n", rtn);
+		#endif
 		return rtn;
 	}
 
-
+	#if INFO == 1
  	printf("Opened.\n");
-	
+	#endif
 	while(1) {
 //		printf("rtn= %d\n", fpga_send_args(fpgaDev, channel, arg, arg, 2, 1));
 //		printf("rtn= %d\n", fpga_send_args(fpgaDev, channel, 0, 0, 2, 1));
 		GETTIME(start);
 		if((rtn = fpga_send_data(fpgaDev, channel, (unsigned char *) senddata, DATA_POINTS*4, 1)) < 0){
+			#if DEBUG == 1
 			printf("error sending args to fpga: %d\n", rtn);
+			#endif
 			break;
 		}
 		GETTIME(end);
 
 		usecs = GETUSEC(end,start);
-
+		#if INFO == 1
 		printf("Time required to send data to FPGA : %ld us\n", usecs);
-
+		#endif
 		GETTIME(start);
 		if ((rtn = fpga_recv_data(fpgaDev, channel, (unsigned char *)gData, DATA_SIZE)) < 0) {
+			#if DEBUG == 1
 			printf("error receiving data from fpga: %d\n", rtn);
+			#endif
 			break;
 		}
-
-//		fpga_recv_data_begin(fpgaDev, channel, (unsigned char * ) gData, DATA_SIZE);
-		
 		GETTIME(end);
 		
 		usecs = GETUSEC(end,start);
-//		fpga_wait_interrupt(fpgaDev, channel);
+		#if INFO == 1
 		printf("Time required to receive data from FPGA : %ld us\n", usecs);
-		
-		printf("Received data response, length: 0x%x\n", rtn);
+		printf("Received data response, length: 0x%x , %d bytes\n", rtn,rtn);
+		#endif
 		DATA_POINTS = MAX(DATA_POINTS,rtn/4);
 		break;
 
 	}
-	
+#if INFO == 1	
 i = 0;
 		printf("gData[%d]\t= %10d, fpga_flip_endian(gData[%d])\t= %10d,	senddata[%d]\t= %10d, fpga_flip_endian(senddata[%d])\t=%10d\n",i,gData[i],i,fpga_flip_endian(gData[i]),i,senddata[i],i,fpga_flip_endian(senddata[i]));
 i = DATA_POINTS - 1;
 
 		printf("gData[%d]\t= %10d, fpga_flip_endian(gData[%d])\t= %10d,	senddata[%d]\t= %10d, fpga_flip_endian(senddata[%d])\t=%10d\n",i,gData[i],i,fpga_flip_endian(gData[i]),i,senddata[i],i,fpga_flip_endian(senddata[i]));
-
   	printf("Done.\n");
-
+#endif
 	fpga_channel_close(fpgaDev, 0);
   	fpga_free(fpgaDev);
-  	printf("Exiting.\n");
+#if INFO == 1
+	printf("Throughput = %.0f bytes/sec\n", (double)(((rtn)*1.0/(usecs))*1000000.0));
+#else
+	FILE *fout = fopen(LOG_FILE,"a+");	
+	fprintf(fout,"Bytes received: %d, Throughput = %f bytes/sec\n", rtn, (double)(((rtn)*1.0/(usecs*1.0))*1000000.0));
+	fclose(fout);	
+#endif
 
+	#if INFO == 1  
+	printf("Exiting.\n");
+	#endif
 	return 0;
 }
 
