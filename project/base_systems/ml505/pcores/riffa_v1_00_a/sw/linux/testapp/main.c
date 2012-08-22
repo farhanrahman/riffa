@@ -46,6 +46,7 @@
 #define LOG_FILE "log.txt"
 #define DEBUG 	0
 #define INFO 	0
+#define LOG	1
 #define MAX(a,b) a > b ? a : b
 
 struct timeval start, end;
@@ -183,10 +184,12 @@ i = DATA_POINTS - 1;
 	fpga_channel_close(fpgaDev, 0);
   	fpga_free(fpgaDev);
 #if INFO == 1
-	printf("Throughput = %.0f bytes/sec\n", (double)(((rtn)*1.0/(usecs))*1000000.0));
-#else
+	printf("Bytes received: %d, Throughput: %f MB/s,\n", rtn, (double)(((rtn/(1024.0*1024.0))/(usecs*1.0))*1000000.0));
+#endif
+
+#if LOG == 1
 	FILE *fout = fopen(LOG_FILE,"a+");	
-	fprintf(fout,"Bytes received: %d, Throughput = %f bytes/sec\n", rtn, (double)(((rtn)*1.0/(usecs*1.0))*1000000.0));
+	fprintf(fout,"%d,%f,\n", rtn, (double)(((rtn/(1024.0*1024.0))/(usecs*1.0))*1000000.0));
 	fclose(fout);	
 #endif
 

@@ -3,7 +3,7 @@ import os
 if __name__=="__main__":
 	if os.path.isfile("riffaexample"):
 		runTime = 512
-		endRunTime = 131072
+		endRunTime = 32768
 		outputCycle = 2
 		try:
 			while(runTime != endRunTime + 4): 

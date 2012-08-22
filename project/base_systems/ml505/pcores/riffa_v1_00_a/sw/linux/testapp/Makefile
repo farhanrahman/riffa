@@ -23,5 +23,6 @@ $(program_NAME): $(program_OBJS)
 clean:
 	@- $(RM) $(program_NAME)
 	@- $(RM) $(program_OBJS)
+	@- $(RM) log.txt
 
 distclean: clean
