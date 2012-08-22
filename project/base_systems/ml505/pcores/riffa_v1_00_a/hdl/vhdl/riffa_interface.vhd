@@ -146,7 +146,7 @@ ARCHITECTURE synth OF riffa_interface IS
 			DMA_SRC					: OUT std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
 			DMA_DST					: OUT std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
 			DMA_LEN					: OUT std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
-			--DMA_SIG					: OUT std_logic;
+			DMA_SIG					: OUT std_logic;
 			DMA_DONE				: IN std_logic;
 			DMA_ERR					: IN std_logic;
 			
@@ -276,7 +276,7 @@ START 		<= r_start;
 --Core outputs assignments
 CORE_INPUTS <= core_inputs_1;
 
-DMA : COMPONENT riffa_example_impl
+DMA : COMPONENT dma_handler
 GENERIC MAP(
 	C_SIMPBUS_AWIDTH 			=> C_SIMPBUS_AWIDTH,
 	C_BRAM_ADDR				=> C_BRAM_ADDR,	
@@ -305,6 +305,10 @@ PORT MAP(
 	BUF_REQ_RDY				=> 	BUF_REQ_RDY,	--IN
 	BUF_REQ_ERR				=> 	BUF_REQ_ERR,	--IN
 	
+	--Start and End addresses to transfer
+	START_ADDR				=>	START_ADDR,	--IN
+	END_ADDR				=>	END_ADDR,	--IN
+
 	--Start signal	
 	START					=> 	START,			--IN
 		
@@ -509,11 +513,11 @@ WAIT UNTIL rising_edge(SYS_CLK);
 		IF (state = dma_transfer OR state = dma_transfer_from_store_state) THEN
 			r_start_addr <= C_BRAM_ADDR;
 			--r_end_addr <= std_logic_vector(unsigned(C_BRAM_ADDR) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));
---			IF (state = dma_transfer) THEN
---				r_end_addr <= bramAddress;
---			ELSE
+			IF (state = dma_transfer) THEN
+				r_end_addr <= bramAddress;
+			ELSE
 				r_end_addr <= std_logic_vector(unsigned(C_BRAM_ADDR) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));
---			END IF;
+			END IF;
 			
 			IF (START_ACK = '1') THEN
 				r_start <= '0'; --start DMA transfer

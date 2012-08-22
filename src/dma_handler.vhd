@@ -19,7 +19,7 @@ PORT(
 	DMA_SRC					: OUT std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
 	DMA_DST					: OUT std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
 	DMA_LEN					: OUT std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
---	DMA_SIG					: OUT std_logic;
+	DMA_SIG					: OUT std_logic;
 	DMA_DONE				: IN std_logic;
 	DMA_ERR					: IN std_logic;
 
@@ -70,7 +70,7 @@ BEGIN
 DMA_SRC <= rStart;
 DMA_DST <= rDes;
 DMA_LEN <= rLen;
-
+DMA_SIG <= '1';
 CombinatorialSignalAssignments : PROCESS (dma_state, BUF_REQ_SIZE)
 BEGIN
 	--When the state is in the request buffer state
