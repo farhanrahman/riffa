@@ -11,8 +11,11 @@ if __name__=="__main__":
 				dataFile.write("%d\n"%runTime)
 				dataFile.write("%d\n"%outputCycle)
 				dataFile.close()
+				for i in range(0,100):
+					out = os.system("./riffaexample")
+				runTime += 4
+			for i in range(0,100):
 				out = os.system("./riffaexample")
-				runTime += 4 
 		except IOError as e:
 			print ("Problem in opening file: %s"%e)	
 	else:
