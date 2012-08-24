@@ -38,10 +38,11 @@ SIGNAL 	BUF_REQ_ERR				: std_logic;                                     	--IN
 --Start and End addresses to transfer
 SIGNAL 	START_ADDR				: std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);	--IN
 SIGNAL 	END_ADDR				: std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);	--IN
-
+	
 --Start signal
 SIGNAL	START					: std_logic;										--IN
-
+SIGNAL  START_ACK				: std_logic;										--OUT
+	
 --Done Signal
 SIGNAL 	DONE					: std_logic;										--IN
 SIGNAL 	DONE_ERR				: std_logic;										--IN
@@ -67,10 +68,10 @@ PORT MAP(
 	DMA_SRC					=>	DMA_SRC,		--OUT
 	DMA_DST					=>	DMA_DST,		--OUT
 	DMA_LEN					=>	DMA_LEN,		--OUT
-	DMA_SIG					=>	DMA_SIG,		--OUT
+--	DMA_SIG					=>	DMA_SIG,		--OUT
 	DMA_DONE				=>	DMA_DONE,		--IN
 	DMA_ERR					=>	DMA_ERR,		--IN
-
+	
 	--PC BUFFER REQUEST SIGNALS--
 	BUF_REQ					=> 	BUF_REQ,		--OUT
 	BUF_REQ_ACK				=> 	BUF_REQ_ACK,	--IN
@@ -78,17 +79,20 @@ PORT MAP(
 	BUF_REQ_SIZE			=> 	BUF_REQ_SIZE,	--IN
 	BUF_REQ_RDY				=> 	BUF_REQ_RDY,	--IN
 	BUF_REQ_ERR				=> 	BUF_REQ_ERR,	--IN
-
+		
 	--Start and End addresses t	o transfer
 	START_ADDR				=> 	START_ADDR,		--IN
 	END_ADDR				=> 	END_ADDR,		--IN
-
+		
 	--Start signal	
 	START					=> 	START,			--IN
-
+		
 	--Done Signal	
 	DONE					=> 	DONE,			--OUT
-	DONE_ERR				=> 	DONE_ERR		--OUT
+	DONE_ERR				=> 	DONE_ERR,		--OUT
+	
+	--Start Ack
+	START_ACK				=> START_ACK
 );
 
 Clk_generate : PROCESS
@@ -121,51 +125,51 @@ BEGIN
 	END_ADDR	    <= 	(OTHERS => '0');
 	START 			<= 	'0';
 	WAIT UNTIL rising_edge(clk);
-	END_ADDR(4) <= '1'; --(4 => '1', OTHERS => '0')
+	--END_ADDR(4) <= '1'; --(4 => '1', OTHERS => '0')
 	START <= '1';
 
 	WAIT UNTIL rising_edge(BUF_REQ);
 	START <= '0';
 	BUF_REQ_ACK <= '1';
-
+	
 	BUF_REQ_SIZE 	<= slv(to_unsigned(11, 5));
 	BUF_REQ_ADDR(3) <= '0'; --(3 => '1', OTHERS => '0'); 
-
+	
 	WAIT UNTIL rising_edge(clk);
 	BUF_REQ_ACK <= '0';
 	BUF_REQ_RDY <= '1';
-
+	
 	WAIT UNTIL rising_edge(DMA_REQ);
 	DMA_REQ_ACK <= '1';
-
+	
 	WAIT UNTIL rising_edge(clk);
 	DMA_REQ_ACK <= '0';
-
+	
 	WAIT UNTIL rising_edge(clk);
 	WAIT UNTIL rising_edge(clk);
 
 	DMA_ERR 	<= '0';
 	DMA_DONE 	<= '1';
-
+	
 	WHILE DONE /= '1' LOOP
 		WAIT UNTIL rising_edge(clk);
 		IF DONE_ERR = '1' THEN
 			REPORT "DONE_ERR = '1'!. Test FAILED" SEVERITY failure;
 		END IF;
 	END LOOP;
-
+	
 	DMA_DONE <= '0';
-
+	
 	WAIT UNTIL rising_edge(clk);
 	WAIT UNTIL rising_edge(clk);
 	WAIT UNTIL rising_edge(clk);
-
+	
 	IF (BUF_REQ = '1') THEN
 			REPORT "Asking for another transfer..should not happen in this test" SEVERITY failure;
 	END IF;
-
+	
 	REPORT "TEST PASSED"SEVERITY failure;
-
+	
 END PROCESS;
 
 END ARCHITECTURE test;

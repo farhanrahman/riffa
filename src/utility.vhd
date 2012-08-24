@@ -75,6 +75,19 @@ PACKAGE utility IS
 			SIGNAL clk		: std_logic;
 			CONSTANT cycles : integer
 	);
+	
+	--Sends a doorbell to FPGA with two consecutive doorbell arguments as
+	--1) ARG_0
+	--2) ARG_1
+	PROCEDURE send_doorbell_arguments(
+			SIGNAL clk			: IN std_logic;
+			SIGNAL DOORBELL		: OUT std_logic;
+			CONSTANT ARG_0		: IN std_logic_vector(31 DOWNTO 0);
+			CONSTANT ARG_1		: IN std_logic_vector(31 DOWNTO 0);
+			SIGNAL DOORBELL_ARG : OUT std_logic_vector(31 DOWNTO 0);
+			SIGNAL DOORBELL_ERR	: OUT std_logic;
+			SIGNAL DOORBELL_LEN : OUT std_logic_vector(31 DOWNTO 0)
+	);
 END PACKAGE utility;
 
 
@@ -156,7 +169,7 @@ PACKAGE BODY utility IS
 		WAIT UNTIL rising_edge(clk);
 		BUF_REQ_ACK <= '1';
 
-		BUF_REQ_SIZE 	<= std_logic_vector(to_unsigned(11, 5));
+		BUF_REQ_SIZE 	<= std_logic_vector(to_unsigned(20, 5));
 		BUF_REQ_ADDR(3) <= '1'; --(3 => '1', OTHERS => '0'); 
 
 		WAIT UNTIL rising_edge(clk);
@@ -263,6 +276,31 @@ PACKAGE BODY utility IS
 		FOR i IN 0 TO cycles - 1 LOOP
 			WAIT UNTIL rising_edge(clk);
 		END LOOP;
+	END;
+	
+	PROCEDURE send_doorbell_arguments(
+			SIGNAL clk			: IN std_logic;
+			SIGNAL DOORBELL		: OUT std_logic;
+			CONSTANT ARG_0		: IN std_logic_vector(31 DOWNTO 0);
+			CONSTANT ARG_1		: IN std_logic_vector(31 DOWNTO 0);
+			SIGNAL DOORBELL_ARG : OUT std_logic_vector(31 DOWNTO 0);
+			SIGNAL DOORBELL_ERR	: OUT std_logic;
+			SIGNAL DOORBELL_LEN : OUT std_logic_vector(31 DOWNTO 0)
+	) IS
+
+	BEGIN
+		DOORBELL <= '0';
+		DOORBELL_ERR <= '0';
+		DOORBELL_LEN <= (OTHERS => '0');
+		WAIT UNTIL rising_edge(clk);
+		DOORBELL <= '1';
+		WAIT UNTIL rising_edge(clk);
+		DOORBELL <= '0';
+		DOORBELL_ARG <= ARG_0;
+		WAIT UNTIL rising_edge(clk);
+		DOORBELL_ARG <= ARG_1;
+		WAIT UNTIL rising_edge(clk);
+		DOORBELL_ARG <= (OTHERS => '0');
 	END;
 	
 END utility;

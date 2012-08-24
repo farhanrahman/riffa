@@ -40,7 +40,10 @@ PORT(
 
 	--Done Signal
 	DONE					: OUT std_logic;
-	DONE_ERR				: OUT std_logic
+	DONE_ERR				: OUT std_logic;
+	
+	--START Acknowledge signal
+	START_ACK				: OUT std_logic
 );
 END ENTITY dma_handler;
 
@@ -67,7 +70,7 @@ BEGIN
 DMA_SRC <= rStart;
 DMA_DST <= rDes;
 DMA_LEN <= rLen;
-
+DMA_SIG <= '1';
 CombinatorialSignalAssignments : PROCESS (dma_state, BUF_REQ_SIZE)
 BEGIN
 	--When the state is in the request buffer state
@@ -84,10 +87,10 @@ BEGIN
 	--the DMA that a buffer is required
 	IF (dma_state = request_dma) THEN
 		DMA_REQ <= '1';
-		DMA_SIG <= '1';
+--		DMA_SIG <= '0';
 	ELSE
 		DMA_REQ <= '0';
-		DMA_SIG <= '0';
+--		DMA_SIG <= '0';
 	END IF;
 
 
@@ -112,7 +115,13 @@ BEGIN
 			buffReq(i) <= '0';
 		END IF;
 	END LOOP;
-
+	
+	--Start Ack signal assignment
+	IF (dma_state /= idle) THEN
+		START_ACK <= '1';
+	ELSE
+		START_ACK <= '0';
+	END IF;
 END PROCESS;
 
 Combinatorial : PROCESS (dma_state, START, BUF_REQ_ACK, BUF_REQ_RDY, DMA_REQ_ACK, DMA_DONE, DMA_ERR, SYS_RST, rStart, rEnd)
@@ -162,7 +171,7 @@ BEGIN
 END PROCESS;
 
 State_clocked : PROCESS
-VARIABLE temp_start : std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);
+--VARIABLE temp_start : std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);
 BEGIN
 	WAIT UNTIL rising_edge(SYS_CLK);
 
@@ -175,17 +184,21 @@ BEGIN
 		dma_state <= dma_nstate;
 
 		IF (dma_state = idle) THEN
-			temp_start := START_ADDR;
-			rStart <= temp_start;
+			--temp_start := START_ADDR;
+			rStart <= START_ADDR;
 			rEnd <= std_logic_vector(resize(unsigned(END_ADDR), C_SIMPBUS_AWIDTH));
-			IF(unsigned(temp_start) > unsigned(END_ADDR)) THEN
-				rStart 	<= END_ADDR;
-				rEnd	<= std_logic_vector(resize(unsigned(START_ADDR), C_SIMPBUS_AWIDTH));
-			END IF;
+			--IF(unsigned(temp_start) > unsigned(END_ADDR)) THEN
+			--	rStart 	<= END_ADDR;
+			--	rEnd	<= std_logic_vector(resize(unsigned(START_ADDR), C_SIMPBUS_AWIDTH));
+			--END IF;
+		END IF;
+
+		IF (BUF_REQ_RDY = '1') THEN
+			rDes <= BUF_REQ_ADDR;
 		END IF;
 
 		IF (dma_state = get_buffer AND BUF_REQ_RDY = '1') THEN
-			rDes <= BUF_REQ_ADDR;
+			--rDes <= BUF_REQ_ADDR;
 			IF (unsigned(rEnd) - unsigned(rStart) < unsigned(buffReq)) THEN
 				IF (unsigned(rEnd) = unsigned(rStart)) THEN
 					rLen <= std_logic_vector(to_unsigned(4,C_SIMPBUS_AWIDTH)); --default length of 4 bytes
