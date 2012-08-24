@@ -57,7 +57,6 @@ GENERIC(
 	C_SIMPBUS_AWIDTH 			: integer := 32;
 	C_BRAM_ADDR					: std_logic_vector(31 DOWNTO 0) := (OTHERS => '0');
 	C_BRAM_SIZE					: integer := 32768
-	--C_NUM_OF_INPUTS_TO_CORE		: integer := 4
 );
 
 PORT(
@@ -106,10 +105,6 @@ PORT(
 	BRAM_Dout				: OUT std_logic_vector(31 DOWNTO 0);
 	BRAM_Din				: IN std_logic_vector(31 DOWNTO 0);
 	BRAM_Addr				: OUT std_logic_vector(31 DOWNTO 0)
-	
-	--Outputs from PC to CORE
-	--CORE_INPUTS				: OUT std_logic_vector(C_NUM_OF_INPUTS_TO_CORE*C_SIMPBUS_AWIDTH-1 DOWNTO 0)
-	
 );
 
 END ENTITY riffa_interface;
@@ -117,59 +112,59 @@ END ENTITY riffa_interface;
 
 ARCHITECTURE synth OF riffa_interface IS
 
-COMPONENT dma_handler IS
-GENERIC(
-	C_SIMPBUS_AWIDTH 	: integer := 32;
-	C_BRAM_ADDR			: std_logic_vector(31 DOWNTO 0) := (OTHERS => '0');
-	C_BRAM_SIZE			: integer := 32768
-);
-PORT(
-	--SYSTEM CLOCK AND SYSTEM RESET--
-	SYS_CLK					: IN std_logic;
-	SYS_RST					: IN std_logic;
+	COMPONENT dma_handler IS
+		GENERIC(
+			C_SIMPBUS_AWIDTH 	: integer;
+			C_BRAM_ADDR			: std_logic_vector(31 DOWNTO 0);
+			C_BRAM_SIZE			: integer
+		);
+		PORT(
+			--SYSTEM CLOCK AND SYSTEM RESET--
+			SYS_CLK					: IN std_logic;
+			SYS_RST					: IN std_logic;
 
-	--DMA signals
-	DMA_REQ					: OUT std_logic;
-	DMA_REQ_ACK				: IN std_logic;
-	DMA_SRC					: OUT std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
-	DMA_DST					: OUT std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
-	DMA_LEN					: OUT std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
-	DMA_SIG					: OUT std_logic;
-	DMA_DONE				: IN std_logic;
-	DMA_ERR					: IN std_logic;
-	
-	--PC BUFFER REQUEST SIGNALS--
-	BUF_REQ					: OUT std_logic;
-	BUF_REQ_ACK				: IN std_logic;
-	BUF_REQ_ADDR			: IN std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
-	BUF_REQ_SIZE			: IN std_logic_vector(4 DOWNTO 0);
-	BUF_REQ_RDY				: IN std_logic;
-	BUF_REQ_ERR				: IN std_logic;
-	
-	--Start and End addresses to transfer
-	START_ADDR				: IN std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
-	END_ADDR				: IN std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
-	
-	--Start signal
-	START					: IN std_logic;
-	
-	--Done Signal
-	DONE					: OUT std_logic;
-	DONE_ERR				: OUT std_logic
-);
-END COMPONENT dma_handler;
+			--DMA signals
+			DMA_REQ					: OUT std_logic;
+			DMA_REQ_ACK				: IN std_logic;
+			DMA_SRC					: OUT std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
+			DMA_DST					: OUT std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
+			DMA_LEN					: OUT std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
+			DMA_SIG					: OUT std_logic;
+			DMA_DONE				: IN std_logic;
+			DMA_ERR					: IN std_logic;
+
+			--PC BUFFER REQUEST SIGNALS--
+			BUF_REQ					: OUT std_logic;
+			BUF_REQ_ACK				: IN std_logic;
+			BUF_REQ_ADDR			: IN std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
+			BUF_REQ_SIZE			: IN std_logic_vector(4 DOWNTO 0);
+			BUF_REQ_RDY				: IN std_logic;
+			BUF_REQ_ERR				: IN std_logic;
+
+			--Start and End addresses to transfer
+			START_ADDR				: IN std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
+			END_ADDR				: IN std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
+
+			--Start signal
+			START					: IN std_logic;
+
+			--Done Signal
+			DONE					: OUT std_logic;
+			DONE_ERR				: OUT std_logic;
+
+			--START Acknowledge signal
+			START_ACK				: OUT std_logic			
+		);
+	END COMPONENT dma_handler;
 
 TYPE states IS (
-			idle, 
-			--INPUT DATA TRANSFER STATE (PC 2 FPGA)
-			PC2FPGA_Data_transfer_wait,
-			--STORE DATA INTO BUFFERS
-			store_data,
-			--PROCESSING STATE
-			process_data,
+			idle,
+			--ARGUMENTS STORAGE STATES
+			store_arg_0,
+			store_arg_1,
 			--SENDING DATA BACK TO PC STATE
 			dma_transfer,
-			--Done states
+			--DONE STATE
 			interrupt_state,
 			interrupt_err_state
 			);
@@ -189,11 +184,8 @@ SIGNAL START, r_start				: std_logic := '0';
 SIGNAL START_ADDR, r_start_addr		: std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0) := (OTHERS => '0');
 SIGNAL END_ADDR, r_end_addr			: std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0) := (OTHERS => '0');
 
---TYPE buffer_type IS ARRAY (0 TO C_NUM_OF_INPUTS_TO_CORE-1) OF std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0);
---
---SIGNAL input_buffer : buffer_type;
---SIGNAL store_counter : std_logic_vector(C_BRAM_SIZE - 1 DOWNTO 0) := (OTHERS => '1');
-SIGNAL bramDIN : std_logic_vector(31 DOWNTO 0) := (OTHERS => '0');
+--Start acknowledge signal from dma_handler block
+SIGNAL START_ACK	: std_logic := '0';
 
 BEGIN
 
@@ -252,11 +244,14 @@ PORT MAP(
 		
 	--Done Signal	
 	DONE					=> 	DONE,			--OUT
-	DONE_ERR				=> 	DONE_ERR		--OUT
+	DONE_ERR				=> 	DONE_ERR,		--OUT
+	
+	--Start ACK signal
+	START_ACK				=> START_ACK		--OUT
 );
 
 
-Combinatorial : PROCESS (SYS_RST, DOORBELL, DOORBELL_ERR, BUF_REQD, INTERRUPT_ACK, DONE, DONE_ERR, state)
+Combinatorial : PROCESS (SYS_RST, DOORBELL, DOORBELL_ERR, DOORBELL_LEN, INTERRUPT_ACK, DONE, DONE_ERR, state)
 BEGIN
 	IF (SYS_RST = '1') THEN
 		nstate <= idle;
@@ -265,20 +260,12 @@ BEGIN
 		
 		CASE state IS
 			WHEN idle =>
-				IF (BUF_REQD = '1') THEN
-					nstate <= PC2FPGA_Data_transfer_wait; --go to wait state until the data is successfully transferred
+				IF (DOORBELL = '1' AND DOORBELL_LEN = SIMPBUS_ZERO AND DOORBELL_ERR = '0') THEN
+					nstate <= store_arg_0; --go to wait state until the data is successfully transferred
 				END IF;
-			WHEN PC2FPGA_Data_transfer_wait =>
-				IF (DOORBELL = '1') THEN
-					IF (DOORBELL_ERR = '0') THEN
-						nstate <= dma_transfer; --go directly to dma_transfer state
-					ELSE
-						nstate <= idle; --reset to idle state if there is an error from host
-					END IF;
-				END IF;
-			WHEN store_data =>
-				nstate <= process_data;
-			WHEN process_data => 
+			WHEN store_arg_0 =>
+				nstate <= store_arg_1;
+			WHEN store_arg_1 =>
 				nstate <= dma_transfer;
 			WHEN dma_transfer =>
 				IF (DONE = '1') THEN
@@ -301,21 +288,14 @@ END PROCESS Combinatorial;
 AssignCombinatorialOutputs : PROCESS (state)
 BEGIN
 	
-	--Write enable BRAM when waiting for PC to transfer
-	--data to FPGA
-	--IF (state = PC2FPGA_Data_transfer_wait) THEN
-	--	BRAM_WEN <= (OTHERS => '1');
-	--ELSE
-		BRAM_WEN <= (OTHERS => '0');
-	--END IF;
+	--The BRAM is not used for storing data in this hardware
+	BRAM_WEN <= (OTHERS => '0');
 
-	--BUF_REQD_RDY is only high if state = wait for PC to transfer data to FPGA	
-	IF (state = PC2FPGA_Data_transfer_wait) THEN
-		BUF_REQD_RDY <= '1';
-	ELSE
-		BUF_REQD_RDY <= '0';
-	END IF;
-	
+
+	--BUF_REQD_RDY is always 0 indicating that hardware doesn't respond to
+	--PC trying to send data to the FPGA.
+	BUF_REQD_RDY <= '0';
+
 	--Interrupt assignments
 	IF (state = interrupt_state OR state = interrupt_err_state) THEN
 		INTERRUPT <= '1'; --Flag interrupt signals
@@ -341,29 +321,34 @@ WAIT UNTIL rising_edge(SYS_CLK);
 		r_start_addr <= (OTHERS => '0');
 		r_end_addr	<= (OTHERS => '0');
 		r_start <= '0';
-		bramDIN <= BRAM_Din;
 	ELSE
 		state <= nstate; -- assign the state to next state
 		r_start_addr <= C_BRAM_ADDR;
 		r_end_addr	<= (OTHERS => '0');
 		r_start <= '0';
-		bramDataOut <= (OTHERS => '0');
-		bramDIN <= BRAM_Din;
-		IF (DOORBELL = '1' AND DOORBELL_ERR = '0' AND DOORBELL_LEN /= SIMPBUS_ZERO) THEN
-			 --Increment the pointer with however many bits were transferred
-			bramAddress <= std_logic_vector(resize(unsigned(C_BRAM_ADDR) + unsigned(DOORBELL_LEN), C_SIMPBUS_AWIDTH));
+		
+		IF (state = store_arg_0) THEN
+			bramAddress <= std_logic_vector(resize(unsigned(C_BRAM_ADDR) + unsigned(DOORBELL_ARG), C_SIMPBUS_AWIDTH));
 		END IF;
 		
+		--Initiate DMA transfer of length = ARG_0
 		IF (state = dma_transfer) THEN
 			r_start_addr <= C_BRAM_ADDR;
-			r_end_addr <= std_logic_vector(unsigned(C_BRAM_ADDR) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));
-			--r_end_addr <= bramAddress;
-			r_start <= '1'; --start DMA transfer
+			IF (unsigned(bramAddress) <= unsigned(C_BRAM_ADDR) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH)) THEN
+				r_end_addr <= bramAddress;
+			ELSE
+				r_end_addr <= std_logic_vector(unsigned(C_BRAM_ADDR) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));
+			END IF;
+
+			IF (START_ACK = '1') THEN
+				r_start <= '0'; --start DMA transfer
+			ELSE
+				r_start <= '1';
+			END IF;
 			IF (DONE = '1') THEN
-				r_start <= '0'; --stop the DMA transfer
 				bramAddress <= r_start_addr;
 			END IF;
-		END IF;
+		END IF;		
 		
 	END IF;
 
