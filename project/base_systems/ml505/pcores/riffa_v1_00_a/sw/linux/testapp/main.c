@@ -57,7 +57,6 @@ long usecs;
 #define PRINTUS(u) printf("Time required to send data to FPGA : %ld us\n", us)
 
 unsigned int gData[DATA_SIZE/4];
-unsigned int senddata[DATA_SIZE/4];
 
 int fpeek(FILE *stream)
 {
@@ -78,9 +77,9 @@ int main(int argc, char* argv[])
 	int rtn, channel, timeout;
 	int i = 0;
 	int DATA_POINTS = 0;
-	unsigned int arg = 4294967295;
 	unsigned int c;
-	unsigned int lastVal = 0;
+	unsigned int arg0 = 0;
+	unsigned int arg1 = 0;
 	timeout = 10*1000; // 5 secs.
 	channel = argc == 2 ? atoi(argv[1]) : 0;
 
@@ -94,33 +93,15 @@ int main(int argc, char* argv[])
 	while(!feof(fin)){
 		fscanf(fin,"%d", &c);
 		if(!feof(fin)){
-			senddata[i++] = c;
+			arg0 = c;
+			i++;
 		}
 	}
 
 	assert(i > 0);
 
 	DATA_POINTS = MAX(1, i);
-	#if INFO == 1	
-	printf("DATA_POINTS: %d\n",DATA_POINTS);
-	#endif
 	fclose(fin);
-
-	#if INFO == 1
-	for(i = 0; i < DATA_POINTS; i++){
-		printf("senddata[%d] = %d\n",i,senddata[i]);
-	}
-	#endif
-
-	lastVal = senddata[DATA_POINTS-1];
-	for(i = DATA_POINTS - 1; i > 0; i--){
-		senddata[i] = senddata[i-1];
-	}
-	senddata[0] = lastVal;
-
-	for(i = 0; i < DATA_POINTS; i++){
-		senddata[i] = fpga_flip_endian(senddata[i]);
-	}
 
 	if ((rtn = fpga_init(&fpgaDev)) < 0) {
 		#if DEBUG == 1
@@ -135,7 +116,7 @@ int main(int argc, char* argv[])
 		#endif
 		return rtn;
 	}
-
+	
 	#if INFO == 1
  	printf("Opened.\n");
 	#endif
@@ -143,7 +124,7 @@ int main(int argc, char* argv[])
 //		printf("rtn= %d\n", fpga_send_args(fpgaDev, channel, arg, arg, 2, 1));
 //		printf("rtn= %d\n", fpga_send_args(fpgaDev, channel, 0, 0, 2, 1));
 		GETTIME(start);
-		if((rtn = fpga_send_data(fpgaDev, channel, (unsigned char *) senddata, DATA_POINTS*4, 1)) < 0){
+		if((rtn = fpga_send_args(fpgaDev, channel, arg0*4, arg1, 2, 1)) < 0){
 			#if DEBUG == 1
 			printf("error sending args to fpga: %d\n", rtn);
 			#endif
@@ -173,14 +154,6 @@ int main(int argc, char* argv[])
 		break;
 
 	}
-#if INFO == 1	
-i = 0;
-		printf("gData[%d]\t= %10d, fpga_flip_endian(gData[%d])\t= %10d,	senddata[%d]\t= %10d, fpga_flip_endian(senddata[%d])\t=%10d\n",i,gData[i],i,fpga_flip_endian(gData[i]),i,senddata[i],i,fpga_flip_endian(senddata[i]));
-i = DATA_POINTS - 1;
-
-		printf("gData[%d]\t= %10d, fpga_flip_endian(gData[%d])\t= %10d,	senddata[%d]\t= %10d, fpga_flip_endian(senddata[%d])\t=%10d\n",i,gData[i],i,fpga_flip_endian(gData[i]),i,senddata[i],i,fpga_flip_endian(senddata[i]));
-  	printf("Done.\n");
-#endif
 	fpga_channel_close(fpgaDev, 0);
   	fpga_free(fpgaDev);
 #if INFO == 1

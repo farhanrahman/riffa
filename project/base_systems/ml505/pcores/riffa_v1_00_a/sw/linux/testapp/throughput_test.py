@@ -2,20 +2,16 @@ import os
 
 if __name__=="__main__":
 	if os.path.isfile("riffaexample"):
-		runTime = 512
-		endRunTime = 32768
-		outputCycle = 2
+		word = 60
+		endRunTime = 16384
 		try:
-			while(runTime != endRunTime + 4): 
+			while(word <= endRunTime): 
 				dataFile = open("data.txt","w")
-				dataFile.write("%d\n"%runTime)
-				dataFile.write("%d\n"%outputCycle)
+				dataFile.write("%d\n"%word)
 				dataFile.close()
 				for i in range(0,100):
 					out = os.system("./riffaexample")
-				runTime += 4
-			for i in range(0,100):
-				out = os.system("./riffaexample")
+				word += 1
 		except IOError as e:
 			print ("Problem in opening file: %s"%e)	
 	else:
