@@ -121,7 +121,7 @@ begin
       C_MPLB_NATIVE_DWIDTH => 32,
       C_MPLB_P2P => 0,
       C_MPLB_SMALLEST_SLAVE => 32,
-      C_MPLB_CLK_PERIOD_PS => 8696
+      C_MPLB_CLK_PERIOD_PS => 8333
     )
     port map (
       MPLB_Clk => MPLB_Clk,
