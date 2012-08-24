@@ -1,0 +1,34 @@
+#  XUPV5-LX110T Evaluation Platform
+Net fpga_0_PCIe_Bridge_RXN_pin LOC=AF1  |  IOSTANDARD = LVDS_25;
+Net fpga_0_PCIe_Bridge_RXP_pin LOC=AE1  |  IOSTANDARD = LVDS_25;
+Net fpga_0_PCIe_Bridge_TXN_pin LOC=AE2  |  IOSTANDARD = LVDS_25;
+Net fpga_0_PCIe_Bridge_TXP_pin LOC=AD2  |  IOSTANDARD = LVDS_25;
+Net fpga_0_clk_1_sys_clk_pin TNM_NET = sys_clk_pin;
+TIMESPEC TS_sys_clk_pin = PERIOD sys_clk_pin 100000 kHz;
+Net fpga_0_clk_1_sys_clk_pin TNM_NET = sys_clk_pin  |  LOC = AH15  |  IOSTANDARD=LVCMOS33;
+Net fpga_0_rst_1_sys_rst_pin TIG;
+Net fpga_0_rst_1_sys_rst_pin LOC = E9  |  IOSTANDARD=LVCMOS33  |  PULLUP;
+Net fpga_0_PCIe_Diff_Clk_IBUF_DS_P_pin LOC=AF4  |  IOSTANDARD = LVDS_25;
+Net fpga_0_PCIe_Diff_Clk_IBUF_DS_N_pin LOC=AF3  |  IOSTANDARD = LVDS_25;
+
+###### PCIe_Bridge
+Net "pcie_bridge/*SPLB_Clk" TNM_NET = "SPLB_Clk";
+Net "pcie_bridge/*Bridge_Clk" TNM_NET = "Bridge_Clk";
+
+## Timing constraints between clock-domain boundaries
+#
+TIMESPEC "TS_PLB_PCIe" = FROM "SPLB_Clk" TO "Bridge_Clk" 8 ns datapathonly;
+TIMESPEC "TS_PCIe_PLB" = FROM "Bridge_Clk" TO "SPLB_Clk" 8 ns datapathonly;
+
+# BlockRAM placement
+INST "pcie_bridge/*pcie_mim_wrapper_i/bram_tl_tx/generate_tdp2[1].ram_tdp2_inst"  LOC = RAMB36_X3Y11;
+INST "pcie_bridge/*pcie_mim_wrapper_i/bram_tl_rx/generate_tdp2[1].ram_tdp2_inst"  LOC = RAMB36_X3Y9;
+INST "pcie_bridge/*pcie_mim_wrapper_i/bram_tl_tx/generate_tdp2[0].ram_tdp2_inst"  LOC = RAMB36_X3Y10;
+INST "pcie_bridge/*pcie_mim_wrapper_i/bram_tl_rx/generate_tdp2[0].ram_tdp2_inst"  LOC = RAMB36_X3Y8;
+INST "pcie_bridge/*pcie_mim_wrapper_i/bram_retry/generate_sdp.ram_sdp_inst"         LOC = RAMB36_X3Y7;
+
+# Timing critical placements
+INST "pcie_bridge/*tx_bridge/shift_pipe1"                 LOC = "SLICE_X59Y56";
+INST "pcie_bridge/*arb_inst/completion_available"         LOC = "SLICE_X58Y46";
+INST "pcie_bridge/*management_interface/mgmt_rdata_d1_3"  LOC = "SLICE_X59Y45";
+ 
