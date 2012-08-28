@@ -8,7 +8,8 @@ ENTITY top_connector IS
 		GENERIC
 		(
 			C_SIMPBUS_AWIDTH			: integer					:= 32;
-			C_BRAM_ADDR					: std_logic_vector			:= X"00000000";
+			C_BRAM_ADDR_0				: std_logic_vector			:= X"00000000";
+			C_BRAM_ADDR_1				: std_logic_vector			:= X"00000000";
 			C_BRAM_SIZE					: integer					:= 32768;
 			C_USE_DOORBELL_RESET		: boolean					:= true
 		);
@@ -52,12 +53,19 @@ ENTITY top_connector IS
 			BUF_REQD_RDY			: OUT std_logic;
 			BUF_REQD_ERR			: OUT std_logic;
 
-			--BRAM SIGNALS--
-			BRAM_EN					: OUT std_logic;
-			BRAM_WEN				: OUT std_logic_vector(3 DOWNTO 0);
-			BRAM_Dout				: OUT std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);	  --Not sure if length should be 32 bits or length of simplebus
-			BRAM_Din				: IN std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);     --Not sure if length should be 32 bits or length of simplebus
-			BRAM_Addr				: OUT std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0)    --Not sure if length should be 32 bits or length of simplebus
+			--BRAM 0 SIGNALS--
+			BRAM_EN_0					: OUT std_logic;
+			BRAM_WEN_0				: OUT std_logic_vector(3 DOWNTO 0);
+			BRAM_Dout_0				: OUT std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);	  --Not sure if length should be 32 bits or length of simplebus
+			BRAM_Din_0				: IN std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);     --Not sure if length should be 32 bits or length of simplebus
+			BRAM_Addr_0				: OUT std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);    --Not sure if length should be 32 bits or length of simplebus
+			
+			--BRAM 1 SIGNALS--
+			BRAM_EN_1				: OUT std_logic;
+			BRAM_WEN_1				: OUT std_logic_vector(3 DOWNTO 0);
+			BRAM_Dout_1				: OUT std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);
+			BRAM_Din_1				: IN std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0); 
+			BRAM_Addr_1				: OUT std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0) 		
 		);
 END ENTITY top_connector;
 
@@ -68,7 +76,8 @@ ARCHITECTURE synth OF top_connector IS
 		GENERIC
 		(
 			C_SIMPBUS_AWIDTH 			: integer;
-			C_BRAM_ADDR					: std_logic_vector(31 DOWNTO 0);
+			C_BRAM_ADDR_0				: std_logic_vector(31 DOWNTO 0);
+			C_BRAM_ADDR_1				: std_logic_vector(31 DOWNTO 0);
 			C_BRAM_SIZE					: integer;
 			C_NUM_OF_INPUTS_TO_CORE		: integer;
 			C_NUM_OF_OUTPUTS_FROM_CORE	: integer
@@ -113,13 +122,19 @@ ARCHITECTURE synth OF top_connector IS
 			BUF_REQD_RDY			: OUT std_logic;
 			BUF_REQD_ERR			: OUT std_logic;
 
-			--BRAM SIGNALS--
-			BRAM_EN					: OUT std_logic;
-			BRAM_WEN				: OUT std_logic_vector(3 DOWNTO 0);
-			BRAM_Dout				: OUT std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);	  --Not sure if length should be 32 bits or length of simplebus
-			BRAM_Din				: IN std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);     --Not sure if length should be 32 bits or length of simplebus
-			BRAM_Addr				: OUT std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);    --Not sure if length should be 32 bits or length of simplebus
+			--BRAM 0 SIGNALS--
+			BRAM_EN_0				: OUT std_logic;
+			BRAM_WEN_0				: OUT std_logic_vector(3 DOWNTO 0);
+			BRAM_Dout_0				: OUT std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);
+			BRAM_Din_0				: IN std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);  
+			BRAM_Addr_0				: OUT std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0); 
 			
+			--BRAM 1 SIGNALS--
+			BRAM_EN_1				: OUT std_logic;
+			BRAM_WEN_1				: OUT std_logic_vector(3 DOWNTO 0);
+			BRAM_Dout_1				: OUT std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);
+			BRAM_Din_1				: IN std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);  
+			BRAM_Addr_1				: OUT std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0); 			
 			
 			---------------CORE INTERFACE SIGNALS-----------------
 			--Inputs from PC to CORE
@@ -229,7 +244,8 @@ BEGIN
 	GENERIC MAP
 	(
 		C_SIMPBUS_AWIDTH			=> C_SIMPBUS_AWIDTH,
-		C_BRAM_ADDR					=> C_BRAM_ADDR,
+		C_BRAM_ADDR_0				=> C_BRAM_ADDR_0,
+		C_BRAM_ADDR_1				=> C_BRAM_ADDR_1,
 		C_BRAM_SIZE					=> C_BRAM_SIZE,
 		C_NUM_OF_INPUTS_TO_CORE 	=> C_NUM_OF_INPUTS_TO_CORE,
 		C_NUM_OF_OUTPUTS_FROM_CORE 	=> C_NUM_OF_OUTPUTS_FROM_CORE
@@ -264,11 +280,16 @@ BEGIN
 		BUF_REQD_SIZE			=> BUF_REQD_SIZE,
 		BUF_REQD_RDY			=> BUF_REQD_RDY,
 		BUF_REQD_ERR			=> BUF_REQD_ERR,
-		BRAM_EN					=> BRAM_EN,
-		BRAM_WEN				=> BRAM_WEN,
-		BRAM_Dout				=> BRAM_Dout,
-		BRAM_Din				=> BRAM_Din,
-		BRAM_Addr				=> BRAM_Addr,
+		BRAM_EN_0				=> BRAM_EN_0,
+		BRAM_WEN_0				=> BRAM_WEN_0,
+		BRAM_Dout_0				=> BRAM_Dout_0,
+		BRAM_Din_0				=> BRAM_Din_0,
+		BRAM_Addr_0				=> BRAM_Addr_0,
+		BRAM_EN_1				=> BRAM_EN_1,
+		BRAM_WEN_1				=> BRAM_WEN_1,
+		BRAM_Dout_1				=> BRAM_Dout_1,
+		BRAM_Din_1				=> BRAM_Din_1,
+		BRAM_Addr_1				=> BRAM_Addr_1,
 		CORE_INPUTS				=> CORE_INPUTS,
 		START_PROCESS			=> START,
 		FINISHED				=> FINISHED,

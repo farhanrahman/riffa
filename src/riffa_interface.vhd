@@ -12,7 +12,7 @@ ENTITY riffa_interface IS
 -- Port assignments taken from Matt Jacobson's riffa_example
 -- Definition of Generics:
 --   C_SIMPBUS_AWIDTH			-- SIMPBUS address width
---   C_BRAM_ADDR				-- Address of BRAM
+--   C_BRAM_ADDR_0				-- Address of BRAM
 --   C_BRAM_SIZE				-- Size of BRAM
 
 -- Definition of Ports:
@@ -48,15 +48,16 @@ ENTITY riffa_interface IS
 
 --   BRAM_Clk					-- Memory clock for pixel output data
 --   BRAM_Rst					-- Memory reset signal for pixel output data
---   BRAM_EN					-- Memory block enable for pixel output data
---   BRAM_WEN					-- Memory block write enable for pixel output data
---   BRAM_Dout					-- Memory data out for pixel output data
---   BRAM_Din					-- Memory data in for pixel output data
---   BRAM_Addr					-- Memory address for pixel output data
+--   BRAM_EN_0					-- Memory block enable for pixel output data
+--   BRAM_WEN_0					-- Memory block write enable for pixel output data
+--   BRAM_Dout_0					-- Memory data out for pixel output data
+--   BRAM_Din_0					-- Memory data in for pixel output data
+--   BRAM_Addr_0					-- Memory address for pixel output data
 ------------------------------------------------------------------------------
 GENERIC(
 	C_SIMPBUS_AWIDTH 			: integer := 32;
-	C_BRAM_ADDR					: std_logic_vector(31 DOWNTO 0) := (OTHERS => '0');
+	C_BRAM_ADDR_0				: std_logic_vector(31 DOWNTO 0) := (OTHERS => '0');
+	C_BRAM_ADDR_1				: std_logic_vector(31 DOWNTO 0) := (OTHERS => '0');
 	C_BRAM_SIZE					: integer := 32768;
 	C_NUM_OF_INPUTS_TO_CORE		: integer := 4; --CANNOT BE ZERO
 	C_NUM_OF_OUTPUTS_FROM_CORE	: integer := 1
@@ -102,13 +103,19 @@ PORT(
 	BUF_REQD_RDY			: OUT std_logic;
 	BUF_REQD_ERR			: OUT std_logic;
 
-	--BRAM SIGNALS--
-	BRAM_EN					: OUT std_logic;
-	BRAM_WEN				: OUT std_logic_vector(3 DOWNTO 0);
-	BRAM_Dout				: OUT std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);	  --Not sure if length should be 32 bits or length of simplebus
-	BRAM_Din				: IN std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);     --Not sure if length should be 32 bits or length of simplebus
-	BRAM_Addr				: OUT std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);    --Not sure if length should be 32 bits or length of simplebus
+	--BRAM 0 SIGNALS--
+	BRAM_EN_0					: OUT std_logic;
+	BRAM_WEN_0				: OUT std_logic_vector(3 DOWNTO 0);
+	BRAM_Dout_0				: OUT std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);	  --Not sure if length should be 32 bits or length of simplebus
+	BRAM_Din_0				: IN std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);     --Not sure if length should be 32 bits or length of simplebus
+	BRAM_Addr_0				: OUT std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);    --Not sure if length should be 32 bits or length of simplebus
 	
+	--BRAM 1 SIGNALS--
+	BRAM_EN_1				: OUT std_logic;
+	BRAM_WEN_1				: OUT std_logic_vector(3 DOWNTO 0);
+	BRAM_Dout_1				: OUT std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);	  --Not sure if length should be 32 bits or length of simplebus
+	BRAM_Din_1				: IN std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);     --Not sure if length should be 32 bits or length of simplebus
+	BRAM_Addr_1				: OUT std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);    --Not sure if length should be 32 bits or length of simplebus	
 	
 	---------------CORE INTERFACE SIGNALS-----------------
 	--Inputs from PC to CORE
@@ -174,39 +181,6 @@ ARCHITECTURE synth OF riffa_interface IS
 		);
 	END COMPONENT dma_handler;
 
-	component riffa_example_impl is
-		generic
-		(
-			C_SIMPBUS_AWIDTH				: integer				:= 32;
-			C_BRAM_ADDR					: std_logic_vector			:= X"00000000";
-			C_BRAM_SIZE					: integer				:= 65536
-		);
-		port
-		(
-			SYS_CLK						: in std_logic;
-			SYS_RST						: in std_logic;
-			DMA_REQ						: out std_logic;
-			DMA_REQ_ACK					: in std_logic;
-			DMA_SRC						: out std_logic_vector(C_SIMPBUS_AWIDTH-1 downto 0);
-			DMA_DST						: out std_logic_vector(C_SIMPBUS_AWIDTH-1 downto 0);
-			DMA_LEN						: out std_logic_vector(C_SIMPBUS_AWIDTH-1 downto 0);
-			DMA_SIG						: out std_logic;
-			DMA_DONE					: in std_logic;
-			DMA_ERR						: in std_logic;
-			BUF_REQ						: out std_logic;
-			BUF_REQ_ACK					: in std_logic;
-			BUF_REQ_ADDR					: in std_logic_vector(C_SIMPBUS_AWIDTH-1 downto 0);
-			BUF_REQ_SIZE					: in std_logic_vector(4 downto 0);
-			BUF_REQ_RDY					: in std_logic;
-			BUF_REQ_ERR					: in std_logic;
-			START						: in std_logic;
-			START_ACK					: out std_logic;
-			DONE						: out std_logic;
-			DONE_ERR					: out std_logic
-
-		);
-	end component riffa_example_impl;
-
 CONSTANT SIMPBUS_ZERO : std_logic_vector(C_SIMPBUS_AWIDTH-1 DOWNTO 0) := (OTHERS => '0');
 CONSTANT C_BRAM_LOG : integer := integer(ceil(log2(real(C_BRAM_SIZE))));
 CONSTANT C_NUM_IOS_LOG : integer := integer(ceil(log2(real(realmax(real(C_NUM_OF_INPUTS_TO_CORE),real(C_NUM_OF_OUTPUTS_FROM_CORE))))));
@@ -257,14 +231,14 @@ SIGNAL core_inputs_1 : std_logic_vector(C_NUM_OF_INPUTS_TO_CORE*C_SIMPBUS_AWIDTH
 BEGIN
 
 --BRAM enable signal
-BRAM_EN <= '1'; --Always enable the memory
+BRAM_EN_0 <= '1'; --Always enable the memory
 
 --Assign BRAM address and output signals
-BRAM_Addr <= bramAddress;
-BRAM_Dout <= bramDataOut;
+BRAM_Addr_0 <= bramAddress;
+BRAM_Dout_0 <= bramDataOut;
 
 --PC TO FPGA data transfer signals
-BUF_REQD_ADDR 	<= C_BRAM_ADDR; --Address of BRAM or off-chip RAM
+BUF_REQD_ADDR 	<= C_BRAM_ADDR_0; --Address of BRAM or off-chip RAM
 BUF_REQD_SIZE 	<= std_logic_vector((to_unsigned(C_BRAM_LOG, 5))); --Size of RAM in exponent of 2
 BUF_REQD_ERR 	<= '0'; --There should be no errors. Should allow the PC to write the arguments to the BRAM
 
@@ -278,8 +252,8 @@ CORE_INPUTS <= core_inputs_1;
 
 DMA : COMPONENT dma_handler
 GENERIC MAP(
-	C_SIMPBUS_AWIDTH 			=> C_SIMPBUS_AWIDTH,
-	C_BRAM_ADDR				=> C_BRAM_ADDR,	
+	C_SIMPBUS_AWIDTH 		=> C_SIMPBUS_AWIDTH,
+	C_BRAM_ADDR				=> C_BRAM_ADDR_0,	
 	C_BRAM_SIZE				=> C_BRAM_SIZE	
 )
 PORT MAP(
@@ -344,14 +318,14 @@ BEGIN
 			WHEN prepare_data =>
 				--Go to next state (process_data) if bramAddress reached the beginning of the BRAM
 				--or all slots of the input_buffer has been assigned
-				IF (bramAddress = C_BRAM_ADDR OR store_counter = store_counter_zero) THEN
+				IF (bramAddress = C_BRAM_ADDR_0 OR store_counter = store_counter_zero) THEN
 					nstate <= start_process_state;
 				END IF;
 			WHEN start_process_state =>
 				nstate <= process_data;
 			WHEN process_data =>
 				IF (VALID = '1') THEN
-					IF (bramAddress = std_logic_vector(unsigned(C_BRAM_ADDR) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH) ) ) THEN
+					IF (bramAddress = std_logic_vector(unsigned(C_BRAM_ADDR_0) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH) ) ) THEN
 						nstate <= dma_transfer_from_store_state;
 					ELSE
 						nstate <= store_state;
@@ -377,7 +351,7 @@ BEGIN
 			WHEN store_state =>
 				IF (output_store_counter = store_counter_zero) THEN
 					nstate <= process_data;
-				ELSIF (bramAddress = std_logic_vector(unsigned(C_BRAM_ADDR) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH) - to_unsigned(BYTE_INCR, C_SIMPBUS_AWIDTH) ) ) THEN
+				ELSIF (bramAddress = std_logic_vector(unsigned(C_BRAM_ADDR_0) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH) - to_unsigned(BYTE_INCR, C_SIMPBUS_AWIDTH) ) ) THEN
 					nstate <= dma_transfer_from_store_state;
 				END IF;
 			WHEN dma_transfer_from_store_state =>
@@ -402,9 +376,9 @@ BEGIN
 	--data to FPGA or when in the store state to store
 	--data into the RAM
 	IF (state = store_state) THEN
-		BRAM_WEN <= (OTHERS => '1');
+		BRAM_WEN_0 <= (OTHERS => '1');
 	ELSE
-		BRAM_WEN <= (OTHERS => '0');
+		BRAM_WEN_0 <= (OTHERS => '0');
 	END IF;
 
 	--BUF_REQD_RDY is only high if state = wait for PC to transfer data to FPGA	
@@ -461,7 +435,7 @@ WAIT UNTIL rising_edge(SYS_CLK);
 	IF(SYS_RST = '1') THEN --Synchronous reset signal
 		state <= idle;
 --		bramDataOut <= (OTHERS => '0');
-		bramAddress <= C_BRAM_ADDR;
+		bramAddress <= C_BRAM_ADDR_0;
 		r_start_addr <= (OTHERS => '0');
 		r_end_addr	<= (OTHERS => '0');
 		r_start <= '0';
@@ -472,7 +446,7 @@ WAIT UNTIL rising_edge(SYS_CLK);
 		output_store_counter <= (OTHERS => '0');
 	ELSE
 		state <= nstate; -- assign the state to next state
-		r_start_addr <= C_BRAM_ADDR;
+		r_start_addr <= C_BRAM_ADDR_0;
 		r_end_addr	<= (OTHERS => '0');
 		r_start <= '0';
 		
@@ -481,20 +455,20 @@ WAIT UNTIL rising_edge(SYS_CLK);
 			store_counter <= std_logic_vector(to_unsigned(C_NUM_OF_INPUTS_TO_CORE-1,C_NUM_IOS_LOG));
 			--bramAddress <= std_logic_vector(unsigned(bramAddress) + resize(unsigned(DOORBELL_LEN)*8 - 1,C_SIMPBUS_AWIDTH));
 			--Increment bramAddress with however many bytes were transferred since BRAM is byte addressible
-			bramAddress <= std_logic_vector(resize(unsigned(C_BRAM_ADDR) + unsigned(DOORBELL_LEN) - BYTE_INCR_USG, C_SIMPBUS_AWIDTH));
+			bramAddress <= std_logic_vector(resize(unsigned(C_BRAM_ADDR_0) + unsigned(DOORBELL_LEN) - BYTE_INCR_USG, C_SIMPBUS_AWIDTH));
 		END IF;
 		
 		IF (state = prepare_data) THEN
 			--Set the input_buffer for every input to the core.
 			--Uses store_counter as a sort of counter to iterate
 			--through the input_buffer.
-			input_buffer(to_integer(unsigned(store_counter))) <= BRAM_Din;
+			input_buffer(to_integer(unsigned(store_counter))) <= BRAM_Din_0;
 			
 			--Decrement bramAddress
-			IF (bramAddress /= C_BRAM_ADDR) THEN
-				--Decrement bramAddress by clamping it to C_BRAM_ADDR if necessary
-				--IF ((unsigned(C_BRAM_ADDR) + BYTE_INCR) > unsigned(bramAddress)) THEN
-				--	bramAddress <= C_BRAM_ADDR;
+			IF (bramAddress /= C_BRAM_ADDR_0) THEN
+				--Decrement bramAddress by clamping it to C_BRAM_ADDR_0 if necessary
+				--IF ((unsigned(C_BRAM_ADDR_0) + BYTE_INCR) > unsigned(bramAddress)) THEN
+				--	bramAddress <= C_BRAM_ADDR_0;
 				--ELSE
 					bramAddress <= std_logic_vector(unsigned(bramAddress) - BYTE_INCR);
 				--END IF;
@@ -511,12 +485,12 @@ WAIT UNTIL rising_edge(SYS_CLK);
 		--to be sent back to the PC because its full then do the dma transfer of
 		--the whole bram.
 		IF (state = dma_transfer OR state = dma_transfer_from_store_state) THEN
-			r_start_addr <= C_BRAM_ADDR;
-			--r_end_addr <= std_logic_vector(unsigned(C_BRAM_ADDR) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));
+			r_start_addr <= C_BRAM_ADDR_0;
+			--r_end_addr <= std_logic_vector(unsigned(C_BRAM_ADDR_0) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));
 			IF (state = dma_transfer) THEN
 				r_end_addr <= bramAddress;
 			ELSE
-				r_end_addr <= std_logic_vector(unsigned(C_BRAM_ADDR) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));
+				r_end_addr <= std_logic_vector(unsigned(C_BRAM_ADDR_0) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));
 			END IF;
 			
 			IF (START_ACK = '1') THEN
