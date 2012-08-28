@@ -228,6 +228,9 @@ CONSTANT BYTE_INCR_USG : unsigned := to_unsigned(BYTE_INCR,C_SIMPBUS_AWIDTH);
 
 SIGNAL core_inputs_1 : std_logic_vector(C_NUM_OF_INPUTS_TO_CORE*C_SIMPBUS_AWIDTH-1 DOWNTO 0);
 
+--BRAM multiplexing switch
+TYPE bram_switch_type IS (bram_0, bram_1);
+SIGNAL bram_switch : bram_switch_type := (bram_0);
 BEGIN
 
 --BRAM enable signal
@@ -429,7 +432,6 @@ BEGIN
 END PROCESS;
 
 State_Assignment : PROCESS
---VARIABLE s : integer;
 BEGIN
 WAIT UNTIL rising_edge(SYS_CLK);
 	IF(SYS_RST = '1') THEN --Synchronous reset signal
@@ -444,16 +446,16 @@ WAIT UNTIL rising_edge(SYS_CLK);
 		END LOOP;
 		store_counter <= (OTHERS => '0');
 		output_store_counter <= (OTHERS => '0');
+		bram_switch <= bram_0; --initialise the bram_switch to bram_0 always.
 	ELSE
 		state <= nstate; -- assign the state to next state
 		r_start_addr <= C_BRAM_ADDR_0;
 		r_end_addr	<= (OTHERS => '0');
 		r_start <= '0';
 		
-		IF (DOORBELL = '1' AND DOORBELL_ERR = '0' AND DOORBELL_LEN /= SIMPBUS_ZERO) THEN
+		IF (state = idle AND DOORBELL = '1' AND DOORBELL_ERR = '0' AND DOORBELL_LEN /= SIMPBUS_ZERO) THEN
 			 --Increment the pointer with however many bits were transferred
 			store_counter <= std_logic_vector(to_unsigned(C_NUM_OF_INPUTS_TO_CORE-1,C_NUM_IOS_LOG));
-			--bramAddress <= std_logic_vector(unsigned(bramAddress) + resize(unsigned(DOORBELL_LEN)*8 - 1,C_SIMPBUS_AWIDTH));
 			--Increment bramAddress with however many bytes were transferred since BRAM is byte addressible
 			bramAddress <= std_logic_vector(resize(unsigned(C_BRAM_ADDR_0) + unsigned(DOORBELL_LEN) - BYTE_INCR_USG, C_SIMPBUS_AWIDTH));
 		END IF;
@@ -467,11 +469,7 @@ WAIT UNTIL rising_edge(SYS_CLK);
 			--Decrement bramAddress
 			IF (bramAddress /= C_BRAM_ADDR_0) THEN
 				--Decrement bramAddress by clamping it to C_BRAM_ADDR_0 if necessary
-				--IF ((unsigned(C_BRAM_ADDR_0) + BYTE_INCR) > unsigned(bramAddress)) THEN
-				--	bramAddress <= C_BRAM_ADDR_0;
-				--ELSE
-					bramAddress <= std_logic_vector(unsigned(bramAddress) - BYTE_INCR);
-				--END IF;
+				bramAddress <= std_logic_vector(unsigned(bramAddress) - BYTE_INCR);
 			END IF;
 			
 			--Decrement store_counter
@@ -480,13 +478,14 @@ WAIT UNTIL rising_edge(SYS_CLK);
 			END IF;
 		END IF;
 		
+--#TODO: Needs changing from here for double buffering--		
+		
 		--If state is in the final dma_transfer then initiate the dma_transfer upto
 		--the point where the data has been stored. If the contents of bram needs 
 		--to be sent back to the PC because its full then do the dma transfer of
 		--the whole bram.
 		IF (state = dma_transfer OR state = dma_transfer_from_store_state) THEN
 			r_start_addr <= C_BRAM_ADDR_0;
-			--r_end_addr <= std_logic_vector(unsigned(C_BRAM_ADDR_0) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));
 			IF (state = dma_transfer) THEN
 				r_end_addr <= bramAddress;
 			ELSE
@@ -499,7 +498,6 @@ WAIT UNTIL rising_edge(SYS_CLK);
 				r_start <= '1';
 			END IF;
 			IF (DONE = '1') THEN
-				--r_start <= '0'; --stop the DMA transfer
 				bramAddress <= r_start_addr;
 			END IF;
 		END IF;
@@ -513,19 +511,13 @@ WAIT UNTIL rising_edge(SYS_CLK);
 		--If in the store state, decrement the store_counter and store the incoming data
 		--Also increment the BRAM address
 		IF (state = store_state) THEN
-			--s := to_integer(unsigned(store_counter));
-			--bramDataOut <= CORE_OUTPUTS(((s+1)*C_SIMPBUS_AWIDTH-1) DOWNTO (((s+1)*C_SIMPBUS_AWIDTH-1)-C_SIMPBUS_AWIDTH + 1));
 			--Decrement store_counter
 			IF (output_store_counter /= store_counter_zero) THEN
 				output_store_counter <= std_logic_vector(unsigned(output_store_counter) - 1);
 			END IF;
 
 			--Increment bramAddress by clamping it to C_BRAM_SIZE
-			--IF ((unsigned(bramAddress) + BYTE_INCR) > to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH)) THEN
-			--	bramAddress <= std_logic_vector(to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));
-		--	ELSE
-				bramAddress <= std_logic_vector(unsigned(bramAddress) + BYTE_INCR);
-		--	END IF;			
+			bramAddress <= std_logic_vector(unsigned(bramAddress) + BYTE_INCR);
 		END IF;
 		
 	END IF;
