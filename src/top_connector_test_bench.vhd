@@ -77,6 +77,12 @@ CONSTANT C_BRAM_SIZE : integer := 16;
 CONSTANT RUNTIME		: std_logic_vector(31 DOWNTO 0) := std_logic_vector(to_unsigned(40,32));
 CONSTANT OUTPUT_CYCLE	: std_logic_vector(31 DOWNTO 0) := std_logic_vector(to_unsigned(2,32));
 
+SIGNAL BRAM_Addr_0_Checked	: std_logic_vector(31 DOWNTO 0) := (OTHERS => '0');
+SIGNAL BRAM_Addr_1_Checked	: std_logic_vector(31 DOWNTO 0) := (OTHERS => '0');
+
+CONSTANT C_BRAM_ADDR_0 : std_logic_vector(31 DOWNTO 0) := X"00000000";
+CONSTANT C_BRAM_ADDR_1 : std_logic_vector(31 DOWNTO 0) := X"90000000";
+
 BEGIN
 
 DUT : ENTITY top_connector
@@ -84,8 +90,8 @@ DUT : ENTITY top_connector
 	(
 		C_SIMPBUS_AWIDTH		=> C_SIMPBUS_AWIDTH,
 		C_BRAM_SIZE				=> C_BRAM_SIZE,
-		C_BRAM_ADDR_0			=> X"00000000",
-		C_BRAM_ADDR_1			=> X"90000000"
+		C_BRAM_ADDR_0			=> C_BRAM_ADDR_0,
+		C_BRAM_ADDR_1			=> C_BRAM_ADDR_1
 	)
 	PORT MAP
 	(
@@ -129,6 +135,7 @@ DUT : ENTITY top_connector
 		BRAM_Addr_1				=> BRAM_Addr_1		
 	);
 
+BRAM_Addr_0_Checked <= std_logic_vector(unsigned(BRAM_Addr_0) - unsigned(C_BRAM_ADDR_0)); 
 RAM_0 : ENTITY BRAM
 GENERIC MAP(
 	C_BRAM_SIZE => C_BRAM_SIZE,
@@ -145,22 +152,23 @@ PORT MAP(
 	BRAM_Addr	=> BRAM_Addr_0
 );
 
---Assign BRAM_ADDR to BRAM_ADDR_1 - C_BRAM_ADDR_1 
---RAM_1 : ENTITY BRAM
---GENERIC MAP(
---	C_BRAM_SIZE => C_BRAM_SIZE,
---	RUNTIME		=> RUNTIME,
---	OUTPUT_CYCLE=> OUTPUT_CYCLE
---)
---PORT MAP(
---	SYS_CLK		=> clk,
---	SYS_RST		=> reset,
---	BRAM_EN		=> BRAM_EN_1,
---	BRAM_WEN	=> BRAM_WEN_1,
---	BRAM_Dout	=> BRAM_Dout_1,
---	BRAM_Din	=> BRAM_Din_1,
---	BRAM_Addr	=> BRAM_Addr_1
---);
+--Assign BRAM_ADDR to BRAM_ADDR_1 - C_BRAM_ADDR_1
+BRAM_Addr_1_Checked <= std_logic_vector(unsigned(BRAM_Addr_1) - unsigned(C_BRAM_ADDR_1));  
+RAM_1 : ENTITY BRAM
+GENERIC MAP(
+	C_BRAM_SIZE => C_BRAM_SIZE,
+	RUNTIME		=> RUNTIME,
+	OUTPUT_CYCLE=> OUTPUT_CYCLE
+)
+PORT MAP(
+	SYS_CLK		=> clk,
+	SYS_RST		=> reset,
+	BRAM_EN		=> BRAM_EN_1,
+	BRAM_WEN	=> BRAM_WEN_1,
+	BRAM_Dout	=> BRAM_Dout_1,
+	BRAM_Din	=> BRAM_Din_1,
+	BRAM_Addr	=> BRAM_Addr_1_Checked
+);
 	
 Clk_generate : PROCESS --Process to generate the clk
 BEGIN

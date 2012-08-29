@@ -50,9 +50,9 @@ ENTITY riffa_interface IS
 --   BRAM_Rst					-- Memory reset signal for pixel output data
 --   BRAM_EN_0					-- Memory block enable for pixel output data
 --   BRAM_WEN_0					-- Memory block write enable for pixel output data
---   BRAM_Dout_0					-- Memory data out for pixel output data
+--   BRAM_Dout_0				-- Memory data out for pixel output data
 --   BRAM_Din_0					-- Memory data in for pixel output data
---   BRAM_Addr_0					-- Memory address for pixel output data
+--   BRAM_Addr_0				-- Memory address for pixel output data
 ------------------------------------------------------------------------------
 GENERIC(
 	C_SIMPBUS_AWIDTH 			: integer := 32;
@@ -60,7 +60,7 @@ GENERIC(
 	C_BRAM_ADDR_1				: std_logic_vector(31 DOWNTO 0) := (OTHERS => '0');
 	C_BRAM_SIZE					: integer := 32768;
 	C_NUM_OF_INPUTS_TO_CORE		: integer := 4; --CANNOT BE ZERO
-	C_NUM_OF_OUTPUTS_FROM_CORE	: integer := 1
+	C_NUM_OF_OUTPUTS_FROM_CORE	: integer := 1 --CANNOT BE ZERO
 );
 
 PORT(
@@ -196,14 +196,13 @@ TYPE states IS (
 			--PROCESSING STATE
 			process_data,
 			--SENDING DATA BACK TO PC STATE
-			dma_transfer,
-			--Done states
-			interrupt_state,
-			interrupt_err_state,
+			final_dma_transfer,
 			--STORE DATA INTO RAM
 			store_state,
-			--DMA TRANFER INITIATED FROM STORE STATE
-			dma_transfer_from_store_state
+			wait_for_free_buffer,
+			--Done states
+			interrupt_state,
+			interrupt_err_state
 			);
 SIGNAL state, nstate : states := idle;
 
@@ -231,21 +230,22 @@ SIGNAL core_inputs_1 : std_logic_vector(C_NUM_OF_INPUTS_TO_CORE*C_SIMPBUS_AWIDTH
 --BRAM multiplexing switch
 TYPE bram_switch_type IS (bram_0, bram_1);
 SIGNAL bram_switch : bram_switch_type := (bram_0);
+
 BEGIN
 
---BRAM enable signal
-BRAM_EN_0 <= '1'; --Always enable the memory
-
---Assign BRAM address and output signals
-BRAM_Addr_0 <= bramAddress;
+--BRAM enable signals
+BRAM_EN_0 <= '1'; --Always enable bram_0
+BRAM_EN_1 <= '1'; --Always enable bram_1
+--Assign BRAM 0 and BRAM 1 output signals
 BRAM_Dout_0 <= bramDataOut;
+BRAM_Dout_1 <= bramDataOut;
 
 --PC TO FPGA data transfer signals
 BUF_REQD_ADDR 	<= C_BRAM_ADDR_0; --Address of BRAM or off-chip RAM
 BUF_REQD_SIZE 	<= std_logic_vector((to_unsigned(C_BRAM_LOG, 5))); --Size of RAM in exponent of 2
 BUF_REQD_ERR 	<= '0'; --There should be no errors. Should allow the PC to write the arguments to the BRAM
 
---Drive signal with registered output
+--Drive signal with registered output for dma_handler
 START_ADDR 	<= r_start_addr;
 END_ADDR 	<= r_end_addr;
 START 		<= r_start;
@@ -277,14 +277,14 @@ PORT MAP(
 	--PC BUFFER REQUEST SIGNALS--
 	BUF_REQ					=> 	BUF_REQ,		--OUT
 	BUF_REQ_ACK				=> 	BUF_REQ_ACK,	--IN
-	BUF_REQ_ADDR				=> 	BUF_REQ_ADDR,	--IN
-	BUF_REQ_SIZE				=> 	BUF_REQ_SIZE,	--IN
+	BUF_REQ_ADDR			=> 	BUF_REQ_ADDR,	--IN
+	BUF_REQ_SIZE			=> 	BUF_REQ_SIZE,	--IN
 	BUF_REQ_RDY				=> 	BUF_REQ_RDY,	--IN
 	BUF_REQ_ERR				=> 	BUF_REQ_ERR,	--IN
 	
 	--Start and End addresses to transfer
-	START_ADDR				=>	START_ADDR,	--IN
-	END_ADDR				=>	END_ADDR,	--IN
+	START_ADDR				=>	START_ADDR,		--IN
+	END_ADDR				=>	END_ADDR,		--IN
 
 	--Start signal	
 	START					=> 	START,			--IN
@@ -298,7 +298,7 @@ PORT MAP(
 );
 
 
-Combinatorial : PROCESS (SYS_RST, DOORBELL, DOORBELL_ERR, BUF_REQD, INTERRUPT_ACK, DONE, DONE_ERR, state, bramAddress, store_counter, output_store_counter, VALID, FINISHED)
+Combinatorial : PROCESS (SYS_RST, DOORBELL, DOORBELL_ERR, BUF_REQD, INTERRUPT_ACK, DONE, DONE_ERR, state, bramAddress, store_counter, output_store_counter, VALID, FINISHED, bram_switch, START_ACK)
 BEGIN
 	IF (SYS_RST = '1') THEN
 		nstate <= idle;
@@ -328,18 +328,55 @@ BEGIN
 				nstate <= process_data;
 			WHEN process_data =>
 				IF (VALID = '1') THEN
-					IF (bramAddress = std_logic_vector(unsigned(C_BRAM_ADDR_0) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH) ) ) THEN
-						nstate <= dma_transfer_from_store_state;
+					--If the current BRAM buffer is full and the dma_handler is busy doing a dma transfer of the already full buffer
+					--then go to wait_for_free_buffer state, else go to store_state.
+					IF (bram_switch = bram_0) THEN
+						IF (bramAddress = std_logic_vector(unsigned(C_BRAM_ADDR_0) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH) ) AND START_ACK = '1') THEN
+							--Go to wait state for free buffer if current buffer is full and dma_handler
+							--is still busy in transferring the full buffer
+							nstate <= wait_for_free_buffer;
+						ELSE
+							nstate <= store_state; --Go to store_state if a free buffer is available. It is safe to increment address to next free buffer
+						END IF;
 					ELSE
-						nstate <= store_state;
-					END IF;
+						--Same logic as above except for alternate buffer
+						IF (bramAddress = std_logic_vector(unsigned(C_BRAM_ADDR_1) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH) ) AND START_ACK = '1') THEN
+							nstate <= wait_for_free_buffer;
+						ELSE
+							nstate <= store_state; --Go to store_state if a free buffer is available
+						END IF;					
+					END IF;		
 				END IF;
 				
+				--Go to the final dma transfer state once the FINISHED signal is received
 				IF (FINISHED = '1') THEN
-					nstate <= dma_transfer;
+					nstate <= final_dma_transfer;
 				END IF;
-				
-			WHEN dma_transfer =>
+			WHEN wait_for_free_buffer =>
+				IF (DONE = '1') THEN
+					IF(DONE_ERR = '1') THEN
+						nstate <= interrupt_err_state; --Flag error if there was an error
+					ELSE
+						nstate <= store_state; --Resume storing data once dma transfer is complete
+					END IF;
+				END IF;				
+			WHEN store_state =>
+				IF (output_store_counter = store_counter_zero) THEN
+					nstate <= process_data;
+				ELSE
+					--If the buffer is about to get full in the next cycle and dma_handler is still busy doing a dma transfer
+					--then go to wait_for_free_buffer state. If buffer is free then it is safe to switch buffers
+					IF (bram_switch = bram_0) THEN
+						IF (bramAddress = std_logic_vector(unsigned(C_BRAM_ADDR_0) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH) - to_unsigned(BYTE_INCR, C_SIMPBUS_AWIDTH) ) AND START_ACK = '1') THEN
+							nstate <= wait_for_free_buffer;
+						END IF;
+					ELSE
+						IF (bramAddress = std_logic_vector(unsigned(C_BRAM_ADDR_1) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH) - to_unsigned(BYTE_INCR, C_SIMPBUS_AWIDTH) ) AND START_ACK = '1') THEN
+							nstate <= wait_for_free_buffer;
+						END IF;						
+					END IF;
+				END IF;				
+			WHEN final_dma_transfer =>
 				IF (DONE = '1') THEN
 					IF (DONE_ERR = '1') THEN
 						nstate <= interrupt_err_state;
@@ -350,20 +387,6 @@ BEGIN
 			WHEN interrupt_err_state | interrupt_state =>
 				IF (INTERRUPT_ACK = '1') THEN
 					nstate <= idle; --go to idle state if PC sends interrupt ack signal back
-				END IF;
-			WHEN store_state =>
-				IF (output_store_counter = store_counter_zero) THEN
-					nstate <= process_data;
-				ELSIF (bramAddress = std_logic_vector(unsigned(C_BRAM_ADDR_0) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH) - to_unsigned(BYTE_INCR, C_SIMPBUS_AWIDTH) ) ) THEN
-					nstate <= dma_transfer_from_store_state;
-				END IF;
-			WHEN dma_transfer_from_store_state =>
-				IF (DONE = '1') THEN
-					IF (DONE_ERR = '1') THEN
-						nstate <= interrupt_err_state;
-					ELSE
-						nstate <= store_state;
-					END IF;
 				END IF;				
 			WHEN OTHERS => nstate <= idle;	
 		END CASE;
@@ -371,7 +394,7 @@ BEGIN
 
 END PROCESS Combinatorial;
 
-AssignCombinatorialOutputs : PROCESS (state, input_buffer, output_store_counter, CORE_OUTPUTS)
+AssignCombinatorialOutputs : PROCESS (state, input_buffer, output_store_counter, CORE_OUTPUTS, bram_switch, bramAddress)
 VARIABLE s : integer;
 BEGIN
 	
@@ -379,9 +402,16 @@ BEGIN
 	--data to FPGA or when in the store state to store
 	--data into the RAM
 	IF (state = store_state) THEN
-		BRAM_WEN_0 <= (OTHERS => '1');
+		IF (bram_switch = bram_0) THEN
+			BRAM_WEN_0 <= (OTHERS => '1');
+			BRAM_WEN_1 <= (OTHERS => '0');
+		ELSE
+			BRAM_WEN_0 <= (OTHERS => '0');
+			BRAM_WEN_1 <= (OTHERS => '1');
+		END IF;
 	ELSE
 		BRAM_WEN_0 <= (OTHERS => '0');
+		BRAM_WEN_1 <= (OTHERS => '0');
 	END IF;
 
 	--BUF_REQD_RDY is only high if state = wait for PC to transfer data to FPGA	
@@ -417,10 +447,10 @@ BEGIN
 		START_PROCESS <= '0';
 	END IF;
 	
-	--For now the BUSY signal will only be high in the dma_transfer or store_state states
-	--Later pause signal will only be high when all the buffers are full and
-	--the core has to stop outputting data until one of the buffers is empty
-	IF (state = dma_transfer OR state = store_state OR state = dma_transfer_from_store_state) THEN
+	--The BUSY signal will only be high when all the buffers are full and
+	--the core has to stop outputting data until one of the buffers is empty.
+	--BUSY signal is also high when storing data into the RAM
+	IF (state = wait_for_free_buffer OR state = store_state) THEN
 		BUSY <= '1';
 	ELSE
 		BUSY <= '0';
@@ -428,6 +458,15 @@ BEGIN
 
 	s := to_integer(unsigned(output_store_counter));
 	bramDataOut <= CORE_OUTPUTS(((s+1)*C_SIMPBUS_AWIDTH-1) DOWNTO (((s+1)*C_SIMPBUS_AWIDTH-1)-C_SIMPBUS_AWIDTH + 1));
+	
+	--BRAM Address signal assignments
+	IF (bram_switch = bram_0) THEN
+		BRAM_Addr_0 <= bramAddress;
+		BRAM_Addr_1 <= C_BRAM_ADDR_1;
+	ELSE
+		BRAM_Addr_0 <= C_BRAM_ADDR_0;
+		BRAM_Addr_1 <= bramAddress;
+	END IF;
 	
 END PROCESS;
 
@@ -449,11 +488,8 @@ WAIT UNTIL rising_edge(SYS_CLK);
 		bram_switch <= bram_0; --initialise the bram_switch to bram_0 always.
 	ELSE
 		state <= nstate; -- assign the state to next state
-		r_start_addr <= C_BRAM_ADDR_0;
-		r_end_addr	<= (OTHERS => '0');
-		r_start <= '0';
 		
-		IF (state = idle AND DOORBELL = '1' AND DOORBELL_ERR = '0' AND DOORBELL_LEN /= SIMPBUS_ZERO) THEN
+		IF (DOORBELL = '1' AND DOORBELL_ERR = '0' AND DOORBELL_LEN /= SIMPBUS_ZERO) THEN
 			 --Increment the pointer with however many bits were transferred
 			store_counter <= std_logic_vector(to_unsigned(C_NUM_OF_INPUTS_TO_CORE-1,C_NUM_IOS_LOG));
 			--Increment bramAddress with however many bytes were transferred since BRAM is byte addressible
@@ -480,31 +516,63 @@ WAIT UNTIL rising_edge(SYS_CLK);
 		
 --#TODO: Needs changing from here for double buffering--		
 		
-		--If state is in the final dma_transfer then initiate the dma_transfer upto
+		--If state is in the final_dma_transfer then initiate the final_dma_transfer upto
 		--the point where the data has been stored. If the contents of bram needs 
 		--to be sent back to the PC because its full then do the dma transfer of
 		--the whole bram.
-		IF (state = dma_transfer OR state = dma_transfer_from_store_state) THEN
-			r_start_addr <= C_BRAM_ADDR_0;
-			IF (state = dma_transfer) THEN
-				r_end_addr <= bramAddress;
+		IF (state = final_dma_transfer) THEN
+			IF (bram_switch = bram_0) THEN
+				r_start_addr <= C_BRAM_ADDR_0;
 			ELSE
-				r_end_addr <= std_logic_vector(unsigned(C_BRAM_ADDR_0) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));
+				r_start_addr <= C_BRAM_ADDR_1;
 			END IF;
 			
+			r_end_addr <= bramAddress;
+			
 			IF (START_ACK = '1') THEN
-				r_start <= '0'; --start DMA transfer
+				r_start <= '0'; --assert start signal low once START_ACK received
 			ELSE
-				r_start <= '1';
+				r_start <= '1'; --else keep it high
 			END IF;
+			
 			IF (DONE = '1') THEN
-				bramAddress <= r_start_addr;
+				bramAddress <= C_BRAM_ADDR_0; --Initialise bramAddress to point to the first bram
+				bram_switch <= bram_0; --Change the switch back to bram_0 as well
 			END IF;
+		END IF;
+		
+		--Handle dma transfer when one of the buffer is full
+		IF (state = wait_for_free_buffer) THEN
+			IF (START_ACK = '1') THEN
+				r_start <= '0'; --assert start signal low once START_ACK received
+			ELSE
+				r_start <= '1'; --else keep it high
+			END IF;
+
+			IF (DONE = '1') THEN
+				IF (bram_switch = bram_0) THEN
+					bramAddress <= C_BRAM_ADDR_1; --Switch to bram_1
+					bram_switch <= bram_1; --Change the switch to bram_1 as well
+				ELSE
+					bramAddress <= C_BRAM_ADDR_0;
+					bram_switch <= bram_0;
+				END IF;
+			END IF;			
+		END IF;
+		
+		--The other case when dma transfer is happening parallely
+		IF (r_start = '1') THEN
+			IF (START_ACK = '1') THEN
+				r_start <= '0'; --assert start signal low once START_ACK received
+			ELSE
+				r_start <= '1'; --else keep it high
+			END IF;			
 		END IF;
 		
 		--Reset the store_counter to C_NUM_OF_OUTPUTS_FROM_CORE before going to store_state
 		--Only reset the counter if transitioning from process_data state to store_state
-		IF (nstate = store_state AND state = process_data) OR (nstate = dma_transfer_from_store_state AND state = process_data) THEN
+		--OR process_data state to wait_for_free_buffer state
+		IF (state = process_data AND nstate = store_state) OR (state = process_data AND nstate = wait_for_free_buffer) THEN
 			output_store_counter <= std_logic_vector(to_unsigned(C_NUM_OF_OUTPUTS_FROM_CORE-1,C_NUM_IOS_LOG));
 		END IF;
 		
@@ -516,8 +584,33 @@ WAIT UNTIL rising_edge(SYS_CLK);
 				output_store_counter <= std_logic_vector(unsigned(output_store_counter) - 1);
 			END IF;
 
-			--Increment bramAddress by clamping it to C_BRAM_SIZE
-			bramAddress <= std_logic_vector(unsigned(bramAddress) + BYTE_INCR);
+			--Increment bramAddress, switch to free buffer if needed
+			IF (bram_switch = bram_0) THEN
+				--If first bram is full switch to next 
+				IF (bramAddress = std_logic_vector(unsigned(C_BRAM_ADDR_0) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH) - to_unsigned(BYTE_INCR, C_SIMPBUS_AWIDTH) ) ) THEN
+					IF (START_ACK = '0') THEN
+						bramAddress <= C_BRAM_ADDR_1;
+						bram_switch <= bram_1;
+						r_start <= '1';
+						r_start_addr <= C_BRAM_ADDR_0;
+						r_end_addr <= std_logic_vector(unsigned(C_BRAM_ADDR_0) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));
+					END IF;
+				ELSE
+					bramAddress <= std_logic_vector(unsigned(bramAddress) + BYTE_INCR);
+				END IF;
+			ELSE
+				IF (bramAddress = std_logic_vector(unsigned(C_BRAM_ADDR_1) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH) - to_unsigned(BYTE_INCR, C_SIMPBUS_AWIDTH) ) ) THEN
+					IF (START_ACK = '0') THEN					
+						bramAddress <= C_BRAM_ADDR_0;
+						bram_switch <= bram_0;
+						r_start <= '1';
+						r_start_addr <= C_BRAM_ADDR_1;
+						r_end_addr <= std_logic_vector(unsigned(C_BRAM_ADDR_1) + to_unsigned(C_BRAM_SIZE, C_SIMPBUS_AWIDTH));
+					END IF;
+				ELSE
+					bramAddress <= std_logic_vector(unsigned(bramAddress) + BYTE_INCR);
+				END IF;				
+			END IF;
 		END IF;
 		
 	END IF;
