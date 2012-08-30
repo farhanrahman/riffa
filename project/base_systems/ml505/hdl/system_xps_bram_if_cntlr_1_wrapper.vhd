@@ -141,8 +141,8 @@ begin
 
   xps_bram_if_cntlr_1 : xps_bram_if_cntlr
     generic map (
-      C_BASEADDR => X"09010000",
-      C_HIGHADDR => X"0901FFFF",
+      C_BASEADDR => X"90010000",
+      C_HIGHADDR => X"9001FFFF",
       C_SPLB_NATIVE_DWIDTH => 32,
       C_SPLB_AWIDTH => 32,
       C_SPLB_DWIDTH => 64,
