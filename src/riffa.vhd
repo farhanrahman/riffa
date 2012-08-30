@@ -94,9 +94,15 @@ use proc_common_v3_00_a.proc_common_pkg.all;
 ENTITY riffa IS
   generic
   (
-	C_SIMPBUS_AWIDTH			: integer					:= 32;
-	C_BRAM_ADDR					: std_logic_vector			:= X"00000000";
-	C_BRAM_SIZE					: integer					:= 32768
+	C_SIMPBUS_AWIDTH			: integer							:= 32;
+	C_BRAM_ADDR_0				: std_logic_vector					:= X"00000000";
+	C_BRAM_ADDR_1				: std_logic_vector					:= X"00000000";
+	C_BRAM_SIZE					: integer							:= 32768;
+	C_USE_DOORBELL_RESET		: boolean							:= true;
+	C_NUM_OF_INPUTS_TO_CORE 	: integer 							:= 2;
+	C_NUM_OF_OUTPUTS_FROM_CORE  : integer 							:= 1;
+	DOORBELL_ARGUMENT_ZERO_VAL	: std_logic_vector(31 DOWNTO 0) 	:= (OTHERS => '1'); 
+	DOORBELL_ARGUMENT_ONE_VAL	: std_logic_vector(31 DOWNTO 0) 	:= (OTHERS => '1')	
   );
   port
   (
@@ -130,20 +136,30 @@ ENTITY riffa IS
 	BUF_REQD_RDY				: out std_logic;
 	BUF_REQD_ERR				: out std_logic;
 
-	BRAM_Clk					: out std_logic;
-	BRAM_Rst					: out std_logic;
-	BRAM_EN						: out std_logic;
-	BRAM_WEN					: out std_logic_vector(0 to 3);
-	BRAM_Dout					: out std_logic_vector(0 to 31);
-	BRAM_Din					: in std_logic_vector(0 to 31);
-	BRAM_Addr					: out std_logic_vector(0 to 31)
+	BRAM_Clk_0					: out std_logic;
+	BRAM_Rst_0					: out std_logic;
+	BRAM_EN_0					: out std_logic;
+	BRAM_WEN_0					: out std_logic_vector(0 to 3);
+	BRAM_Dout_0					: out std_logic_vector(0 to 31);
+	BRAM_Din_0					: in std_logic_vector(0 to 31);
+	BRAM_Addr_0					: out std_logic_vector(0 to 31);
+	
+	BRAM_Clk_1					: out std_logic;
+	BRAM_Rst_1					: out std_logic;	
+	BRAM_EN_1					: out std_logic;
+	BRAM_WEN_1					: out std_logic_vector(0 to 3);
+	BRAM_Dout_1					: out std_logic_vector(0 to 31);
+	BRAM_Din_1					: in std_logic_vector(0 to 31); 
+	BRAM_Addr_1					: out std_logic_vector(0 to 31) 			
   );
 
   attribute SIGIS : string;
   attribute SIGIS of SYS_CLK     		: signal is "CLK";
   attribute SIGIS of SYS_RST      		: signal is "RST";
-  attribute SIGIS of BRAM_Clk      		: signal is "CLK";
-  attribute SIGIS of BRAM_Rst      		: signal is "RST";
+  attribute SIGIS of BRAM_Clk_0      	: signal is "CLK";
+  attribute SIGIS of BRAM_Rst_0      	: signal is "RST";
+  attribute SIGIS of BRAM_Clk_1      	: signal is "CLK";
+  attribute SIGIS of BRAM_Rst_1      	: signal is "RST"; 
   
 END ENTITY riffa;
 
@@ -159,10 +175,16 @@ ARCHITECTURE IMP OF riffa IS
 	COMPONENT top_connector IS
 		GENERIC
 		(
-			C_SIMPBUS_AWIDTH			: integer;
-			C_BRAM_ADDR					: std_logic_vector;
-			C_BRAM_SIZE					: integer
-		);
+			C_SIMPBUS_AWIDTH			: integer							:= 32;
+			C_BRAM_ADDR_0				: std_logic_vector					:= X"00000000";
+			C_BRAM_ADDR_1				: std_logic_vector					:= X"00000000";
+			C_BRAM_SIZE					: integer							:= 32768;
+			C_USE_DOORBELL_RESET		: boolean							:= true;
+			C_NUM_OF_INPUTS_TO_CORE 	: integer 							:= 2;
+			C_NUM_OF_OUTPUTS_FROM_CORE  : integer 							:= 1;
+			ARGUMENT_ZERO_VAL			: std_logic_vector(31 DOWNTO 0) 	:= (OTHERS => '1'); 
+			ARGUMENT_ONE_VAL			: std_logic_vector(31 DOWNTO 0) 	:= (OTHERS => '1')
+		);			
 		PORT(
 			--SYSTEM CLOCK AND SYSTEM RESET--
 			SYS_CLK					: IN std_logic;
@@ -203,12 +225,19 @@ ARCHITECTURE IMP OF riffa IS
 			BUF_REQD_RDY			: OUT std_logic;
 			BUF_REQD_ERR			: OUT std_logic;
 
-			--BRAM SIGNALS--
-			BRAM_EN					: OUT std_logic;
-			BRAM_WEN				: OUT std_logic_vector(3 DOWNTO 0);
-			BRAM_Dout				: OUT std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);	  --Not sure if length should be 32 bits or length of simplebus
-			BRAM_Din				: IN std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);     --Not sure if length should be 32 bits or length of simplebus
-			BRAM_Addr				: OUT std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0)    --Not sure if length should be 32 bits or length of simplebus
+			--BRAM 0 SIGNALS--
+			BRAM_EN_0					: OUT std_logic;
+			BRAM_WEN_0				: OUT std_logic_vector(3 DOWNTO 0);
+			BRAM_Dout_0				: OUT std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);	  --Not sure if length should be 32 bits or length of simplebus
+			BRAM_Din_0				: IN std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);     --Not sure if length should be 32 bits or length of simplebus
+			BRAM_Addr_0				: OUT std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);    --Not sure if length should be 32 bits or length of simplebus
+			
+			--BRAM 1 SIGNALS--
+			BRAM_EN_1				: OUT std_logic;
+			BRAM_WEN_1				: OUT std_logic_vector(3 DOWNTO 0);
+			BRAM_Dout_1				: OUT std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);
+			BRAM_Din_1				: IN std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0); 
+			BRAM_Addr_1				: OUT std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0) 		
 		);
 	END COMPONENT top_connector;
 BEGIN
@@ -218,9 +247,15 @@ BEGIN
 	TOP_CONNECTOR_I : COMPONENT top_connector
 	GENERIC MAP
 	(
-		C_SIMPBUS_AWIDTH		=> C_SIMPBUS_AWIDTH,
-		C_BRAM_ADDR				=> C_BRAM_ADDR,
-		C_BRAM_SIZE				=> C_BRAM_SIZE
+		C_SIMPBUS_AWIDTH				=> C_SIMPBUS_AWIDTH,
+		C_BRAM_ADDR_0					=> C_BRAM_ADDR_0,
+		C_BRAM_ADDR_1					=> C_BRAM_ADDR_1,
+		C_BRAM_SIZE						=> C_BRAM_SIZE,
+		C_USE_DOORBELL_RESET		    => C_USE_DOORBELL_RESET,		
+		C_NUM_OF_INPUTS_TO_CORE 	    => C_NUM_OF_INPUTS_TO_CORE, 	
+		C_NUM_OF_OUTPUTS_FROM_CORE      => C_NUM_OF_OUTPUTS_FROM_CORE,  
+		ARGUMENT_ZERO_VAL			    => DOORBELL_ARGUMENT_ZERO_VAL,			
+		ARGUMENT_ONE_VAL				=> DOORBELL_ARGUMENT_ONE_VAL				
 	)
 	PORT MAP
 	(
@@ -252,14 +287,20 @@ BEGIN
 		BUF_REQD_SIZE			=> BUF_REQD_SIZE,
 		BUF_REQD_RDY			=> BUF_REQD_RDY,
 		BUF_REQD_ERR			=> BUF_REQD_ERR,
-		BRAM_EN					=> BRAM_EN,
-		BRAM_WEN				=> BRAM_WEN,
-		BRAM_Dout				=> BRAM_Dout,
-		BRAM_Din				=> BRAM_Din,
-		BRAM_Addr				=> BRAM_Addr
+		BRAM_EN_0				=> BRAM_EN_0,
+		BRAM_WEN_0				=> BRAM_WEN_0,
+		BRAM_Dout_0				=> BRAM_Dout_0,
+		BRAM_Din_0				=> BRAM_Din_0,
+		BRAM_Addr_0				=> BRAM_Addr_0,
+		BRAM_EN_1				=> BRAM_EN_1,
+		BRAM_WEN_1				=> BRAM_WEN_1,
+		BRAM_Dout_1				=> BRAM_Dout_1,
+		BRAM_Din_1				=> BRAM_Din_1,
+		BRAM_Addr_1				=> BRAM_Addr_1		
 	);
 
-	BRAM_Clk <= SYS_CLK;
-	BRAM_Rst <= SYS_RST;
-
+	BRAM_Clk_0 <= SYS_CLK;
+	BRAM_Rst_0 <= SYS_RST;
+	BRAM_Clk_1 <= SYS_CLK;
+	BRAM_Rst_1 <= SYS_RST;
 END IMP;
