@@ -44,9 +44,9 @@
 #define DATA_SIZE (20*1024*1024)
 #define FILE_NAME "data.txt"
 #define LOG_FILE "log.txt"
-#define DEBUG 	1
-#define INFO 	1
-#define LOG	0
+#define DEBUG 	0
+#define INFO 	0
+#define LOG	1
 #define MAX(a,b) a > b ? a : b
 
 struct timeval start, end;
