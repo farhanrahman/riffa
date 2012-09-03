@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------
---	Copyright (c) 2012, Matthew Jacobsen
+--	Copyright (c) 2012, Matthew Jacobsen, Imperial College London
 --	All rights reserved.
 --	
 --	Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,8 @@
 -- Description:			Top level core design, instantiates riffa_impl
 --						and passes all signals through.
 -- History:				@mattj: Initial pre-release. Version 0.9.
+--						@farhanrahman: Updated code for multiple dma transfers and double
+--										buffering. Version 1.0
 -------------------------------------------------------------------------------
 
 library ieee;
