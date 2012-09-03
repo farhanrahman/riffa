@@ -151,7 +151,7 @@ begin
       C_SPLB_P2P => 0,
       C_SPLB_SUPPORT_BURSTS => 0,
       C_SPLB_SMALLEST_MASTER => 32,
-      C_SPLB_CLK_PERIOD_PS => 8333,
+      C_SPLB_CLK_PERIOD_PS => 8000,
       C_INCLUDE_DPHASE_TIMER => 1,
       C_FAMILY => "virtex5"
     )

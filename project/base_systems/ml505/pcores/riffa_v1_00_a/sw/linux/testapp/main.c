@@ -41,7 +41,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-#define DATA_SIZE (1*1024*1024)
+#define DATA_SIZE (20*1024*1024)
 #define FILE_NAME "data.txt"
 #define LOG_FILE "log.txt"
 #define DEBUG 	0

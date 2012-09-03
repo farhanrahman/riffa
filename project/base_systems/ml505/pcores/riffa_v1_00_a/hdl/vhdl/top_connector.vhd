@@ -7,11 +7,16 @@ USE IEEE.numeric_std.ALL;
 ENTITY top_connector IS
 		GENERIC
 		(
-			C_SIMPBUS_AWIDTH			: integer					:= 32;
-			C_BRAM_ADDR					: std_logic_vector			:= X"00000000";
-			C_BRAM_SIZE					: integer					:= 32768;
-			C_USE_DOORBELL_RESET		: boolean					:= true
-		);
+			C_SIMPBUS_AWIDTH			: integer							:= 32;
+			C_BRAM_ADDR_0				: std_logic_vector					:= X"00000000";
+			C_BRAM_ADDR_1				: std_logic_vector					:= X"00000000";
+			C_BRAM_SIZE					: integer							:= 32768;
+			C_USE_DOORBELL_RESET		: boolean							:= true;
+			C_NUM_OF_INPUTS_TO_CORE 	: integer 							:= 2;
+			C_NUM_OF_OUTPUTS_FROM_CORE  : integer 							:= 1;
+			ARGUMENT_ZERO_VAL			: std_logic_vector(31 DOWNTO 0) 	:= (OTHERS => '1'); 
+			ARGUMENT_ONE_VAL			: std_logic_vector(31 DOWNTO 0) 	:= (OTHERS => '1')
+		);			
 		PORT(
 			--SYSTEM CLOCK AND SYSTEM RESET--
 			SYS_CLK					: IN std_logic;
@@ -52,12 +57,19 @@ ENTITY top_connector IS
 			BUF_REQD_RDY			: OUT std_logic;
 			BUF_REQD_ERR			: OUT std_logic;
 
-			--BRAM SIGNALS--
-			BRAM_EN					: OUT std_logic;
-			BRAM_WEN				: OUT std_logic_vector(3 DOWNTO 0);
-			BRAM_Dout				: OUT std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);	  --Not sure if length should be 32 bits or length of simplebus
-			BRAM_Din				: IN std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);     --Not sure if length should be 32 bits or length of simplebus
-			BRAM_Addr				: OUT std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0)    --Not sure if length should be 32 bits or length of simplebus
+			--BRAM 0 SIGNALS--
+			BRAM_EN_0					: OUT std_logic;
+			BRAM_WEN_0				: OUT std_logic_vector(3 DOWNTO 0);
+			BRAM_Dout_0				: OUT std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);	  --Not sure if length should be 32 bits or length of simplebus
+			BRAM_Din_0				: IN std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);     --Not sure if length should be 32 bits or length of simplebus
+			BRAM_Addr_0				: OUT std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);    --Not sure if length should be 32 bits or length of simplebus
+			
+			--BRAM 1 SIGNALS--
+			BRAM_EN_1				: OUT std_logic;
+			BRAM_WEN_1				: OUT std_logic_vector(3 DOWNTO 0);
+			BRAM_Dout_1				: OUT std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);
+			BRAM_Din_1				: IN std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0); 
+			BRAM_Addr_1				: OUT std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0) 		
 		);
 END ENTITY top_connector;
 
@@ -68,7 +80,8 @@ ARCHITECTURE synth OF top_connector IS
 		GENERIC
 		(
 			C_SIMPBUS_AWIDTH 			: integer;
-			C_BRAM_ADDR					: std_logic_vector(31 DOWNTO 0);
+			C_BRAM_ADDR_0				: std_logic_vector(31 DOWNTO 0);
+			C_BRAM_ADDR_1				: std_logic_vector(31 DOWNTO 0);
 			C_BRAM_SIZE					: integer;
 			C_NUM_OF_INPUTS_TO_CORE		: integer;
 			C_NUM_OF_OUTPUTS_FROM_CORE	: integer
@@ -113,13 +126,19 @@ ARCHITECTURE synth OF top_connector IS
 			BUF_REQD_RDY			: OUT std_logic;
 			BUF_REQD_ERR			: OUT std_logic;
 
-			--BRAM SIGNALS--
-			BRAM_EN					: OUT std_logic;
-			BRAM_WEN				: OUT std_logic_vector(3 DOWNTO 0);
-			BRAM_Dout				: OUT std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);	  --Not sure if length should be 32 bits or length of simplebus
-			BRAM_Din				: IN std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);     --Not sure if length should be 32 bits or length of simplebus
-			BRAM_Addr				: OUT std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0);    --Not sure if length should be 32 bits or length of simplebus
+			--BRAM 0 SIGNALS--
+			BRAM_EN_0				: OUT std_logic;
+			BRAM_WEN_0				: OUT std_logic_vector(3 DOWNTO 0);
+			BRAM_Dout_0				: OUT std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);
+			BRAM_Din_0				: IN std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);  
+			BRAM_Addr_0				: OUT std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0); 
 			
+			--BRAM 1 SIGNALS--
+			BRAM_EN_1				: OUT std_logic;
+			BRAM_WEN_1				: OUT std_logic_vector(3 DOWNTO 0);
+			BRAM_Dout_1				: OUT std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);
+			BRAM_Din_1				: IN std_logic_vector(C_SIMPBUS_AWIDTH -1  DOWNTO 0);  
+			BRAM_Addr_1				: OUT std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0); 			
 			
 			---------------CORE INTERFACE SIGNALS-----------------
 			--Inputs from PC to CORE
@@ -153,7 +172,7 @@ ARCHITECTURE synth OF top_connector IS
 		);
 	END COMPONENT doorbell_reset;
 	
-	--DECLARE YOUR COMPONENT HERE FOR YOUR CORE
+----------------DECLARE YOUR CORE AS A COMPONENT HERE--------------------
 	COMPONENT test_core IS
 		GENERIC(
 			C_SIMPBUS_AWIDTH 	: integer := 32
@@ -189,10 +208,8 @@ ARCHITECTURE synth OF top_connector IS
 			OUTPUT_CYCLE 	: IN std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0)
 		);	
 	END COMPONENT test_core;
-	
-	
-	CONSTANT C_NUM_OF_INPUTS_TO_CORE 	: integer := 2; --Number of inputs expected from the PC to FPGA
-	CONSTANT C_NUM_OF_OUTPUTS_FROM_CORE : integer := 1; --Expected number of outupts from core
+---------------COMPONENT DECLARATION END----------------------------------
+
 	
 	SIGNAL CORE_INPUTS : std_logic_vector(C_NUM_OF_INPUTS_TO_CORE*C_SIMPBUS_AWIDTH-1 DOWNTO 0); --Inputs to the core organised in a contigous std_logic_vector
 	
@@ -213,14 +230,11 @@ ARCHITECTURE synth OF top_connector IS
 	--START signal from interface to core to start processing
 	SIGNAL START : std_logic := '0';
 	
-	CONSTANT RUNTIME 		: std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0) := std_logic_vector(to_unsigned(30, C_SIMPBUS_AWIDTH));
-	CONSTANT OUTPUT_CYCLE 	: std_logic_vector(C_SIMPBUS_AWIDTH - 1 DOWNTO 0) := std_logic_vector(to_unsigned(10,C_SIMPBUS_AWIDTH));
-	
 	SIGNAL CORE_OUTPUTS		: std_logic_vector(C_NUM_OF_OUTPUTS_FROM_CORE*C_SIMPBUS_AWIDTH - 1 DOWNTO 0) := (OTHERS => '0');
 	
+	--DOORBELL RESET SIGNALS--
 	SIGNAL RESET : std_logic := '0';
-	CONSTANT ARGUMENT_ZERO_VAL	:	std_logic_vector(31 DOWNTO 0) := (OTHERS => '1'); --default values (update them there)
-	CONSTANT ARGUMENT_ONE_VAL	:	std_logic_vector(31 DOWNTO 0) := (OTHERS => '1'); --default values (update them there)
+
 BEGIN
 
 	--riffa_interface instantiation. The riffa_interface handles the data transfer
@@ -229,7 +243,8 @@ BEGIN
 	GENERIC MAP
 	(
 		C_SIMPBUS_AWIDTH			=> C_SIMPBUS_AWIDTH,
-		C_BRAM_ADDR					=> C_BRAM_ADDR,
+		C_BRAM_ADDR_0				=> C_BRAM_ADDR_0,
+		C_BRAM_ADDR_1				=> C_BRAM_ADDR_1,
 		C_BRAM_SIZE					=> C_BRAM_SIZE,
 		C_NUM_OF_INPUTS_TO_CORE 	=> C_NUM_OF_INPUTS_TO_CORE,
 		C_NUM_OF_OUTPUTS_FROM_CORE 	=> C_NUM_OF_OUTPUTS_FROM_CORE
@@ -264,11 +279,16 @@ BEGIN
 		BUF_REQD_SIZE			=> BUF_REQD_SIZE,
 		BUF_REQD_RDY			=> BUF_REQD_RDY,
 		BUF_REQD_ERR			=> BUF_REQD_ERR,
-		BRAM_EN					=> BRAM_EN,
-		BRAM_WEN				=> BRAM_WEN,
-		BRAM_Dout				=> BRAM_Dout,
-		BRAM_Din				=> BRAM_Din,
-		BRAM_Addr				=> BRAM_Addr,
+		BRAM_EN_0				=> BRAM_EN_0,
+		BRAM_WEN_0				=> BRAM_WEN_0,
+		BRAM_Dout_0				=> BRAM_Dout_0,
+		BRAM_Din_0				=> BRAM_Din_0,
+		BRAM_Addr_0				=> BRAM_Addr_0,
+		BRAM_EN_1				=> BRAM_EN_1,
+		BRAM_WEN_1				=> BRAM_WEN_1,
+		BRAM_Dout_1				=> BRAM_Dout_1,
+		BRAM_Din_1				=> BRAM_Din_1,
+		BRAM_Addr_1				=> BRAM_Addr_1,
 		CORE_INPUTS				=> CORE_INPUTS,
 		START_PROCESS			=> START,
 		FINISHED				=> FINISHED,
@@ -312,7 +332,7 @@ BEGIN
 		END GENERATE;
 	END BLOCK RST_ASSIGN;
 	
-	--Connect your components here.
+----------INSTANTIATE AND CONNECT YOUR CORE HERE. DECLARE IT AS A COMPONENT----------
 	TEST_CORE_1 : COMPONENT test_core
 		GENERIC MAP(
 			C_SIMPBUS_AWIDTH 	=> C_SIMPBUS_AWIDTH

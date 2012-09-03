@@ -56,12 +56,19 @@ SIGNAL BUF_REQD_SIZE	:	std_logic_vector(4 DOWNTO 0);					--OUT
 SIGNAL BUF_REQD_RDY		:	std_logic;										--OUT
 SIGNAL BUF_REQD_ERR		:	std_logic;										--OUT
 
---BRAM SIGNALS FROM AND TO RIFFA_INTERFACE
-SIGNAL BRAM_EN			: std_logic;										--OUT
-SIGNAL BRAM_WEN			: std_logic_vector(3 DOWNTO 0);						--OUT
-SIGNAL BRAM_Dout		: std_logic_vector(31 DOWNTO 0);					--OUT
-SIGNAL BRAM_Din			: std_logic_vector(31 DOWNTO 0);					--IN
-SIGNAL BRAM_Addr		: std_logic_vector(31 DOWNTO 0);					--OUT
+--BRAM 0 SIGNALS FROM AND TO RIFFA_INTERFACE
+SIGNAL BRAM_EN_0		: std_logic;										--OUT
+SIGNAL BRAM_WEN_0		: std_logic_vector(3 DOWNTO 0);						--OUT
+SIGNAL BRAM_Dout_0		: std_logic_vector(31 DOWNTO 0);					--OUT
+SIGNAL BRAM_Din_0		: std_logic_vector(31 DOWNTO 0);					--IN
+SIGNAL BRAM_Addr_0		: std_logic_vector(31 DOWNTO 0);					--OUT
+
+--BRAM 1 SIGNALS FROM AND TO RIFFA_INTERFACE
+SIGNAL BRAM_EN_1		: std_logic;										--OUT
+SIGNAL BRAM_WEN_1		: std_logic_vector(3 DOWNTO 0);						--OUT
+SIGNAL BRAM_Dout_1		: std_logic_vector(31 DOWNTO 0);					--OUT
+SIGNAL BRAM_Din_1		: std_logic_vector(31 DOWNTO 0);					--IN
+SIGNAL BRAM_Addr_1		: std_logic_vector(31 DOWNTO 0);					--OUT
 
 CONSTANT C_NUM_OF_OUTPUTS_FROM_CORE	: integer := 1;
 
@@ -70,13 +77,21 @@ CONSTANT C_BRAM_SIZE : integer := 16;
 CONSTANT RUNTIME		: std_logic_vector(31 DOWNTO 0) := std_logic_vector(to_unsigned(40,32));
 CONSTANT OUTPUT_CYCLE	: std_logic_vector(31 DOWNTO 0) := std_logic_vector(to_unsigned(2,32));
 
+SIGNAL BRAM_Addr_0_Checked	: std_logic_vector(31 DOWNTO 0) := (OTHERS => '0');
+SIGNAL BRAM_Addr_1_Checked	: std_logic_vector(31 DOWNTO 0) := (OTHERS => '0');
+
+CONSTANT C_BRAM_ADDR_0 : std_logic_vector(31 DOWNTO 0) := X"00000000";
+CONSTANT C_BRAM_ADDR_1 : std_logic_vector(31 DOWNTO 0) := X"90000000";
+
 BEGIN
 
 DUT : ENTITY top_connector
 	GENERIC MAP
 	(
 		C_SIMPBUS_AWIDTH		=> C_SIMPBUS_AWIDTH,
-		C_BRAM_SIZE				=> C_BRAM_SIZE
+		C_BRAM_SIZE				=> C_BRAM_SIZE,
+		C_BRAM_ADDR_0			=> C_BRAM_ADDR_0,
+		C_BRAM_ADDR_1			=> C_BRAM_ADDR_1
 	)
 	PORT MAP
 	(
@@ -108,14 +123,20 @@ DUT : ENTITY top_connector
 		BUF_REQD_SIZE			=> BUF_REQD_SIZE,
 		BUF_REQD_RDY			=> BUF_REQD_RDY,
 		BUF_REQD_ERR			=> BUF_REQD_ERR,
-		BRAM_EN					=> BRAM_EN,
-		BRAM_WEN				=> BRAM_WEN,
-		BRAM_Dout				=> BRAM_Dout,
-		BRAM_Din				=> BRAM_Din,
-		BRAM_Addr				=> BRAM_Addr
+		BRAM_EN_0				=> BRAM_EN_0,
+		BRAM_WEN_0				=> BRAM_WEN_0,
+		BRAM_Dout_0				=> BRAM_Dout_0,
+		BRAM_Din_0				=> BRAM_Din_0,
+		BRAM_Addr_0				=> BRAM_Addr_0,
+		BRAM_EN_1				=> BRAM_EN_1,
+		BRAM_WEN_1				=> BRAM_WEN_1,
+		BRAM_Dout_1				=> BRAM_Dout_1,
+		BRAM_Din_1				=> BRAM_Din_1,
+		BRAM_Addr_1				=> BRAM_Addr_1		
 	);
 
-RAM : ENTITY BRAM
+BRAM_Addr_0_Checked <= std_logic_vector(unsigned(BRAM_Addr_0) - unsigned(C_BRAM_ADDR_0)); 
+RAM_0 : ENTITY BRAM
 GENERIC MAP(
 	C_BRAM_SIZE => C_BRAM_SIZE,
 	RUNTIME		=> RUNTIME,
@@ -124,11 +145,29 @@ GENERIC MAP(
 PORT MAP(
 	SYS_CLK		=> clk,
 	SYS_RST		=> reset,
-	BRAM_EN		=> BRAM_EN,
-	BRAM_WEN	=> BRAM_WEN,
-	BRAM_Dout	=> BRAM_Dout,
-	BRAM_Din	=> BRAM_Din,
-	BRAM_Addr	=> BRAM_Addr
+	BRAM_EN		=> BRAM_EN_0,
+	BRAM_WEN	=> BRAM_WEN_0,
+	BRAM_Dout	=> BRAM_Dout_0,
+	BRAM_Din	=> BRAM_Din_0,
+	BRAM_Addr	=> BRAM_Addr_0
+);
+
+--Assign BRAM_ADDR to BRAM_ADDR_1 - C_BRAM_ADDR_1
+BRAM_Addr_1_Checked <= std_logic_vector(unsigned(BRAM_Addr_1) - unsigned(C_BRAM_ADDR_1));  
+RAM_1 : ENTITY BRAM
+GENERIC MAP(
+	C_BRAM_SIZE => C_BRAM_SIZE,
+	RUNTIME		=> RUNTIME,
+	OUTPUT_CYCLE=> OUTPUT_CYCLE
+)
+PORT MAP(
+	SYS_CLK		=> clk,
+	SYS_RST		=> reset,
+	BRAM_EN		=> BRAM_EN_1,
+	BRAM_WEN	=> BRAM_WEN_1,
+	BRAM_Dout	=> BRAM_Dout_1,
+	BRAM_Din	=> BRAM_Din_1,
+	BRAM_Addr	=> BRAM_Addr_1_Checked
 );
 	
 Clk_generate : PROCESS --Process to generate the clk
@@ -153,7 +192,7 @@ BEGIN
 	INTERRUPT_ACK 	<= '0';
 	handle_interrupt(clk,INTERRUPT,INTERRUPT_ERR,INTERRUPT_ACK);
 	wait_for(clk, 10);
-	REPORT "Test PASSED." SEVERITY failure;
+	REPORT "Test FINISHED. Check waveform for correct behaviour." SEVERITY failure;
 	WAIT;
 END PROCESS;
 

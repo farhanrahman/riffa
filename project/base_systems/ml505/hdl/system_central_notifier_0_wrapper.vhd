@@ -929,7 +929,7 @@ begin
     generic map (
       C_SIMPBUS_AWIDTH => 32,
       C_SIMPBUS_DWIDTH => 32,
-      C_NUM_CHANNELS => 2,
+      C_NUM_CHANNELS => 1,
       C_INIT_BUS => 0,
       C_DMA_BASE_ADDR => X"80200000",
       C_PCIE_BASE_ADDR => X"85C00000",

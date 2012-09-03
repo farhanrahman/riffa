@@ -40,13 +40,20 @@ entity system_riffa_0_wrapper is
     BUF_REQD_SIZE : out std_logic_vector(4 downto 0);
     BUF_REQD_RDY : out std_logic;
     BUF_REQD_ERR : out std_logic;
-    BRAM_Rst : out std_logic;
-    BRAM_Clk : out std_logic;
-    BRAM_EN : out std_logic;
-    BRAM_WEN : out std_logic_vector(0 to 3);
-    BRAM_Addr : out std_logic_vector(0 to 31);
-    BRAM_Din : in std_logic_vector(0 to 31);
-    BRAM_Dout : out std_logic_vector(0 to 31)
+    BRAM_Rst_0 : out std_logic;
+    BRAM_Clk_0 : out std_logic;
+    BRAM_EN_0 : out std_logic;
+    BRAM_WEN_0 : out std_logic_vector(0 to 3);
+    BRAM_Addr_0 : out std_logic_vector(0 to 31);
+    BRAM_Din_0 : in std_logic_vector(0 to 31);
+    BRAM_Dout_0 : out std_logic_vector(0 to 31);
+    BRAM_Rst_1 : out std_logic;
+    BRAM_Clk_1 : out std_logic;
+    BRAM_EN_1 : out std_logic;
+    BRAM_WEN_1 : out std_logic_vector(0 to 3);
+    BRAM_Addr_1 : out std_logic_vector(0 to 31);
+    BRAM_Din_1 : in std_logic_vector(0 to 31);
+    BRAM_Dout_1 : out std_logic_vector(0 to 31)
   );
 end system_riffa_0_wrapper;
 
@@ -55,8 +62,13 @@ architecture STRUCTURE of system_riffa_0_wrapper is
   component riffa is
     generic (
       C_SIMPBUS_AWIDTH : INTEGER;
-      C_BRAM_ADDR : std_logic_vector;
-      C_BRAM_SIZE : INTEGER
+      C_BRAM_ADDR_0 : std_logic_vector;
+      C_BRAM_ADDR_1 : std_logic_vector;
+      C_BRAM_SIZE : INTEGER;
+      C_NUM_OF_INPUTS_TO_CORE : INTEGER;
+      C_NUM_OF_OUTPUTS_FROM_CORE : INTEGER;
+      DOORBELL_ARGUMENT_ZERO_VAL : std_logic_vector;
+      DOORBELL_ARGUMENT_ONE_VAL : std_logic_vector
     );
     port (
       SYS_CLK : in std_logic;
@@ -87,13 +99,20 @@ architecture STRUCTURE of system_riffa_0_wrapper is
       BUF_REQD_SIZE : out std_logic_vector(4 downto 0);
       BUF_REQD_RDY : out std_logic;
       BUF_REQD_ERR : out std_logic;
-      BRAM_Rst : out std_logic;
-      BRAM_Clk : out std_logic;
-      BRAM_EN : out std_logic;
-      BRAM_WEN : out std_logic_vector(0 to 3);
-      BRAM_Addr : out std_logic_vector(0 to 31);
-      BRAM_Din : in std_logic_vector(0 to 31);
-      BRAM_Dout : out std_logic_vector(0 to 31)
+      BRAM_Rst_0 : out std_logic;
+      BRAM_Clk_0 : out std_logic;
+      BRAM_EN_0 : out std_logic;
+      BRAM_WEN_0 : out std_logic_vector(0 to 3);
+      BRAM_Addr_0 : out std_logic_vector(0 to 31);
+      BRAM_Din_0 : in std_logic_vector(0 to 31);
+      BRAM_Dout_0 : out std_logic_vector(0 to 31);
+      BRAM_Rst_1 : out std_logic;
+      BRAM_Clk_1 : out std_logic;
+      BRAM_EN_1 : out std_logic;
+      BRAM_WEN_1 : out std_logic_vector(0 to 3);
+      BRAM_Addr_1 : out std_logic_vector(0 to 31);
+      BRAM_Din_1 : in std_logic_vector(0 to 31);
+      BRAM_Dout_1 : out std_logic_vector(0 to 31)
     );
   end component;
 
@@ -102,8 +121,13 @@ begin
   riffa_0 : riffa
     generic map (
       C_SIMPBUS_AWIDTH => 32,
-      C_BRAM_ADDR => X"90000000",
-      C_BRAM_SIZE => 65536
+      C_BRAM_ADDR_0 => X"90000000",
+      C_BRAM_ADDR_1 => X"90010000",
+      C_BRAM_SIZE => 65536,
+      C_NUM_OF_INPUTS_TO_CORE => 2,
+      C_NUM_OF_OUTPUTS_FROM_CORE => 1,
+      DOORBELL_ARGUMENT_ZERO_VAL => X"ffffffff",
+      DOORBELL_ARGUMENT_ONE_VAL => X"ffffffff"
     )
     port map (
       SYS_CLK => SYS_CLK,
@@ -134,13 +158,20 @@ begin
       BUF_REQD_SIZE => BUF_REQD_SIZE,
       BUF_REQD_RDY => BUF_REQD_RDY,
       BUF_REQD_ERR => BUF_REQD_ERR,
-      BRAM_Rst => BRAM_Rst,
-      BRAM_Clk => BRAM_Clk,
-      BRAM_EN => BRAM_EN,
-      BRAM_WEN => BRAM_WEN,
-      BRAM_Addr => BRAM_Addr,
-      BRAM_Din => BRAM_Din,
-      BRAM_Dout => BRAM_Dout
+      BRAM_Rst_0 => BRAM_Rst_0,
+      BRAM_Clk_0 => BRAM_Clk_0,
+      BRAM_EN_0 => BRAM_EN_0,
+      BRAM_WEN_0 => BRAM_WEN_0,
+      BRAM_Addr_0 => BRAM_Addr_0,
+      BRAM_Din_0 => BRAM_Din_0,
+      BRAM_Dout_0 => BRAM_Dout_0,
+      BRAM_Rst_1 => BRAM_Rst_1,
+      BRAM_Clk_1 => BRAM_Clk_1,
+      BRAM_EN_1 => BRAM_EN_1,
+      BRAM_WEN_1 => BRAM_WEN_1,
+      BRAM_Addr_1 => BRAM_Addr_1,
+      BRAM_Din_1 => BRAM_Din_1,
+      BRAM_Dout_1 => BRAM_Dout_1
     );
 
 end architecture STRUCTURE;
