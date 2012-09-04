@@ -1,3 +1,7 @@
+------------------------------------------------------------------------------
+--	Copyright (c) 2012, Imperial College London
+--	All rights reserved.
+-------------------------------------------------------------------------------
 LIBRARY IEEE;
 USE IEEE.std_logic_1164.ALL;
 USE IEEE.numeric_std.ALL;
