@@ -1,0 +1,26 @@
+#Please do not modify this file by hand
+XmpVersion: 14.1
+VerMgmt: 14.1
+IntStyle: default
+Flow: ise
+ModuleSearchPath: /home/fr909/git/riffa/riffa/pcores/central_notifier_v2_00_a/../../../
+MHS File: system.mhs
+Architecture: virtex6
+Device: xc6vlx240t
+Package: ff1156
+SpeedGrade: -1
+UserCmd1: 
+UserCmd1Type: 0
+UserCmd2: 
+UserCmd2Type: 0
+GenSimTB: 0
+SdkExportBmmBit: 1
+SdkExportDir: SDK/SDK_Export
+InsertNoPads: 0
+WarnForEAArch: 1
+HdlLang: VHDL
+SimModel: BEHAVIORAL
+ExternalMemSim: 0
+UcfFile: data/system.ucf
+EnableParTimingError: 1
+ShowLicenseDialog: 1

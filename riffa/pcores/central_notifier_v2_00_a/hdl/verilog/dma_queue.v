@@ -68,6 +68,7 @@ module dma_queue
 	ERR
 );
 
+parameter C_ARCH = "V5";
 parameter C_SIMPBUS_AWIDTH = 32;
 parameter C_SIMPBUS_DWIDTH = 32;
 parameter C_DMA_BASE_ADDR = 32'h00000000;
@@ -156,17 +157,34 @@ assign DONE = rDone;
 assign ERR = rErr;
 
 // DMA parameters FIFO storage.
-fifo_ramb_32w512d dmaFifo (
-	.clk(SYS_CLK),
-	.srst(SYS_RST),
-	.din(FIFO_DATA),
-	.wr_en(FIFO_WEN),
-	.rd_en(rFifoREN),
-	.dout(wFifoDataOut),
-	.full(),
-	.empty(),
-	.data_count(wFifoDataCount)
-);
+generate
+	if (C_ARCH == "V5") begin: v5
+		fifo_ramb_32w512d dmaFifo (
+			.clk(SYS_CLK),
+			.srst(SYS_RST),
+			.din(FIFO_DATA),
+			.wr_en(FIFO_WEN),
+			.rd_en(rFifoREN),
+			.dout(wFifoDataOut),
+			.full(),
+			.empty(),
+			.data_count(wFifoDataCount)
+		);
+	end
+	else if (C_ARCH == "V6") begin: v6
+		fifo_ramb_32w512d_v6 dmaFifo (
+			.clk(SYS_CLK),
+			.srst(SYS_RST),
+			.din(FIFO_DATA),
+			.wr_en(FIFO_WEN),
+			.rd_en(rFifoREN),
+			.dout(wFifoDataOut),
+			.full(),
+			.empty(),
+			.data_count(wFifoDataCount)
+		);
+	end
+endgenerate
 
 // Master state machine to send out DMA transfer requests to the
 // DMA Controller and to service proxy SIMPBUS requests.

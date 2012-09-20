@@ -4,4 +4,4 @@
 
 Files
 ################################################################################
-ramb_sp_32w256d.ngc,fifo_ramb_32w512d.ngc,fifo_ramd_36w32d.ngc 
+chipscope_icon.ngc,chipscope_ila_1.ngc,chipscope_ila_128.ngc,ramb_sp_32w256d.ngc,ramb_sp_32w256d_v6.ngc,fifo_ramb_32w512d.ngc,fifo_ramb_32w512d_v6.ngc,fifo_ramd_36w32d.ngc,fifo_ramd_36w32d_v6.ngc 

@@ -91,6 +91,7 @@ module reg_handler
 	BUF_REQD_ERR
 );
 
+parameter C_ARCH = "V5";
 parameter C_SIMPBUS_AWIDTH = 32;
 parameter C_SIMPBUS_DWIDTH = 32;
 parameter C_NUM_CHANNELS = 1;
@@ -328,38 +329,67 @@ assign BUF_REQ_ERR = rBufReqErr;
 
 assign BUF_REQD = rBufReqd;
 
-// Block ram to store register values.
-ramb_sp_32w256d regMem (
-	.clka(SYS_CLK),
-	.wea(rBramWEN),
-	.addra(rBramAddr),
-	.dina(rData),
-	.douta(wBramDataOut)
-);
-
-// FIFO for queuing interrupts.
-fifo_ramd_36w32d interruptFifo (
-	.clk(SYS_CLK),
-	.rst(SYS_RST),
-	.din({rChannel, rData}),
-	.wr_en(rFifoIntrWEN),
-	.rd_en(rFifoIntrREN),
-	.dout(wFifoIntrDataOut),
-	.full(),
-	.empty(wFifoIntrEmpty)
-);
-
-// FIFO for queuing dma info msgs.
-fifo_ramd_36w32d dmaInfoFifo (
-	.clk(SYS_CLK),
-	.rst(SYS_RST),
-	.din({rChannel, rData}),
-	.wr_en(rFifoDmaInfoWEN),
-	.rd_en(rFifoDmaInfoREN),
-	.dout(wFifoDmaInfoDataOut),
-	.full(),
-	.empty(wFifoDmaInfoEmpty)
-);
+// Block ram to store register values and FIFO for queuing interrupts & dma info msgs.
+generate
+	if (C_ARCH == "V5") begin: v5
+		ramb_sp_32w256d regMem (
+			.clka(SYS_CLK),
+			.wea(rBramWEN),
+			.addra(rBramAddr),
+			.dina(rData),
+			.douta(wBramDataOut)
+		);
+		fifo_ramd_36w32d interruptFifo (
+			.clk(SYS_CLK),
+			.rst(SYS_RST),
+			.din({rChannel, rData}),
+			.wr_en(rFifoIntrWEN),
+			.rd_en(rFifoIntrREN),
+			.dout(wFifoIntrDataOut),
+			.full(),
+			.empty(wFifoIntrEmpty)
+		);
+		fifo_ramd_36w32d dmaInfoFifo (
+			.clk(SYS_CLK),
+			.rst(SYS_RST),
+			.din({rChannel, rData}),
+			.wr_en(rFifoDmaInfoWEN),
+			.rd_en(rFifoDmaInfoREN),
+			.dout(wFifoDmaInfoDataOut),
+			.full(),
+			.empty(wFifoDmaInfoEmpty)
+		);
+	end
+	else if (C_ARCH == "V6") begin: v6
+		ramb_sp_32w256d_v6 regMem (
+			.clka(SYS_CLK),
+			.wea(rBramWEN),
+			.addra(rBramAddr),
+			.dina(rData),
+			.douta(wBramDataOut)
+		);
+		fifo_ramd_36w32d_v6 interruptFifo (
+			.clk(SYS_CLK),
+			.rst(SYS_RST),
+			.din({rChannel, rData}),
+			.wr_en(rFifoIntrWEN),
+			.rd_en(rFifoIntrREN),
+			.dout(wFifoIntrDataOut),
+			.full(),
+			.empty(wFifoIntrEmpty)
+		);
+		fifo_ramd_36w32d_v6 dmaInfoFifo (
+			.clk(SYS_CLK),
+			.rst(SYS_RST),
+			.din({rChannel, rData}),
+			.wr_en(rFifoDmaInfoWEN),
+			.rd_en(rFifoDmaInfoREN),
+			.dout(wFifoDmaInfoDataOut),
+			.full(),
+			.empty(wFifoDmaInfoEmpty)
+		);
+	end
+endgenerate
 
 // State machine to service bus requests (PC channel requests) and
 // directly connected IP core requests.
