@@ -1,0 +1,75 @@
+#  Virtex 6 ML605 Evaluation Platform
+
+###############################################################################
+# System level pin location constraints
+###############################################################################
+Net fpga_0_clk_1_sys_clk_p_pin LOC = J9;
+Net fpga_0_clk_1_sys_clk_p_pin IOSTANDARD = LVDS_25;
+Net fpga_0_clk_1_sys_clk_p_pin DIFF_TERM = TRUE;
+Net fpga_0_clk_1_sys_clk_n_pin LOC = H9;
+Net fpga_0_clk_1_sys_clk_n_pin IOSTANDARD = LVDS_25;
+Net fpga_0_clk_1_sys_clk_n_pin DIFF_TERM = TRUE;
+Net fpga_0_rst_1_sys_rst_pin LOC = H10;
+Net fpga_0_rst_1_sys_rst_pin IOSTANDARD = SSTL15;
+Net fpga_0_rst_1_sys_rst_pin PULLUP;
+Net fpga_0_rst_1_sys_rst_pin TIG;
+
+NET "CLK_S" TNM_NET = sys_clk_pin;
+TIMESPEC TS_sys_clk_pin = PERIOD sys_clk_pin 200000 kHz;
+
+NET "fpga_0_PCIe_perstn" TIG;
+NET "fpga_0_PCIe_perstn" LOC = AE13 | IOSTANDARD = LVCMOS25 | PULLUP | NODELAY ;
+
+###############################################################################
+# System level clock constraints
+###############################################################################
+NET "plbv46_pcie_0/REFCLK" TNM_NET = "PCIe_RefClk" ;
+NET "*/pcie_clocking_i/clk_125" TNM_NET = "PCIe_CLK_125" ;
+TIMESPEC "TS_PCIe_RefClk"  = PERIOD "PCIe_RefClk" 250.00 MHz HIGH 50 % ;
+TIMESPEC "TS_PCIe_CLK_125" = PERIOD "PCIe_CLK_125" TS_PCIe_RefClk/2.0 HIGH 50 % PRIORITY 100;
+
+###############################################################################
+###### PCIe_Bridge constraints
+###############################################################################
+# SYS clock 250 MHz (input) signal.  The sys_clk_p and sys_clk_n
+# signals are the PCI Express reference clock. Virtex-6 FPGA GT
+# Transceiver architecture requires the use of a dedicated clock
+# resources (FPGA input pins) associated with each GT Transceiver.
+# To use these pins an IBUFDS primitive (refclk_ibuf) is
+# instantiated in user's design.
+# See the Virtex-6 FPGA GT Transceiver User Guide
+# (UG) for guidelines regarding clock resource selection.
+#Net fpga_0_PCIe_Diff_Clk_P_pin LOC=V6  |  IOSTANDARD = LVDS_25;
+#Net fpga_0_PCIe_Diff_Clk_N_pin LOC=V5  |  IOSTANDARD = LVDS_25;
+INST "*/PCIe_Diff_Clk_0/USE_IBUFDS_GTXE1.GEN_IBUFDS_GTXE1[0].IBUFDS_GTXE1_I" LOC = IBUFDS_GTXE1_X0Y4;
+
+# Transceiver instance placement. This constraint selects the
+# transceivers to be used, which also dictates the pinout for the
+# transmit and receive differential pairs. See the 
+# Virtex-6 FPGA GT Transceiver User Guide (UG) for more
+# information.
+# PCIe Lane 0
+#Net fpga_0_PCIe_Bridge_RXN_pin LOC=J4  |  IOSTANDARD = LVDS_25;
+#Net fpga_0_PCIe_Bridge_RXP_pin LOC=J3  |  IOSTANDARD = LVDS_25;
+#Net fpga_0_PCIe_Bridge_TXN_pin LOC=F2  |  IOSTANDARD = LVDS_25;
+#Net fpga_0_PCIe_Bridge_TXP_pin LOC=F1  |  IOSTANDARD = LVDS_25;
+INST "*/pcie_2_0_i/pcie_gt_i/gtx_v6_i/GTXD[0].GTX" LOC = GTXE1_X0Y15;
+
+# PCI Express Block placement. This constraint selects the PCI Express
+# Block to be used. #
+INST "*/pcie_2_0_i/pcie_block_i" LOC = PCIE_X0Y1;
+
+
+#
+# MMCM Placment. This constraint selects the MMCM Placement
+#
+INST "*/pcie_clocking_i/mmcm_adv_i" LOC = MMCM_ADV_X0Y7;
+
+################################################################################
+# Bridge clock domain crossing constraints 
+################################################################################
+ NET "plbv46_pcie_0/*SPLB_Clk"               TNM_NET = "SPLB_Clk";
+ NET "plbv46_pcie_0/*Bridge_Clk"             TNM_NET = "Bridge_Clk";
+ TIMESPEC "TS_PLB_PCIe" = FROM "SPLB_Clk"   TO "Bridge_Clk" 8 ns datapathonly;
+ TIMESPEC "TS_PCIe_PLB" = FROM "Bridge_Clk" TO "SPLB_Clk" 10 ns datapathonly;
+ 

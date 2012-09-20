@@ -3,12 +3,18 @@
 ##############################################################################
 
 lib proc_common_v3_00_a proc_common_pkg vhdl
+lib central_notifier_v2_00_a chipscope_icon verilog
+lib central_notifier_v2_00_a chipscope_ila_1 verilog
+lib central_notifier_v2_00_a chipscope_ila_128 verilog
 lib central_notifier_v2_00_a interrupt_queue verilog
 lib central_notifier_v2_00_a initializer verilog
 lib central_notifier_v2_00_a reg_handler verilog
 lib central_notifier_v2_00_a dma_queue verilog
 lib central_notifier_v2_00_a ramb_sp_32w256d verilog
+lib central_notifier_v2_00_a ramb_sp_32w256d_v6 verilog
 lib central_notifier_v2_00_a fifo_ramd_36w32d verilog
+lib central_notifier_v2_00_a fifo_ramd_36w32d_v6 verilog
 lib central_notifier_v2_00_a fifo_ramb_32w512d verilog
+lib central_notifier_v2_00_a fifo_ramb_32w512d_v6 verilog
 lib central_notifier_v2_00_a central_notifier_impl verilog
 lib central_notifier_v2_00_a central_notifier vhdl

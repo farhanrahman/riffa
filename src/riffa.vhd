@@ -34,7 +34,7 @@
 --						and passes all signals through.
 -- History:				@mattj: Initial pre-release. Version 0.9.
 --						@farhanrahman: Updated code for multiple dma transfers and double
---										buffering. Version 1.0
+--										buffering. Version 0.9.1
 -------------------------------------------------------------------------------
 
 library ieee;

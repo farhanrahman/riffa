@@ -465,6 +465,7 @@ architecture STRUCTURE of system_central_notifier_0_wrapper is
 
   component central_notifier is
     generic (
+      C_ARCH : string;
       C_SIMPBUS_AWIDTH : INTEGER;
       C_SIMPBUS_DWIDTH : INTEGER;
       C_NUM_CHANNELS : INTEGER;
@@ -927,6 +928,7 @@ begin
 
   central_notifier_0 : central_notifier
     generic map (
+      C_ARCH => "V5",
       C_SIMPBUS_AWIDTH => 32,
       C_SIMPBUS_DWIDTH => 32,
       C_NUM_CHANNELS => 1,

@@ -47,6 +47,7 @@ use proc_common_v3_00_a.proc_common_pkg.all;
 -- Entity section
 ------------------------------------------------------------------------------
 -- Definition of Generics:
+--   C_ARCH						-- FPGA architecture (e.g. V5, V6)
 --   C_SIMPBUS_AWIDTH			-- SIMPBUS address width
 --   C_SIMPBUS_DWIDTH			-- SIMPBUS data width
 --   C_NUM_CHANNELS				-- Number of RIFFA channels to activate
@@ -119,6 +120,7 @@ use proc_common_v3_00_a.proc_common_pkg.all;
 entity central_notifier is
   generic
   (
+    C_ARCH							: string					:= "V5";
 	C_SIMPBUS_AWIDTH				: integer					:= 32;
 	C_SIMPBUS_DWIDTH				: integer					:= 32;
 	C_NUM_CHANNELS					: integer					:= 16;
@@ -646,6 +648,7 @@ architecture IMP of central_notifier is
   component central_notifier_impl is
     generic
     (
+		C_ARCH							: string					:= "V5";
 		C_SIMPBUS_AWIDTH				: integer					:= 32;
 		C_SIMPBUS_DWIDTH				: integer					:= 32;
 		C_NUM_CHANNELS					: integer					:= 0;
@@ -728,6 +731,7 @@ begin
   CENTRAL_NOTIFIER_I : component central_notifier_impl
     generic map
     (
+		C_ARCH					=> C_ARCH,
 		C_SIMPBUS_AWIDTH		=> C_SIMPBUS_AWIDTH,
 		C_SIMPBUS_DWIDTH		=> C_SIMPBUS_DWIDTH,
 		C_NUM_CHANNELS			=> C_NUM_CHANNELS,

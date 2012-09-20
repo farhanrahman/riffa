@@ -96,6 +96,7 @@ module central_notifier_impl
 	BUF_REQD_ERR
 );
 
+parameter C_ARCH = "V5";
 parameter C_SIMPBUS_AWIDTH = 32;
 parameter C_SIMPBUS_DWIDTH = 32;
 parameter C_NUM_CHANNELS = 1;
@@ -199,7 +200,7 @@ interrupt_queue interruptQueue (
 // Handles queuing up DMA transfer requests and issuing them to the
 // DMA Controller. Also signals DMA done/err and interrupt/doorbell
 // after the DMA transfer completes (as necessary).
-dma_queue #(C_SIMPBUS_AWIDTH, C_SIMPBUS_DWIDTH, C_DMA_BASE_ADDR) dmaQueue (
+dma_queue #(C_ARCH, C_SIMPBUS_AWIDTH, C_SIMPBUS_DWIDTH, C_DMA_BASE_ADDR) dmaQueue (
 	.SYS_CLK(SYS_CLK),
 	.SYS_RST(SYS_RST),
 	.INTR_DMA(INTR_DMA),
@@ -231,7 +232,7 @@ dma_queue #(C_SIMPBUS_AWIDTH, C_SIMPBUS_DWIDTH, C_DMA_BASE_ADDR) dmaQueue (
 
 // Handles bus accessible register reads/writes for DMA transfers,
 // interrupts, and doorbells.
-reg_handler #(C_SIMPBUS_AWIDTH, C_SIMPBUS_DWIDTH, C_NUM_CHANNELS) regHandler (
+reg_handler #(C_ARCH, C_SIMPBUS_AWIDTH, C_SIMPBUS_DWIDTH, C_NUM_CHANNELS) regHandler (
 	.SYS_CLK(SYS_CLK),
 	.SYS_RST(SYS_RST),
 	.INTR_REQ(wIntrReq),
