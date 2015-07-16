@@ -1,3 +1,14 @@
+IMPORANT UPDATE
+===============
+
+Please follow to [RIFFA 2.0](https://github.com/drichmond/riffa) for the most up to date project. This repository was forked and branched off from RIFFA 0.9 as mentioned below.
+
+Currently [RIFFA 2.0] (https://github.com/drichmond/riffa) and future versions will be maintained by [Dustin Richmond](https://github.com/drichmond).
+
+Please visit their [website](http://riffa.ucsd.edu) for more information
+
+-----------------------------
+
 [RIFFA](https://sites.google.com/a/eng.ucsd.edu/matt-jacobsen/riffa) (Reusable Integration Framework for FPGA Accelerators) is a framework developed by [Matt Jacobsen](https://sites.google.com/a/eng.ucsd.edu/matt-jacobsen/). It connects IP cores on an FPGA with user software running on a Linux computer. For detailed explanation about the framework please read the "RIFFA README" section of this file which is the contents of the README file taken from RIFFA 0.9.
 
 This project has been developed on top of RIFFA version 0.9. It includes extra hardware which interfaces with a user's IP Core via handshaking signals. RIFFA 0.9 offers more control and low level access to the corresponding framework from the hardware side of the framework in the FPGA. However in this project I decided to abstract away and include a handshaking interface that a user can connect to as long as their cores maintain the handshake protocol. Please refer to the WIKI pages to find out how to interface with the core. You can have a look at the [test_core.vhdl](https://github.com/farhanrahman/riffa/blob/master/src/test_core.vhd) file which is an example of how a user's core can interface with this framework.
